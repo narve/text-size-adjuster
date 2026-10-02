@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import MarkdownIt from 'markdown-it';
 import { chromium } from 'playwright';
 
@@ -281,6 +282,31 @@ if (!userscriptBundle) {
 }
 // iframe-cross-origin has no live demo on purpose (TR5.5): it depends on the local two-port test
 // server setup and wouldn't work once this site is served/deployed elsewhere.
+
+// --- Downloads: the built userscript and an *unsigned* extension package, so the advanced
+// install guides can link to real files. Release Firefox (desktop permanent installs, and
+// Android) only accepts Mozilla-signed packages — signing needs the maintainer's AMO API
+// credentials, so a signed .xpi isn't produced here. ---
+const EXTENSION_DIST = path.join(REPO_ROOT, 'packages', 'extension', 'dist');
+ensureDir(path.join(DIST, 'downloads'));
+if (userscriptBundle) {
+  fs.writeFileSync(path.join(DIST, 'downloads', 'text-size-adjuster.user.js'), userscriptBundle, 'utf8');
+}
+if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
+  execFileSync(
+    'npx',
+    [
+      'web-ext', 'build',
+      '--source-dir', EXTENSION_DIST,
+      '--artifacts-dir', path.join(DIST, 'downloads'),
+      '--filename', 'text-size-adjuster-unsigned.xpi',
+      '--overwrite-dest',
+    ],
+    { cwd: path.join(REPO_ROOT, 'packages', 'extension'), stdio: 'ignore' },
+  );
+} else {
+  console.warn('[downloads] extension not built — skipping the .xpi. Run "npm run build -w packages/extension" first.');
+}
 
 // --- Website embed (FR3.4/TR5.6): the same self-starting bundle, published as a plain script a
 // site owner can include with one <script src> tag, plus a demo that loads it exactly that way. ---
