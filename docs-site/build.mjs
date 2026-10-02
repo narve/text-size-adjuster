@@ -279,6 +279,17 @@ if (!userscriptBundle) {
 // iframe-cross-origin has no live demo on purpose (TR5.5): it depends on the local two-port test
 // server setup and wouldn't work once this site is served/deployed elsewhere.
 
+// --- Website embed (FR3.4/TR5.6): the same self-starting bundle, published as a plain script a
+// site owner can include with one <script src> tag, plus a demo that loads it exactly that way. ---
+if (userscriptBundle) {
+  const embedScript = userscriptBundle.replace(/^\/\/ ==UserScript==[\s\S]*?\/\/ ==\/UserScript==\s*/, '');
+  ensureDir(path.join(DIST, 'embed'));
+  fs.writeFileSync(path.join(DIST, 'embed', 'text-size-adjuster.js'), embedScript, 'utf8');
+
+  ensureDir(path.join(DIST, 'demos', 'script-tag'));
+  fs.copyFileSync(path.join(SRC, 'demos', 'script-tag.html'), path.join(DIST, 'demos', 'script-tag', 'index.html'));
+}
+
 await browser.close();
 
 // --- 5. Landing page (TR5.2/TR5.2a/TR5.2b) ---
@@ -305,6 +316,11 @@ writePage(path.join(DIST, 'index.html'), {
 
     <h2>Install</h2>
     <div class="card-grid">${installCards}</div>
+
+    <h2>Run a website?</h2>
+    <p>Give every visitor the same +/− control with a single script tag —
+    <a href="guides/add-to-your-website.html">see how</a>, or
+    <a href="demos/script-tag/index.html">try the demo page</a> that does exactly that.</p>
 
     <h2>Learn more</h2>
     <ul>

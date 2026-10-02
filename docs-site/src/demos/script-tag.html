@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Script-tag demo — Text Size Adjuster</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 720px; margin: 0 auto; padding: 24px 20px 96px; color: #222; }
+    header { border-bottom: 2px solid #222; margin-bottom: 20px; }
+    h1 { font-size: 34px; margin: 0 0 4px; }
+    .byline { font-size: 13px; color: #777; margin-bottom: 12px; }
+    p { font-size: 16px; line-height: 1.55; }
+    aside { font-size: 13px; color: #555; background: #f4f4f4; padding: 10px 14px; border-radius: 6px; }
+    code { font-size: 13px; }
+  </style>
+  <!-- The only thing this page does to get the +/- control: one script tag. -->
+  <script src="../../embed/text-size-adjuster.js"></script>
+</head>
+<body>
+  <header>
+    <h1>The Daily Example</h1>
+    <div class="byline">A made-up news site that added Text Size Adjuster with one line of HTML</div>
+  </header>
+
+  <h2>Local library extends opening hours</h2>
+  <p>Starting next month, the central library will stay open until nine in the evening on
+  weekdays. The change follows a survey in which most respondents said they could only visit
+  after work. Weekend hours are unchanged.</p>
+  <p>Staff say the reading room has been the most requested space, especially among students
+  preparing for exams, and that the longer hours should ease crowding in the afternoons.</p>
+
+  <aside>
+    This page loads the tool with <code>&lt;script src="…/embed/text-size-adjuster.js"&gt;&lt;/script&gt;</code>
+    in its <code>&lt;head&gt;</code> — nothing else. Use the round control in the bottom-right corner.
+    <a href="../../guides/add-to-your-website.html">How to add it to your own site</a>.
+  </aside>
+</body>
+</html>

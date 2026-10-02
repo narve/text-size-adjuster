@@ -146,6 +146,10 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
   not work once the docs site is served/deployed elsewhere — document that one exception rather
   than silently shipping a broken demo.
 
+- **TR5.6**: The site publishes the embeddable script (FR3.4) at `embed/text-size-adjuster.js`,
+  explains how a site owner adds it, and includes a demo page that loads it via an actual
+  `<script src>` tag (not inlined like the other demos).
+
 **Acceptance**: `npm run build` produces a browsable `docs-site/dist/` with working internal
 links and all gallery images present in framed form; no manual copying or framing of
 screenshots. Live demo links (TR5.5) work when the site is served via `npm run docs:serve`.

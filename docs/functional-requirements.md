@@ -52,6 +52,9 @@ horizontal scrollbar.
   scaling logic between them. The one deliberate exception is reach: the extension may use its
   elevated permissions to scale content the userscript structurally cannot reach (see FR6.1) —
   that's a desirable capability difference to lean into, not a divergence to avoid.
+- **FR3.4**: A site owner can add the tool to their own website with a single `<script src>` tag
+  (same engine and floating widget, no persistence). This only covers sites the owner controls —
+  it's not a way for a visitor to use the tool on someone else's site.
 
 ## FR4. UI is decoupled from the engine
 
