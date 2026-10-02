@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { EXTENSION_DIR, EXTENSION_DIST, readJson, requireBuilt, writeJson } from '../../tools/paths.mjs';
+import { EXTENSION_DIR, EXTENSION_DIST, readJson, requireBuilt, writeJson } from '../../tools/paths.js';
 
 // FR8 (best-effort, not a primary target): reuses the built Firefox extension as-is — the
 // bundles are already cross-browser via webextension-polyfill's `browser` global — and only

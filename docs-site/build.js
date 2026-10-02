@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import MarkdownIt from 'markdown-it';
 import { chromium } from 'playwright';
-import { readProduct } from '../tools/product.mjs';
+import { readProduct } from '../tools/product.js';
 import {
   REPO_ROOT,
   EXTENSION_DIR,
@@ -19,8 +19,8 @@ import {
   readSites,
   realWorldScreenshot,
   realWorldSnapshot,
-} from '../tools/paths.mjs';
-import { imageDataUri, screenshotHtml } from '../tools/render-image.mjs';
+} from '../tools/paths.js';
+import { imageDataUri, screenshotHtml } from '../tools/render-image.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(__dirname, 'src');
@@ -194,7 +194,7 @@ for (const site of readSitesSafe()) {
   }
   const outDir = path.join(DIST, 'gallery', site.id);
   ensureDir(outDir);
-  // Real sites are captured on a phone viewport (see fixtures/real-world/download.mjs).
+  // Real sites are captured on a phone viewport (see fixtures/real-world/download.js).
   await frameScreenshot(beforePng, site.url, path.join(outDir, 'before.png'));
   await frameScreenshot(afterPng, site.url, path.join(outDir, 'after.png'));
   galleryEntries.push({

@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
-    "download": "node real-world/download.mjs"
+    "start": "node server.js",
+    "download": "node real-world/download.js"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

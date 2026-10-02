@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { EXTENSION_DIR, readJson, writeJson } from '../../tools/paths.mjs';
+import { EXTENSION_DIR, readJson, writeJson } from '../../tools/paths.js';
 
 // Bumps the extension's minor version (x.Y.z → x.(Y+1).0). package.json is the single source of the
 // version; the build injects it into the manifest. Run before signing: Mozilla signs each version

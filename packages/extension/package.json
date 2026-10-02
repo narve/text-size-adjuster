@@ -6,14 +6,14 @@
   "type": "module",
   "scripts": {
     "build": "vite build --mode content && vite build --mode background && vite build --mode options && vite build --mode popup",
-    "build:chrome": "node build-chrome-variant.mjs",
+    "build:chrome": "node build-chrome-variant.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint:webext": "web-ext lint --source-dir dist",
     "run:desktop": "web-ext run -t firefox-desktop --source-dir dist",
     "run:android": "web-ext run -t firefox-android --source-dir dist",
-    "sign": "node sign.mjs",
-    "version:bump": "node bump-version.mjs",
-    "icons": "node render-icons.mjs"
+    "sign": "node sign.js",
+    "version:bump": "node bump-version.js",
+    "icons": "node render-icons.js"
   },
   "dependencies": {
     "@tsa/core": "*",

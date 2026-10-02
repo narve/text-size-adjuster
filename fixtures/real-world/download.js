@@ -1,7 +1,7 @@
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
-import { readSites, realWorldSnapshot } from '../../tools/paths.mjs';
+import { readSites, realWorldSnapshot } from '../../tools/paths.js';
 
 // TR1a: snapshots a representative page from popular real-world sites, as an additional,
 // non-gating fixture set alongside the synthetic TR1 fixtures. Snapshots are NOT committed to git
@@ -22,7 +22,7 @@ import { readSites, realWorldSnapshot } from '../../tools/paths.mjs';
 
 const sites = readSites();
 // The full device (mobile user agent, touch), not just its size, so sites serve their mobile
-// layout. Its width matches PHONE_VIEWPORT in tools/paths.mjs, which the screenshots use.
+// layout. Its width matches PHONE_VIEWPORT in tools/paths.js, which the screenshots use.
 const DEVICE = devices['Pixel 7'];
 
 const CONSENT_SELECTORS = [

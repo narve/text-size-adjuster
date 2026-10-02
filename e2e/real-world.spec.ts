@@ -7,13 +7,13 @@ import {
   readSites,
   realWorldScreenshot,
   realWorldSnapshot,
-} from '../tools/paths.mjs';
+} from '../tools/paths.js';
 import { gotoAndAttach, setFactor } from './helpers.js';
 
 const sites = readSites();
 
 // A phone-sized viewport: the tool's motivating use case, and the layout the snapshots were
-// captured in (see fixtures/real-world/download.mjs). deviceScaleFactor 2 keeps screenshots crisp.
+// captured in (see fixtures/real-world/download.js). deviceScaleFactor 2 keeps screenshots crisp.
 test.use({ viewport: PHONE_VIEWPORT, deviceScaleFactor: PHONE_SCALE });
 
 /**

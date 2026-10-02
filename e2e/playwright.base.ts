@@ -1,5 +1,5 @@
 import { devices, type PlaywrightTestConfig } from '@playwright/test';
-import { FIXTURE_ORIGIN } from '../tools/paths.mjs';
+import { FIXTURE_ORIGIN } from '../tools/paths.js';
 
 /** Shared by the three configs: the fixture server, its base URL, and the browser projects. */
 export const baseConfig: PlaywrightTestConfig = {
@@ -8,7 +8,7 @@ export const baseConfig: PlaywrightTestConfig = {
   retries: 0,
   reporter: [['list']],
   webServer: {
-    command: 'node ../fixtures/server.mjs',
+    command: 'node ../fixtures/server.js',
     url: `${FIXTURE_ORIGIN}/plain-px/`,
     reuseExistingServer: !process.env.CI,
     timeout: 20_000,

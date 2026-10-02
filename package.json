@@ -20,7 +20,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "docs:build": "node docs-site/build.mjs",
+    "docs:build": "node docs-site/build.js",
     "docs:serve": "npx --yes http-server docs-site/dist -p 8080"
   },
   "devDependencies": {

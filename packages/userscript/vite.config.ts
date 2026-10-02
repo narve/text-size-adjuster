@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 // @ts-expect-error plain JS helper shared with the other build scripts
-import { readProduct } from '../../tools/product.mjs';
+import { readProduct } from '../../tools/product.js';
 import monkey from 'vite-plugin-monkey';
 // @ts-expect-error plain JS helper shared with the other build scripts
-import { USERSCRIPT_FILENAME } from '../../tools/paths.mjs';
+import { USERSCRIPT_FILENAME } from '../../tools/paths.js';
 
 const product = readProduct();
 const iconSvg = readFileSync(new URL('../extension/icons/icon.svg', import.meta.url), 'utf8');

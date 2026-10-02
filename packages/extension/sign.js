@@ -9,7 +9,7 @@ import {
   SIGNED_XPI,
   readJson,
   requireBuilt,
-} from '../../tools/paths.mjs';
+} from '../../tools/paths.js';
 
 // Signs the built extension (dist/) with Mozilla as an *unlisted* add-on: signed, so release
 // Firefox (desktop and Android) installs it permanently, but not published on addons.mozilla.org.

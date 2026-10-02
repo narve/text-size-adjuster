@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { chromium } from 'playwright';
-import { EXTENSION_DIR } from '../../tools/paths.mjs';
-import { imageDataUri, screenshotHtml } from '../../tools/render-image.mjs';
+import { EXTENSION_DIR } from '../../tools/paths.js';
+import { imageDataUri, screenshotHtml } from '../../tools/render-image.js';
 
 // Rasterizes icons/icon.svg (the source of truth) into the PNG sizes the manifests reference.
 // Chrome doesn't accept SVG extension icons, so both manifests use these PNGs. Re-run after

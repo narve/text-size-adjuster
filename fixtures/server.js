@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FIXTURE_PORT as PRIMARY_PORT, FIXTURE_SECONDARY_PORT as SECONDARY_PORT, USERSCRIPT_DIST } from '../tools/paths.mjs';
+import { FIXTURE_PORT as PRIMARY_PORT, FIXTURE_SECONDARY_PORT as SECONDARY_PORT, USERSCRIPT_DIST } from '../tools/paths.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 

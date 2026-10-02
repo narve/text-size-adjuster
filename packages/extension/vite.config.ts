@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 // @ts-expect-error plain JS helper shared with the other build scripts
-import { readProduct } from '../../tools/product.mjs';
-import { EXTENSION_DIR, EXTENSION_DIST, readJson, writeJson } from '../../tools/paths.mjs';
+import { readProduct } from '../../tools/product.js';
+import { EXTENSION_DIR, EXTENSION_DIST, readJson, writeJson } from '../../tools/paths.js';
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 

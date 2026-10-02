@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * Shared locations and conventions for build scripts, tests and the docs site, so each path,
- * file name and port is written once. Types for the TypeScript consumers are in paths.d.mts.
+ * file name and port is written once. Types for the TypeScript consumers are in paths.d.ts.
  */
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,7 +25,7 @@ export const FIXTURES_DIR = path.join(REPO_ROOT, 'fixtures');
 export const SITES_FILE = path.join(FIXTURES_DIR, 'real-world', 'sites.json');
 export const SCREENSHOT_DIR = path.join(REPO_ROOT, 'e2e', 'screenshots');
 
-/** Fixture server (fixtures/server.mjs): two ports give two origins for the cross-origin fixture. */
+/** Fixture server (fixtures/server.js): two ports give two origins for the cross-origin fixture. */
 export const FIXTURE_PORT = Number(process.env.TSA_FIXTURES_PORT ?? 4310);
 export const FIXTURE_SECONDARY_PORT = Number(process.env.TSA_FIXTURES_SECONDARY_PORT ?? 4311);
 export const FIXTURE_ORIGIN = `http://127.0.0.1:${FIXTURE_PORT}`;

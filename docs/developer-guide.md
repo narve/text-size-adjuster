@@ -11,9 +11,9 @@ the split exists.
 text-size-adjuster/
   product.json             # name, summary, homepage, text-length limits
   product-description.txt  # long store description
-  tools/                   # shared Node helpers: product.mjs (reads the two
-                           #   files above), paths.mjs (artifact paths, ports,
-                           #   fixture lists), render-image.mjs
+  tools/                   # shared Node helpers: product.js (reads the two
+                           #   files above), paths.js (artifact paths, ports,
+                           #   fixture lists), render-image.js
   packages/
     core/          # the scaling engine — framework/UI/storage-agnostic
     stores/        # createMemoryStore, createLocalExtensionStore,
@@ -86,9 +86,9 @@ build shows them in the gallery when their screenshots exist.
   exercises, which requirement it traces to). Real sites:
   `fixtures/real-world/sites.json`.
 - **Paths, file names and ports** shared by build scripts, tests and the docs
-  build: `tools/paths.mjs`.
+  build: `tools/paths.js`.
 
-`tools/product.mjs` reads the name, summary and description for the manifests,
+`tools/product.js` reads the name, summary and description for the manifests,
 the userscript header and the docs site (front page, guides via `{{name}}` and
 `{{homepage}}` placeholders, and the "Store listing text" page in the
 contributor section). Edit the sources, not generated files.
@@ -107,7 +107,7 @@ contributor section). Edit the sources, not generated files.
    published to the public catalog.
 4. Signing is scripted: `npm run release:extension` bumps the extension's minor
    version (in `packages/extension/package.json`), builds the extension and
-   signs it as an unlisted add-on (`packages/extension/sign.mjs`, wrapping
+   signs it as an unlisted add-on (`packages/extension/sign.js`, wrapping
    `web-ext sign --channel unlisted`). The signed file ends up at
    `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`, and the
    next docs build publishes it as `downloads/text-size-adjuster.xpi`.

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { EXTENSION_DIST, requireBuilt } from '../tools/paths.mjs';
+import { EXTENSION_DIST, requireBuilt } from '../tools/paths.js';
 import { test, expect } from './webextext-fixture.js';
 
 /**

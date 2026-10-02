@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { USERSCRIPT_BUNDLE, requireBuilt } from '../tools/paths.mjs';
+import { USERSCRIPT_BUNDLE, requireBuilt } from '../tools/paths.js';
 
 test.beforeAll(() => requireBuilt(USERSCRIPT_BUNDLE, 'packages/userscript'));
 

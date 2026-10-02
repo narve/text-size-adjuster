@@ -34,9 +34,9 @@ kept current; this plan doesn't repeat it.
   logic, popup) is shared unchanged.
 - **@playwright/test** for Layer 1/2; **web-ext** as a devDependency for manual
   `run`/`lint` only.
-- **Custom Node script** (`docs-site/build.mjs`, using `markdown-it`) for the
+- **Custom Node script** (`docs-site/build.js`, using `markdown-it`) for the
   docs site instead of a full SSG — content volume doesn't justify a framework.
-- **Screenshot framing** (TR5.4): `docs-site/build.mjs` uses `playwright`
+- **Screenshot framing** (TR5.4): `docs-site/build.js` uses `playwright`
   (chromium) to render each raw phone screenshot inside a small local HTML
   template (`docs-site/src/templates/frame-mobile.html`) that draws a phone
   bezel purely in CSS around an `<img>` of the raw screenshot, then screenshots
@@ -97,7 +97,7 @@ afterwards (FR6.4, accepted).
 3. **Fixtures + Layer 1 Playwright harness**, all synthetic fixtures green
    against Firefox and Chromium, screenshots captured. This is the load-bearing
    checkpoint — the hard requirement — get it solid before any UI work. Commit.
-   3a. Real-world fixtures (TR1a): `fixtures/real-world/download.mjs` +
+   3a. Real-world fixtures (TR1a): `fixtures/real-world/download.js` +
    `sites.json`; a separate, informative (non-gating) Playwright suite
    (`npm run test:real-world`), not part of Layer 1. Commit.
 4. UI widget (shadow-DOM, standalone) + the three Store implementations with a
@@ -122,7 +122,7 @@ afterwards (FR6.4, accepted).
    interactive demo per fixture (TR5.5, with the `iframe-cross-origin` caveat
    called out); wired into `npm run build` (TR5.1); `docs:serve` verified
    locally. Commit.
-10. GitHub Pages publishing (TR7): extend `docs-site/build.mjs` to also render
+10. GitHub Pages publishing (TR7): extend `docs-site/build.js` to also render
     TR6.1's developer docs into a `/dev/` section (reusing the markdown-it
     rendering already used for the end-user guides), linked from, but not part
     of, the default landing page. Add `.github/workflows/docs.yml` (checkout,

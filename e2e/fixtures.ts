@@ -1,4 +1,4 @@
-import { readFixtures } from '../tools/paths.mjs';
+import { readFixtures } from '../tools/paths.js';
 
 export interface FixtureDef {
   id: string;

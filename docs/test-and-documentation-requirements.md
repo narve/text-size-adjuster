@@ -33,7 +33,7 @@ In addition to the synthetic TR1 fixtures (which each isolate one technique), a
 second fixture set is built from actual popular websites, to catch real-world
 combinations the synthetic fixtures miss:
 
-- `fixtures/real-world/download.mjs` loads each site listed in
+- `fixtures/real-world/download.js` loads each site listed in
   `fixtures/real-world/sites.json` on an emulated phone and saves it as a
   **static** snapshot. How (and why scripts are stripped) is described in that
   script's header comment.

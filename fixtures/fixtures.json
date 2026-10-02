@@ -1,5 +1,5 @@
 {
-  "_about": "Single source for the synthetic test fixtures (TR1). e2e/fixtures.ts reads it for the Layer 1 specs, docs-site/build.mjs for the gallery and live demos. 'standard': covered by the generic ratio check and the phone screenshots (shown in the gallery). 'demo': copied into the docs site as a live demo. 'entry'/'extraFiles' are relative to fixtures/<id>/.",
+  "_about": "Single source for the synthetic test fixtures (TR1). e2e/fixtures.ts reads it for the Layer 1 specs, docs-site/build.js for the gallery and live demos. 'standard': covered by the generic ratio check and the phone screenshots (shown in the gallery). 'demo': copied into the docs site as a live demo. 'entry'/'extraFiles' are relative to fixtures/<id>/.",
   "fixtures": [
     {
       "id": "plain-px",

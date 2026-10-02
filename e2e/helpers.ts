@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { CORE_BUNDLE } from '../tools/paths.mjs';
+import { CORE_BUNDLE } from '../tools/paths.js';
 
 /** The slice of the engine API the specs drive through `window.__tsa`. */
 export interface MinimalEngine {
