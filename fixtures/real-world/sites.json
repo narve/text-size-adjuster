@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ap-no",
+    "url": "https://www.ap.no/",
+    "description": "Norwegian news site — the original motivating example"
+  },
+  {
+    "id": "hacker-news",
+    "url": "https://news.ycombinator.com/",
+    "description": "dense, text-heavy, minimal CSS"
+  },
+  {
+    "id": "wikipedia-article",
+    "url": "https://en.wikipedia.org/wiki/Web_browser",
+    "description": "long-form reference article, mixed heading levels, tables, infobox"
+  },
+  {
+    "id": "bbc-news",
+    "url": "https://www.bbc.com/news",
+    "description": "international news, heavier/denser layout and componentry"
+  }
+]

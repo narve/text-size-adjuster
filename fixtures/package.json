@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "download": "node real-world/download.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }

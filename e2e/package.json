@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "test:extension": "playwright test --config playwright.extension.config.ts"
+    "test:extension": "playwright test --config playwright.extension.config.ts",
+    "test:real-world": "playwright test --config playwright.real-world.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

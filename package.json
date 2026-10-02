@@ -14,6 +14,7 @@
     "test:unit": "npm run test --workspace packages/core",
     "test:e2e": "npm run build --workspace packages/core && npm run test --workspace e2e",
     "test:e2e:extension": "npm run test:extension --workspace e2e",
+    "test:real-world": "npm run build --workspace packages/core && npm run test:real-world --workspace e2e",
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",

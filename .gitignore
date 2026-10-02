@@ -3,6 +3,7 @@ dist/
 *.tsbuildinfo
 docs-site/dist/
 e2e/screenshots/
+fixtures/real-world/snapshots/
 e2e/test-results/
 playwright-report/
 .DS_Store
