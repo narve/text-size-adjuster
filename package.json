@@ -1,0 +1,30 @@
+{
+  "name": "text-size-adjuster",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "fixtures",
+    "e2e",
+    "docs-site"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present && npm run test:e2e && npm run docs:build",
+    "test": "npm run test --workspaces --if-present && npm run test:e2e",
+    "test:unit": "npm run test --workspace packages/core",
+    "test:e2e": "npm run test --workspace e2e",
+    "test:e2e:extension": "npm run test:extension --workspace e2e",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "docs:build": "node docs-site/build.mjs",
+    "docs:serve": "npx --yes http-server docs-site/dist -p 8080"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "eslint": "^9.19.0",
+    "@eslint/js": "^9.19.0",
+    "typescript-eslint": "^8.22.0",
+    "prettier": "^3.4.2"
+  }
+}

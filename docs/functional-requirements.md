@@ -82,6 +82,21 @@ horizontal scrollbar.
   overridden (CSS gives inline `!important` the highest possible priority). High-specificity
   *stylesheet* rules with `!important` are handled (FR2.5); this narrower inline case is not.
 
+## FR8. Cross-browser compatibility (best-effort)
+
+- **FR8.1**: Where possible, the same code should also work in Chrome, not only Firefox. This is
+  best-effort, not a primary deliverable: Firefox Desktop + Firefox Android (FR3) remain the
+  required targets, and nothing here should compromise them.
+- **FR8.2**: The core engine (FR2) already only uses standard DOM/CSS APIs, so it is
+  Chrome-compatible without special-casing.
+- **FR8.3**: The extension (FR3.2) should avoid Firefox-only extension APIs where a
+  cross-browser equivalent exists (e.g. via the `webextension-polyfill` library), so that a
+  Chrome build is a thin manifest variation rather than a rewrite. Publishing to the Chrome Web
+  Store is out of scope; building and manually loading an unpacked Chrome build is enough to call
+  this satisfied.
+- **FR8.4**: The userscript (FR3.1) already runs under Tampermonkey/Violentmonkey on Chrome with
+  no extra work, since those managers are cross-browser; no additional requirement beyond FR3.1.
+
 ## FR7. Performance
 
 - **FR7.1**: Scaling a typical page (hundreds to low-thousands of elements) must complete its
