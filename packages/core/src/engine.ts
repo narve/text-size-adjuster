@@ -1,6 +1,6 @@
 import type { EngineOptions, EngineChangeEvent, EngineListener, TextSizeEngine } from './types.js';
 import { clampFactor } from './clamp.js';
-import { captureElements } from './capture.js';
+import { captureElements, releaseElements } from './capture.js';
 import { DEFAULT_IGNORE_ATTR, DEFAULT_SCALED_ATTR } from './constants.js';
 
 const DEFAULTS = {
@@ -21,6 +21,8 @@ const NON_TEXT_TAGS = new Set([
   'HEAD', 'META', 'TITLE', 'STYLE', 'SCRIPT', 'LINK', 'BASE', 'NOSCRIPT', 'TEMPLATE', 'BR', 'WBR',
 ]);
 const SVG_NS = 'http://www.w3.org/2000/svg';
+/** How long the viewport width has to stay put before sizes are captured again. */
+const RECAPTURE_DELAY_MS = 250;
 
 /** A child engine for an open shadow root or a same-origin iframe's document. */
 interface Child {
@@ -270,6 +272,29 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     discoverChildrenIn(elements);
   }
 
+  /**
+   * Captured sizes are fixed pixels, so viewport-relative sizes (`vw`) and media queries stop
+   * applying once captured. When the viewport's width changes (a phone rotated, a window resized
+   * or split), let go of every element and capture again from the page's own current styling.
+   * Height-only changes (a phone's address bar sliding away while scrolling) are ignored.
+   */
+  const win = doc.defaultView;
+  let capturedWidth = 0;
+  let recaptureTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function recapture(): void {
+    recaptureTimer = undefined;
+    if (!attached || !win || win.innerWidth === capturedWidth) return;
+    capturedWidth = win.innerWidth;
+    releaseElements(Array.from(root.querySelectorAll(`[${opts.scaledAttr}]`)), FACTOR_VAR, opts);
+    rescan();
+  }
+
+  function onResize(): void {
+    if (recaptureTimer !== undefined) clearTimeout(recaptureTimer);
+    recaptureTimer = setTimeout(recapture, RECAPTURE_DELAY_MS);
+  }
+
   function startObserving(): void {
     observer = new MutationObserver((mutations) => {
       const added: Element[] = [];
@@ -300,14 +325,19 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
         dropChild(child);
       }
     }
+    capturedWidth = win?.innerWidth ?? 0;
     rescan();
     startObserving();
+    win?.addEventListener('resize', onResize);
   }
 
   function detach(): void {
     attached = false;
     observer?.disconnect();
     observer = null;
+    win?.removeEventListener('resize', onResize);
+    if (recaptureTimer !== undefined) clearTimeout(recaptureTimer);
+    recaptureTimer = undefined;
     for (const child of Array.from(children)) {
       try {
         child.engine.detach();

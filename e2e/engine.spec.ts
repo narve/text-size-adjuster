@@ -314,6 +314,49 @@ test.describe('late shadow roots', () => {
   });
 });
 
+/**
+ * Sizes are captured as pixels. When the viewport width changes (a phone rotated, a window
+ * resized), viewport-relative sizes and media queries must apply again (code review M2).
+ */
+test.describe('viewport width changes', () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+
+  test('viewport-relative sizes and media queries follow a resize, at the current factor', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.head.insertAdjacentHTML(
+        'beforeend',
+        '<style>#vw { font-size: 4vw } #mq { font-size: 16px } @media (min-width: 600px) { #mq { font-size: 24px } }</style>',
+      );
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<p id="vw">vw</p><p id="mq">media query</p><p id="inline" style="font-size: 10px !important">inline</p>',
+      );
+    });
+    await attachEngine(page);
+    await setFactor(page, 2);
+    const read = () =>
+      page.evaluate(() =>
+        Object.fromEntries(
+          // Rounded: Firefox resolves font sizes to 1/16 px.
+          ['vw', 'mq', 'inline'].map((id) => [
+            id,
+            Math.round(parseFloat(getComputedStyle(document.getElementById(id)!).fontSize) * 10) / 10,
+          ]),
+        ),
+      );
+    expect(await read()).toEqual({ vw: 28.8, mq: 32, inline: 20 });
+
+    await page.setViewportSize({ width: 800, height: 740 });
+    await expect.poll(read).toEqual({ vw: 64, mq: 48, inline: 20 });
+
+    // The page's own inline size was kept, not lost, when the engine let go of it.
+    await setFactor(page, 1);
+    expect(await read()).toEqual({ vw: 32, mq: 24, inline: 10 });
+  });
+});
+
 test.describe('spa-mutation', () => {
   test('content injected after load is captured automatically, without a manual rescan', async ({
     page,
