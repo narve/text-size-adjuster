@@ -2,7 +2,7 @@ import browser from 'webextension-polyfill';
 import { bindStore, createEngine } from '@tsa/core';
 import { createRemountableWidget } from '@tsa/ui-widget';
 import { createGatedStore, createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
-import type { FactorResponse, Message } from './protocol.js';
+import { isFactor, type FactorResponse, type Message } from './protocol.js';
 import { watchSettings } from './settings.js';
 
 const engine = createEngine();
@@ -45,9 +45,14 @@ browser.runtime.onMessage.addListener((raw: unknown): Promise<FactorResponse> | 
     case 'tsa:getFactor':
       return Promise.resolve(respond(engine.getFactor()));
     case 'tsa:setFactor':
+      if (!isFactor(message.factor)) return undefined;
       applyingExternal = true;
-      engine.setFactor(message.factor);
-      applyingExternal = false;
+      try {
+        engine.setFactor(message.factor);
+      } finally {
+        // Even if applying throws, this frame must keep broadcasting its own later changes.
+        applyingExternal = false;
+      }
       return Promise.resolve(respond(engine.getFactor()));
     case 'tsa:increase':
       return Promise.resolve(respond(engine.increase()));

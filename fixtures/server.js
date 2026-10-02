@@ -39,16 +39,32 @@ function serveFile(res, base, rel) {
 // Two listeners on different ports = two different origins (scheme+host+port all have to
 // match for same-origin), which is what the iframe-cross-origin fixture needs: its parent is
 // served from PRIMARY_PORT and its child iframe points at SECONDARY_PORT.
+//
+// `?delay=<ms>` on any URL holds the response back (capped at 10 s), so a test can make an
+// iframe's real document arrive well after the parent page — and after a content script or
+// engine has already looked at the frame's initial about:blank placeholder.
+const MAX_DELAY_MS = 10_000;
+
 function createServer() {
   return http.createServer((req, res) => {
-    const urlPath = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
-    // Built bundles (e.g. the userscript/embed) for tests that load them via a real <script src>.
-    if (urlPath.startsWith('/__bundles/')) {
-      serveFile(res, USERSCRIPT_DIST, urlPath.slice('/__bundles/'.length));
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    const delay = Math.min(Number(url.searchParams.get('delay')) || 0, MAX_DELAY_MS);
+    if (delay > 0) {
+      setTimeout(() => handle(res, url), delay);
       return;
     }
-    serveFile(res, ROOT, urlPath);
+    handle(res, url);
   });
+}
+
+function handle(res, url) {
+  const urlPath = decodeURIComponent(url.pathname);
+  // Built bundles (e.g. the userscript/embed) for tests that load them via a real <script src>.
+  if (urlPath.startsWith('/__bundles/')) {
+    serveFile(res, USERSCRIPT_DIST, urlPath.slice('/__bundles/'.length));
+    return;
+  }
+  serveFile(res, ROOT, urlPath);
 }
 
 export function startFixtureServers() {

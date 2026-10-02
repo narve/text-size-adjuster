@@ -14,3 +14,8 @@ export type Message =
 export interface FactorResponse {
   factor: number;
 }
+
+/** A factor received in a message: anything else (NaN, a string) would make every `calc()` invalid. */
+export function isFactor(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}

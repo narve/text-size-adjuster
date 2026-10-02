@@ -13,6 +13,14 @@ const DEFAULTS = {
 
 const FACTOR_VAR = '--tsa-k';
 
+/** A child engine for an open shadow root or a same-origin iframe's document. */
+interface Child {
+  engine: TextSizeEngine;
+  root: Document | ShadowRoot;
+  /** The iframe whose document `root` is, for iframe children. */
+  iframe?: HTMLIFrameElement;
+}
+
 /**
  * Creates a text-scaling engine for `options.root` (defaults to `document`). A child engine is
  * created automatically for every open shadow root and reachable same-origin iframe document
@@ -30,15 +38,27 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   const doc = isDocument ? (root as Document) : root.ownerDocument;
   if (!doc) throw new Error('createEngine: root has no owner document');
 
-  const styleTarget = (isDocument ? (root as Document).documentElement : (root as ShadowRoot).host) as HTMLElement;
+  const shadowHost = isDocument ? null : (root as ShadowRoot).host;
+
+  /**
+   * Where the factor variable lives: the shadow host, or the document's *current* root element.
+   * Read on every use rather than once, because `document.open()` (e.g. `document.write` into an
+   * about:blank iframe) replaces a document's root element.
+   */
+  function styleTarget(): HTMLElement | null {
+    return (shadowHost ?? doc!.documentElement) as HTMLElement | null;
+  }
 
   let factor = 1;
   let attached = false;
   let observer: MutationObserver | null = null;
   const listeners = new Set<EngineListener>();
-  const children = new Set<TextSizeEngine>();
+  const children = new Set<Child>();
+  /** The child engine for each iframe's current document (absent: none, or not reachable). */
+  const iframeChildren = new Map<HTMLIFrameElement, Child>();
   const scannedShadowHosts = new WeakSet<Element>();
-  const scannedIframes = new WeakSet<Element>();
+  /** Iframes that have a `load` listener — not "done": a frame is re-examined on every load. */
+  const watchedIframes = new WeakSet<Element>();
 
   function origin(): string {
     try {
@@ -54,16 +74,37 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   }
 
   function captureNew(elements: Element[]): void {
+    const target = styleTarget();
+    if (!target) return;
     const unscaled = elements.filter((el) => !el.hasAttribute(opts.scaledAttr));
     if (unscaled.length === 0) return;
-    captureElements(unscaled, styleTarget, FACTOR_VAR, { scaledAttr: opts.scaledAttr });
+    captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr });
+    // A root element that replaced the one the factor was written to (document.open) starts
+    // without the variable.
+    if (factor !== 1) target.style.setProperty(FACTOR_VAR, String(factor));
   }
 
-  function attachChildFor(childRoot: Document | ShadowRoot): void {
-    const child = createEngine({ ...options, root: childRoot });
+  function attachChildFor(childRoot: Document | ShadowRoot, iframe?: HTMLIFrameElement): Child {
+    const child: Child = { engine: createEngine({ ...options, root: childRoot }), root: childRoot, iframe };
     children.add(child);
-    child.setFactor(factor);
-    child.attach();
+    child.engine.setFactor(factor);
+    child.engine.attach();
+    return child;
+  }
+
+  /**
+   * Forgets a child engine. Its document may already be gone: in Firefox's content scripts, a
+   * navigated-away frame's document becomes a "dead object" whose every use throws, so this (and
+   * every other call into a child) must never let that escape and break the parent.
+   */
+  function dropChild(child: Child): void {
+    children.delete(child);
+    if (child.iframe && iframeChildren.get(child.iframe) === child) iframeChildren.delete(child.iframe);
+    try {
+      child.engine.detach();
+    } catch {
+      // dead document: nothing left to detach from
+    }
   }
 
   /** Scans the given elements (not their ancestors) for open shadow roots and same-origin iframes. */
@@ -74,9 +115,14 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
         scannedShadowHosts.add(el);
         attachChildFor(shadow);
       }
-      if (el.tagName === 'IFRAME' && !scannedIframes.has(el)) {
-        scannedIframes.add(el);
-        attachIframe(el as HTMLIFrameElement);
+      if (el.tagName === 'IFRAME' && !watchedIframes.has(el)) {
+        watchedIframes.add(el);
+        const iframe = el as HTMLIFrameElement;
+        // Not `once`: every navigation of the frame brings a new document to adopt.
+        iframe.addEventListener('load', () => {
+          if (attached) adoptIframeDocument(iframe);
+        });
+        adoptIframeDocument(iframe);
       }
     }
   }
@@ -95,29 +141,47 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     }
   }
 
-  function attachIframe(iframe: HTMLIFrameElement): void {
+  /**
+   * Every iframe starts out with a same-origin, already complete about:blank document, which
+   * an iframe with a real `src` (or `srcdoc`) replaces once its content arrives — possibly from
+   * another origin. Adopting that placeholder would scale nothing that matters.
+   */
+  function isPlaceholder(iframe: HTMLIFrameElement, childDoc: Document): boolean {
+    if (childDoc.URL !== 'about:blank') return false;
+    if (iframe.hasAttribute('srcdoc')) return true;
+    const src = iframe.getAttribute('src');
+    return !!src && src.trim() !== '' && iframe.src !== 'about:blank';
+  }
+
+  /** Points the iframe's child engine at the frame's current document, if it's reachable. */
+  function adoptIframeDocument(iframe: HTMLIFrameElement): void {
     const childDoc = readSameOriginContentDocument(iframe);
-    if (!childDoc) return;
-    if (childDoc.readyState === 'loading') {
-      iframe.addEventListener(
-        'load',
-        () => {
-          const doc = readSameOriginContentDocument(iframe);
-          if (doc) attachChildFor(doc);
-        },
-        { once: true },
-      );
-    } else {
-      attachChildFor(childDoc);
-    }
+    const current = iframeChildren.get(iframe);
+    if (current && current.root === childDoc) return;
+    if (current) dropChild(current);
+    // A document still loading gets its turn at the frame's `load` event.
+    if (!childDoc || childDoc.readyState === 'loading' || isPlaceholder(iframe, childDoc)) return;
+    iframeChildren.set(iframe, attachChildFor(childDoc, iframe));
   }
 
   function applyFactor(k: number, eventType: 'change' | 'reset'): number {
     // Rounded so repeated ±step arithmetic (1 + 0.1 - 0.1 = 1.0000000000000002) lands back on
     // exact values — "back to 100%" must compare equal to 1.
     factor = Math.round(clampFactor(k, opts.min, opts.max) * 1000) / 1000;
-    styleTarget.style.setProperty(FACTOR_VAR, String(factor));
-    for (const child of children) child.setFactor(factor);
+    styleTarget()?.style.setProperty(FACTOR_VAR, String(factor));
+    // One unreachable child (a frame that navigated away or was removed) must never stop the
+    // rest of the page, or the change notification below, from happening (code review C1).
+    for (const child of Array.from(children)) {
+      if (child.iframe && !child.iframe.isConnected) {
+        dropChild(child);
+        continue;
+      }
+      try {
+        child.engine.setFactor(factor);
+      } catch {
+        dropChild(child);
+      }
+    }
     notify(eventType);
     return factor;
   }
@@ -172,6 +236,13 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   function attach(): void {
     if (attached) return;
     attached = true;
+    for (const child of Array.from(children)) {
+      try {
+        child.engine.attach();
+      } catch {
+        dropChild(child);
+      }
+    }
     rescan();
     startObserving();
   }
@@ -180,7 +251,13 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     attached = false;
     observer?.disconnect();
     observer = null;
-    for (const child of children) child.detach();
+    for (const child of Array.from(children)) {
+      try {
+        child.engine.detach();
+      } catch {
+        dropChild(child);
+      }
+    }
   }
 
   function onChange(listener: EngineListener): () => void {

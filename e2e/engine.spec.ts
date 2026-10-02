@@ -117,6 +117,92 @@ test.describe('iframe-same-origin', () => {
   }
 });
 
+/**
+ * An iframe's *initial* document is a same-origin, already-complete about:blank placeholder until
+ * its real document arrives. The engine must not adopt that placeholder and then consider the
+ * frame done: the real document (and every later navigation of the frame) has to be picked up.
+ * In Firefox's content scripts, the stale child engine also turned into a "dead object" that made
+ * every later factor change throw (code review C1).
+ */
+test.describe('iframe lifecycle', () => {
+  const readChildLarge = (page: Page) =>
+    page
+      .frameLocator('iframe')
+      .locator('[data-tsa-ref="large"]')
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+
+  async function waitForChildLoad(page: Page, trigger: () => Promise<void>): Promise<void> {
+    const loaded = page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          document.querySelector('iframe')!.addEventListener('load', () => resolve(), { once: true }),
+        ),
+    );
+    await trigger();
+    await loaded;
+  }
+
+  test('a frame whose document arrives after the engine attached is scaled', async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (error) => errors.push(error));
+    await gotoAndAttach(page, '/iframe-same-origin/parent.html');
+    // Replace the fixture's frame with one whose document is held back by the server; the
+    // engine sees it (via its MutationObserver) while it is still the about:blank placeholder.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          const iframe = document.createElement('iframe');
+          iframe.addEventListener('load', () => resolve(), { once: true });
+          iframe.src = 'child.html?delay=800';
+          document.querySelector('iframe')!.replaceWith(iframe);
+        }),
+    );
+    const before = await readChildLarge(page);
+    await setFactor(page, 2);
+    expect((await readChildLarge(page)) / before).toBeCloseTo(2, 1);
+    expect(errors).toEqual([]);
+  });
+
+  test('a frame that navigates after it was scaled is scaled again', async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (error) => errors.push(error));
+    await gotoAndAttach(page, '/iframe-same-origin/parent.html');
+    const original = await readChildLarge(page);
+    await setFactor(page, 2);
+    expect((await readChildLarge(page)) / original).toBeCloseTo(2, 1);
+
+    await waitForChildLoad(page, () =>
+      page.evaluate(() => {
+        document.querySelector('iframe')!.src = 'child.html?navigated';
+      }),
+    );
+    // The new document picks up the current factor as soon as it is attached…
+    expect((await readChildLarge(page)) / original).toBeCloseTo(2, 1);
+    // …and keeps following later changes.
+    await setFactor(page, 3);
+    expect((await readChildLarge(page)) / original).toBeCloseTo(3, 1);
+    expect(errors).toEqual([]);
+  });
+
+  test('a frame without src that is filled in with document.write is scaled', async ({ page }) => {
+    await gotoAndAttach(page, '/iframe-same-origin/parent.html');
+    await page.evaluate(() => {
+      const iframe = document.createElement('iframe');
+      document.querySelector('iframe')!.replaceWith(iframe);
+    });
+    // Give the MutationObserver a turn to adopt the (genuine, src-less) about:blank document.
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    await page.evaluate(() => {
+      const doc = document.querySelector('iframe')!.contentDocument!;
+      doc.open();
+      doc.write('<!doctype html><p data-tsa-ref="large" style="font-size: 20px">written</p>');
+      doc.close();
+    });
+    await setFactor(page, 2);
+    expect(await readChildLarge(page)).toBeCloseTo(40, 0);
+  });
+});
+
 test.describe('iframe-cross-origin', () => {
   for (const factor of FACTORS) {
     test(`outer page scales while the cross-origin iframe is left untouched at factor ${factor}`, async ({

@@ -14,11 +14,18 @@ import type { TextSizeEngine, Store } from './types.js';
 export function bindStore(engine: TextSizeEngine, store: Store, key: string): () => void {
   let applyingExternal = false;
 
-  void store.get(key).then((value) => {
-    if (value === undefined) return;
+  /** Applies a stored value without saving it straight back. */
+  function applyExternal(value: number): void {
     applyingExternal = true;
-    engine.setFactor(value);
-    applyingExternal = false;
+    try {
+      engine.setFactor(value);
+    } finally {
+      applyingExternal = false;
+    }
+  }
+
+  void store.get(key).then((value) => {
+    if (value !== undefined) applyExternal(value);
   });
 
   const unsubscribeChange = engine.onChange((event) => {
@@ -27,11 +34,7 @@ export function bindStore(engine: TextSizeEngine, store: Store, key: string): ()
     else void store.set(key, event.factor);
   });
 
-  const unsubscribeStore = store.subscribe?.(key, (value) => {
-    applyingExternal = true;
-    engine.setFactor(value ?? 1);
-    applyingExternal = false;
-  });
+  const unsubscribeStore = store.subscribe?.(key, (value) => applyExternal(value ?? 1));
 
   return () => {
     unsubscribeChange();
