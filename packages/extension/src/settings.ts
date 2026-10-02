@@ -16,17 +16,24 @@ export const SETTINGS_KEY = 'tsa:settings';
 export interface ControlSettings {
   position: WidgetPosition;
   show: WidgetVisibility;
+  /** FR9.4: remember each site's size automatically; when off, only explicitly remembered sites. */
+  autoRemember: boolean;
 }
 
 // FR10.4: the extension always has its toolbar/menu button too, so by default the on-page
 // control stays out of the way until the user zooms.
-export const DEFAULT_SETTINGS: ControlSettings = { position: DEFAULT_POSITION, show: 'on-zoom' };
+export const DEFAULT_SETTINGS: ControlSettings = {
+  position: DEFAULT_POSITION,
+  show: 'on-zoom',
+  autoRemember: true,
+};
 
 export function normalizeSettings(raw: unknown): ControlSettings {
-  const value = (raw ?? {}) as Partial<Record<string, string>>;
+  const value = (raw ?? {}) as Partial<Record<string, unknown>>;
   return {
-    position: parsePosition(value.position) ?? DEFAULT_SETTINGS.position,
-    show: parseShow(value.show) ?? DEFAULT_SETTINGS.show,
+    position: parsePosition(value.position as string | undefined) ?? DEFAULT_SETTINGS.position,
+    show: parseShow(value.show as string | undefined) ?? DEFAULT_SETTINGS.show,
+    autoRemember: typeof value.autoRemember === 'boolean' ? value.autoRemember : DEFAULT_SETTINGS.autoRemember,
   };
 }
 

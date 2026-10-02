@@ -17,7 +17,7 @@ async function writeSettings(patch: Partial<ControlSettings>): Promise<void> {
   await browser.storage.local.set({ [SETTINGS_KEY]: next });
 }
 
-function bindRadioGroup(name: keyof ControlSettings, current: string): void {
+function bindRadioGroup(name: 'position' | 'show', current: string): void {
   for (const input of document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)) {
     input.checked = input.value === current;
     input.addEventListener('change', () => {
@@ -63,6 +63,9 @@ async function init(): Promise<void> {
   const settings = await readSettings();
   bindRadioGroup('position', settings.position);
   bindRadioGroup('show', settings.show);
+  const autoRemember = document.getElementById('autoRemember') as HTMLInputElement;
+  autoRemember.checked = settings.autoRemember;
+  autoRemember.addEventListener('change', () => void writeSettings({ autoRemember: autoRemember.checked }));
   await renderSites();
   // Keep the list current while the page is open (sizes changed in other tabs, removals here).
   browser.storage.onChanged.addListener((_changes, area) => {

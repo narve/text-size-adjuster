@@ -148,6 +148,17 @@ the unscaled page, and produces no new horizontal scrollbar.
   extension. Changes apply to all sites, and to already-open pages without
   reloading them.
 
+- **FR9.4**: The options page has a setting for whether sizes are remembered per
+  site automatically (default: on, which is FR5.1's behaviour). When it's off,
+  size changes are temporary (reset on reload, like FR1.4) unless the site is
+  remembered explicitly.
+- **FR9.5**: When automatic remembering is off, the toolbar popup offers a
+  "Remember this site" button for the current tab's site (shown only if that
+  site isn't remembered yet). It saves the current size; the site then appears
+  in the FR9.2 list, and its later size changes are saved too, until it's
+  removed from the list. (The button lives in the popup rather than on the
+  options page because only the popup knows which site is current.)
+
 ## FR10. On-page control settings
 
 Settings for the floating control. As a general rule, every setting here is

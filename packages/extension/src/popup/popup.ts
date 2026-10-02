@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import type { FactorResponse, Message } from '../protocol.js';
+import { isSiteKey, normalizeSettings, SETTINGS_KEY } from '../settings.js';
 
 /**
  * Zero engine logic here (FR4.3) — every button just sends a message to the active tab's top
@@ -49,3 +50,28 @@ document.getElementById('options')!.addEventListener('click', (event) => {
   void browser.runtime.openOptionsPage();
   window.close();
 });
+
+/**
+ * FR9.5: with automatic remembering off, offer to remember the current tab's site. Saving its
+ * current size adds it to the options page's list; the content script's store then keeps updating
+ * it on later changes (see createGatedStore).
+ */
+async function setUpRememberButton(): Promise<void> {
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.url) return;
+  const origin = new URL(tab.url).origin;
+  if (!isSiteKey(origin)) return;
+  const stored = await browser.storage.local.get([SETTINGS_KEY, origin]);
+  if (normalizeSettings(stored[SETTINGS_KEY]).autoRemember || origin in stored) return;
+
+  const button = document.getElementById('remember') as HTMLButtonElement;
+  button.hidden = false;
+  button.addEventListener('click', async () => {
+    const current = await send({ type: 'tsa:getFactor' });
+    await browser.storage.local.set({ [origin]: current?.factor ?? 1 });
+    button.textContent = 'Site remembered';
+    button.disabled = true;
+  });
+}
+
+void setUpRememberButton();

@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import { bindStore, createEngine } from '@tsa/core';
 import { createFloatingWidget } from '@tsa/ui-widget';
-import { createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
+import { createGatedStore, createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
 import type { FactorResponse, Message } from './protocol.js';
 import { normalizeSettings, SETTINGS_KEY } from './settings.js';
 import type { UIAdapter } from '@tsa/core';
@@ -11,8 +11,21 @@ const engine = createEngine();
 // Per-origin persistence (FR5.1). Keyed by *this frame's own* origin — for a cross-origin iframe
 // (ads, embeds) that means persistence is scoped to the embed's own origin, shared across
 // whichever pages embed it, which is a reasonable default for v1.
-const store = createLocalExtensionStore(browser as unknown as BrowserStorageLike);
+// FR9.4: with automatic remembering off, only sites already remembered keep being saved.
+let autoRemember = true;
+const store = createGatedStore(
+  createLocalExtensionStore(browser as unknown as BrowserStorageLike),
+  () => autoRemember,
+);
 bindStore(engine, store, location.origin);
+void browser.storage.local.get(SETTINGS_KEY).then((stored) => {
+  autoRemember = normalizeSettings(stored[SETTINGS_KEY]).autoRemember;
+});
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && SETTINGS_KEY in changes) {
+    autoRemember = normalizeSettings(changes[SETTINGS_KEY]?.newValue).autoRemember;
+  }
+});
 
 engine.attach();
 
