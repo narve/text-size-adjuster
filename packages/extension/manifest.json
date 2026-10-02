@@ -34,7 +34,6 @@
     ]
   },
   "action": {
-    "default_title": "Text Size Adjuster",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

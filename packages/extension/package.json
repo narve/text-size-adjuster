@@ -5,8 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build -c vite.content.config.ts && vite build -c vite.background.config.ts && vite build -c vite.options.config.ts && vite build -c vite.popup.config.ts",
+    "build": "vite build --mode content && vite build --mode background && vite build --mode options && vite build --mode popup",
     "build:chrome": "node build-chrome-variant.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint:webext": "web-ext lint --source-dir dist",

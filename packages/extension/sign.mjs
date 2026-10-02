@@ -1,7 +1,15 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import {
+  EXTENSION_ARTIFACTS as ARTIFACTS,
+  EXTENSION_DIR,
+  EXTENSION_DIST as DIST,
+  REPO_ROOT,
+  SIGNED_XPI,
+  readJson,
+  requireBuilt,
+} from '../../tools/paths.mjs';
 
 // Signs the built extension (dist/) with Mozilla as an *unlisted* add-on: signed, so release
 // Firefox (desktop and Android) installs it permanently, but not published on addons.mozilla.org.
@@ -12,11 +20,6 @@ import { fileURLToPath } from 'node:url';
 //   JWT secret: firefox_auth_key / firefox_jwt_secret or AMO_JWT_SECRET
 // They're passed to web-ext via its WEB_EXT_API_* environment variables, never on the command
 // line, so they don't show up in process listings or logs.
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const DIST = path.join(__dirname, 'dist');
-const ARTIFACTS = path.join(__dirname, 'web-ext-artifacts');
 
 function readPrivateEnv() {
   const file = path.join(REPO_ROOT, 'private.env');
@@ -45,20 +48,17 @@ if (missing.length > 0) {
   );
   process.exit(1);
 }
-if (!fs.existsSync(path.join(DIST, 'manifest.json'))) {
-  console.error('Extension not built — run "npm run build -w packages/extension" first.');
-  process.exit(1);
-}
+const manifestFile = path.join(DIST, 'manifest.json');
+requireBuilt(manifestFile, 'packages/extension');
 
-const { version } = JSON.parse(fs.readFileSync(path.join(DIST, 'manifest.json'), 'utf8'));
+const { version } = readJson(manifestFile);
 console.log(`Signing version ${version} as an unlisted add-on (usually takes a few minutes)...`);
-
 
 execFileSync(
   'npx',
   ['web-ext', 'sign', '--channel', 'unlisted', '--source-dir', DIST, '--artifacts-dir', ARTIFACTS],
   {
-    cwd: __dirname,
+    cwd: EXTENSION_DIR,
     stdio: 'inherit',
     env: { ...process.env, WEB_EXT_API_KEY: issuer, WEB_EXT_API_SECRET: secret },
   },
@@ -72,6 +72,5 @@ if (signed.length === 0) {
   console.error('web-ext finished but no signed .xpi for this version was found in web-ext-artifacts/.');
   process.exit(1);
 }
-const target = path.join(ARTIFACTS, 'text-size-adjuster-signed.xpi');
-fs.copyFileSync(signed[0], target);
-console.log(`Signed: ${path.relative(REPO_ROOT, target)}`);
+fs.copyFileSync(signed[0], SIGNED_XPI);
+console.log(`Signed: ${path.relative(REPO_ROOT, SIGNED_XPI)}`);
