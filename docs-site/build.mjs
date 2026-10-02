@@ -5,21 +5,26 @@ import { execFileSync } from 'node:child_process';
 import MarkdownIt from 'markdown-it';
 import { chromium } from 'playwright';
 import { readProduct } from '../tools/product.mjs';
+import {
+  REPO_ROOT,
+  EXTENSION_DIR,
+  EXTENSION_DIST,
+  FIXTURES_DIR,
+  SIGNED_XPI,
+  UNSIGNED_XPI_FILENAME,
+  USERSCRIPT_BUNDLE,
+  USERSCRIPT_FILENAME,
+  fixtureScreenshot,
+  readFixtures,
+  readSites,
+  realWorldScreenshot,
+  realWorldSnapshot,
+} from '../tools/paths.mjs';
+import { imageDataUri, screenshotHtml } from '../tools/render-image.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(__dirname, 'src');
 const DIST = path.join(__dirname, 'dist');
-const SCREENSHOT_DIR = path.join(REPO_ROOT, 'e2e', 'screenshots');
-const FIXTURES_DIR = path.join(REPO_ROOT, 'fixtures');
-const SITES_FILE = path.join(FIXTURES_DIR, 'real-world', 'sites.json');
-const USERSCRIPT_BUNDLE = path.join(
-  REPO_ROOT,
-  'packages',
-  'userscript',
-  'dist',
-  'text-size-adjuster.user.js',
-);
 
 // Name and descriptive text: product.json is the single source (also used by the manifests,
 // the userscript header and the store listing).
@@ -27,39 +32,17 @@ const product = readProduct();
 
 const md = new MarkdownIt({ html: false, linkify: true });
 
-// --- TR1 fixtures shown in the gallery (TR5.3) --- the ids Layer 1 actually screenshots via the
-// generic before/after loop (see e2e/fixtures.ts STANDARD_FIXTURES). Kept as a literal list here
-// rather than importing that TS file, since this is a plain Node script.
-const SYNTHETIC_GALLERY_FIXTURES = [
-  { id: 'plain-px', label: 'Plain px sizing', sourceDir: 'plain-px', entry: 'index.html' },
-  { id: 'rem-em', label: 'Root-relative sizing (rem/em)', sourceDir: 'rem-em', entry: 'index.html' },
-  { id: 'nested-em', label: 'Deeply nested em inheritance', sourceDir: 'nested-em', entry: 'index.html' },
-  { id: 'shadow-dom-open', label: 'Open shadow DOM content', sourceDir: 'shadow-dom-open', entry: 'index.html' },
-  { id: 'overflow-clipping', label: 'Fixed-height container', sourceDir: 'overflow-clipping', entry: 'index.html' },
-  {
-    id: 'important-high-specificity',
-    label: 'Stubborn !important styling',
-    sourceDir: 'important-high-specificity',
-    entry: 'index.html',
-  },
-  { id: 'line-height-mixed', label: 'Mixed line-height styles', sourceDir: 'line-height-mixed', entry: 'index.html' },
-  {
-    id: 'large-dom-performance',
-    label: 'Large page (performance)',
-    sourceDir: 'large-dom-performance',
-    entry: 'index.html',
-  },
-];
+// --- TR1 fixtures (fixtures/fixtures.json): `standard` ones are in the gallery, `demo` ones get a
+// live demo page. ---
+const fixtures = readFixtures();
 
-// Also demo-able even though they're not in the generic before/after screenshot loop.
-const EXTRA_DEMO_FIXTURES = [
-  { id: 'iframe-same-origin', sourceDir: 'iframe-same-origin', entry: 'parent.html', extraFiles: ['child.html'] },
-  { id: 'spa-mutation', sourceDir: 'spa-mutation', entry: 'index.html' },
-];
-
-function readSitesConfig() {
-  if (!fs.existsSync(SITES_FILE)) return [];
-  return JSON.parse(fs.readFileSync(SITES_FILE, 'utf8'));
+/** Real-world sites (fixtures/real-world/sites.json); none if the file is unreadable. */
+function readSitesSafe() {
+  try {
+    return readSites();
+  } catch {
+    return [];
+  }
 }
 
 function rimrafSync(dir) {
@@ -81,9 +64,11 @@ function renderPage({ title, bodyHtml, assetRoot, isDev = false }) {
       assetRoot +
       'index.html">Home</a> instead.</div>'
     : '';
-  const fullTitle = title === 'Text Size Adjuster' ? title : `${title} — Text Size Adjuster`;
+  const fullTitle = title === product.name ? title : `${title} — ${product.name}`;
   return template
     .replaceAll('{{TITLE}}', fullTitle)
+    .replaceAll('{{NAME}}', product.name)
+    .replaceAll('{{LICENSE}}', product.license)
     .replaceAll('{{ASSET_ROOT}}', assetRoot)
     .replaceAll('{{DEV_BANNER}}', devBanner)
     .replace('{{BODY}}', bodyHtml);
@@ -106,14 +91,18 @@ function slugTitle(filename) {
 rimrafSync(DIST);
 ensureDir(DIST);
 fs.copyFileSync(path.join(SRC, 'style.css'), path.join(DIST, 'style.css'));
-fs.copyFileSync(path.join(REPO_ROOT, 'packages', 'extension', 'icons', 'icon.svg'), path.join(DIST, 'icon.svg'));
+fs.copyFileSync(path.join(EXTENSION_DIR, 'icons', 'icon.svg'), path.join(DIST, 'icon.svg'));
 
 // --- 2. End-user guides (TR5.2/5.2a/5.2b) ---
 const guidesDir = path.join(SRC, 'guides');
 const guideFiles = fs.readdirSync(guidesDir).filter((f) => f.endsWith('.md'));
 const guideLinks = [];
 for (const file of guideFiles) {
-  const raw = fs.readFileSync(path.join(guidesDir, file), 'utf8');
+  // Guides may use {{name}} and {{homepage}} for the product name and the site's own address.
+  const raw = fs
+    .readFileSync(path.join(guidesDir, file), 'utf8')
+    .replaceAll('{{name}}', product.name)
+    .replaceAll('{{homepage}}', product.homepage);
   const slug = file.replace(/\.md$/, '');
   const titleMatch = raw.match(/^#\s+(.+)$/m);
   const title = titleMatch ? titleMatch[1] : slugTitle(file);
@@ -169,40 +158,21 @@ writePage(path.join(DIST, 'dev', 'index.html'), {
 const browser = await chromium.launch();
 const page = await browser.newPage();
 
-async function frameScreenshot(imagePath, urlText, outPath, frame = 'frame-desktop.html') {
-  // A data: URI rather than file:// — a page loaded via setContent() has no origin that's
-  // allowed to load local files, so an img pointed at file://... never fires `load` and the
-  // screenshot would time out waiting for it.
-  const dataUri = `data:image/png;base64,${fs.readFileSync(imagePath).toString('base64')}`;
-  const template = readTemplate(frame)
-    .replace('{{IMAGE_SRC}}', dataUri)
+/** Puts a phone screenshot into the frame-mobile.html device frame, with `urlText` in its address bar. */
+async function frameScreenshot(imagePath, urlText, outPath) {
+  const html = readTemplate('frame-mobile.html')
+    .replace('{{IMAGE_SRC}}', imageDataUri(imagePath))
     .replace('{{URL_TEXT}}', urlText);
-  await page.setContent(template);
-  // waitForSelector only waits for the <img> to exist in the DOM, not for it to finish loading —
-  // without waiting for that too, the image has zero rendered height at capture time and the
-  // screenshot comes out as just an empty title bar.
-  await page.waitForFunction(() => {
-    const img = document.querySelector('img');
-    return !!img && img.complete && img.naturalWidth > 0;
-  });
   // Transparent outside the frame's rounded corners, so it sits cleanly on light and dark pages.
-  await page.locator('.frame').screenshot({ path: outPath, omitBackground: true });
-}
-
-function readSitesConfigSafe() {
-  try {
-    return readSitesConfig();
-  } catch {
-    return [];
-  }
+  await screenshotHtml(page, html, outPath, { selector: '.frame' });
 }
 
 const galleryEntries = [];
 
-for (const fixture of SYNTHETIC_GALLERY_FIXTURES) {
+for (const fixture of fixtures.filter((f) => f.standard)) {
   // Phone-viewport shots (see the 'phone gallery screenshots' block in e2e/engine.spec.ts).
-  const beforePng = path.join(SCREENSHOT_DIR, fixture.id, 'phone-1x.png');
-  const afterPng = path.join(SCREENSHOT_DIR, fixture.id, 'phone-2x.png');
+  const beforePng = fixtureScreenshot(fixture.id, 1);
+  const afterPng = fixtureScreenshot(fixture.id, 2);
   if (!fs.existsSync(beforePng) || !fs.existsSync(afterPng)) {
     console.warn(`[gallery] skipping ${fixture.id}: screenshots not found (run the Layer 1 suite first)`);
     continue;
@@ -210,14 +180,14 @@ for (const fixture of SYNTHETIC_GALLERY_FIXTURES) {
   const outDir = path.join(DIST, 'gallery', fixture.id);
   ensureDir(outDir);
   const urlText = `https://example.com/${fixture.id}/`;
-  await frameScreenshot(beforePng, urlText, path.join(outDir, 'before.png'), 'frame-mobile.html');
-  await frameScreenshot(afterPng, urlText, path.join(outDir, 'after.png'), 'frame-mobile.html');
-  galleryEntries.push({ id: fixture.id, label: fixture.label, hasDemo: true });
+  await frameScreenshot(beforePng, urlText, path.join(outDir, 'before.png'));
+  await frameScreenshot(afterPng, urlText, path.join(outDir, 'after.png'));
+  galleryEntries.push({ id: fixture.id, label: fixture.label, hasDemo: fixture.demo });
 }
 
-for (const site of readSitesConfigSafe()) {
-  const beforePng = path.join(SCREENSHOT_DIR, 'real-world', `${site.id}-1x.png`);
-  const afterPng = path.join(SCREENSHOT_DIR, 'real-world', `${site.id}-2x.png`);
+for (const site of readSitesSafe()) {
+  const beforePng = realWorldScreenshot(site.id, 1);
+  const afterPng = realWorldScreenshot(site.id, 2);
   if (!fs.existsSync(beforePng) || !fs.existsSync(afterPng)) {
     console.warn(`[gallery] skipping real-world/${site.id}: screenshots not found (run "npm run test:real-world" first)`);
     continue;
@@ -225,14 +195,13 @@ for (const site of readSitesConfigSafe()) {
   const outDir = path.join(DIST, 'gallery', site.id);
   ensureDir(outDir);
   // Real sites are captured on a phone viewport (see fixtures/real-world/download.mjs).
-  await frameScreenshot(beforePng, site.url, path.join(outDir, 'before.png'), 'frame-mobile.html');
-  await frameScreenshot(afterPng, site.url, path.join(outDir, 'after.png'), 'frame-mobile.html');
-  const hasSnapshot = fs.existsSync(path.join(FIXTURES_DIR, 'real-world', 'snapshots', site.id, 'index.html'));
+  await frameScreenshot(beforePng, site.url, path.join(outDir, 'before.png'));
+  await frameScreenshot(afterPng, site.url, path.join(outDir, 'after.png'));
   galleryEntries.push({
     id: site.id,
     label: site.name,
     subtitle: site.description,
-    hasDemo: hasSnapshot,
+    hasDemo: fs.existsSync(realWorldSnapshot(site.id)),
     isRealWorld: true,
   });
 }
@@ -284,23 +253,23 @@ function injectDemoScript(html) {
 if (!userscriptBundle) {
   console.warn('[demos] userscript bundle not found — skipping live demos entirely. Run "npm run build -w packages/userscript" first.');
 } else {
-  for (const fixture of [...SYNTHETIC_GALLERY_FIXTURES, ...EXTRA_DEMO_FIXTURES]) {
-    const entryPath = path.join(FIXTURES_DIR, fixture.sourceDir, fixture.entry);
+  for (const fixture of fixtures.filter((f) => f.demo)) {
+    const entryPath = path.join(FIXTURES_DIR, fixture.id, fixture.entry);
     if (!fs.existsSync(entryPath)) continue;
     const outDir = path.join(DIST, 'demos', fixture.id);
     ensureDir(outDir);
     const html = fs.readFileSync(entryPath, 'utf8');
     fs.writeFileSync(path.join(outDir, 'index.html'), injectDemoScript(html), 'utf8');
     for (const extra of fixture.extraFiles ?? []) {
-      fs.copyFileSync(path.join(FIXTURES_DIR, fixture.sourceDir, extra), path.join(outDir, extra));
+      fs.copyFileSync(path.join(FIXTURES_DIR, fixture.id, extra), path.join(outDir, extra));
     }
   }
 
   // Fixture pages reference shared files (e.g. the sample image) as ../assets/…
   fs.cpSync(path.join(FIXTURES_DIR, 'assets'), path.join(DIST, 'demos', 'assets'), { recursive: true });
 
-  for (const site of readSitesConfigSafe()) {
-    const snapshotPath = path.join(FIXTURES_DIR, 'real-world', 'snapshots', site.id, 'index.html');
+  for (const site of readSitesSafe()) {
+    const snapshotPath = realWorldSnapshot(site.id);
     if (!fs.existsSync(snapshotPath)) continue;
     const outDir = path.join(DIST, 'demos', site.id);
     ensureDir(outDir);
@@ -308,17 +277,16 @@ if (!userscriptBundle) {
     fs.writeFileSync(path.join(outDir, 'index.html'), injectDemoScript(html), 'utf8');
   }
 }
-// iframe-cross-origin has no live demo on purpose (TR5.5): it depends on the local two-port test
-// server setup and wouldn't work once this site is served/deployed elsewhere.
+// Fixtures without `demo` (e.g. iframe-cross-origin, which needs the local two-port test server)
+// have no live demo on purpose (TR5.5): they wouldn't work once this site is deployed elsewhere.
 
 // --- Downloads: the built userscript and an *unsigned* extension package, so the advanced
 // install guides can link to real files. Release Firefox (desktop permanent installs, and
 // Android) only accepts Mozilla-signed packages — signing needs the maintainer's AMO API
 // credentials, so a signed .xpi isn't produced here. ---
-const EXTENSION_DIST = path.join(REPO_ROOT, 'packages', 'extension', 'dist');
 ensureDir(path.join(DIST, 'downloads'));
 if (userscriptBundle) {
-  fs.writeFileSync(path.join(DIST, 'downloads', 'text-size-adjuster.user.js'), userscriptBundle, 'utf8');
+  fs.writeFileSync(path.join(DIST, 'downloads', USERSCRIPT_FILENAME), userscriptBundle, 'utf8');
 }
 if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
   execFileSync(
@@ -327,17 +295,16 @@ if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
       'web-ext', 'build',
       '--source-dir', EXTENSION_DIST,
       '--artifacts-dir', path.join(DIST, 'downloads'),
-      '--filename', 'text-size-adjuster-unsigned.xpi',
+      '--filename', UNSIGNED_XPI_FILENAME,
       '--overwrite-dest',
     ],
-    { cwd: path.join(REPO_ROOT, 'packages', 'extension'), stdio: 'ignore' },
+    { cwd: EXTENSION_DIR, stdio: 'ignore' },
   );
 } else {
   console.warn('[downloads] extension not built — skipping the .xpi. Run "npm run build -w packages/extension" first.');
 }
 // A Mozilla-signed build, if one has been produced (`npm run release:extension`, needs the
 // maintainer's AMO credentials in private.env) — the one regular Firefox and Android accept.
-const SIGNED_XPI = path.join(REPO_ROOT, 'packages', 'extension', 'web-ext-artifacts', 'text-size-adjuster-signed.xpi');
 if (fs.existsSync(SIGNED_XPI)) {
   fs.copyFileSync(SIGNED_XPI, path.join(DIST, 'downloads', 'text-size-adjuster.xpi'));
 }
@@ -358,15 +325,14 @@ await browser.close();
 // --- 5. Landing page (TR5.0/TR5.2) — the install section is for end users; the userscript and
 // manual extension installs are for technical users and live under their own heading.
 writePage(path.join(DIST, 'index.html'), {
-  title: 'Text Size Adjuster',
+  title: product.name,
   assetRoot: '',
   bodyHtml: `
     <section class="hero" aria-labelledby="hero-title">
       <img src="icon.svg" alt="" width="96" height="96" />
       <div>
         <h1 id="hero-title">${product.name}</h1>
-        <p class="lead">${product.summary} Pictures and layout keep their size, and the text
-        still fits your screen. Works in Firefox on your computer and on Android.</p>
+        <p class="lead">${product.summary}</p>
         <div class="actions">
           <a class="button button-primary" href="guides/install.html">Install</a>
           <a class="button button-secondary" href="gallery/index.html">See it in action</a>
@@ -390,7 +356,7 @@ writePage(path.join(DIST, 'index.html'), {
     or use it outside Firefox:</p>
     <ul>
       <li><a href="guides/install-userscript.html">As a userscript</a> (Tampermonkey/Violentmonkey; also works in Chrome) — no signing needed, but doesn't remember sizes per site</li>
-      <li><a href="guides/install-extension-manually.html">The extension, installed manually</a> — temporary load, self-signed, or unsigned on Firefox Developer Edition/Nightly</li>
+      <li><a href="guides/install-extension-manually.html">The extension, installed manually</a> — for trying a build before it's on Firefox Add-ons</li>
       <li><a href="guides/install-extension-manually-android.html">The extension, installed manually on Android</a></li>
     </ul>
   `,
