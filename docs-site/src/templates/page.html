@@ -3,27 +3,36 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>{{TITLE}}</title>
   <link rel="stylesheet" href="{{ASSET_ROOT}}style.css" />
   <link rel="icon" href="{{ASSET_ROOT}}icon.svg" type="image/svg+xml" />
 </head>
 <body>
-  <div class="page">
-    <header class="site-header">
-      <strong class="brand"><img src="{{ASSET_ROOT}}icon.svg" alt="" width="28" height="28" />Text Size Adjuster</strong>
-      <nav>
-        <a href="{{ASSET_ROOT}}index.html">Home</a>
-        <a href="{{ASSET_ROOT}}gallery/index.html">Screenshot gallery</a>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ASSET_ROOT}}index.html">
+        <img src="{{ASSET_ROOT}}icon.svg" alt="" width="32" height="32" />
+        <span>Text Size Adjuster</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="{{ASSET_ROOT}}guides/install.html">Install</a>
+        <a href="{{ASSET_ROOT}}gallery/index.html">Gallery</a>
         <a href="{{ASSET_ROOT}}dev/index.html">For contributors</a>
       </nav>
-    </header>
+    </div>
+  </header>
+  <main id="main" class="page" tabindex="-1">
     {{DEV_BANNER}}
     {{BODY}}
-    <footer class="site-footer">
-      Built from the project's docs — see
+  </main>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      Text Size Adjuster is open source under the MIT license. See
       <a href="{{ASSET_ROOT}}dev/index.html">the contributor section</a> for how this site and the
-      tool itself are built.
-    </footer>
-  </div>
+      tool are built.
+    </div>
+  </footer>
 </body>
 </html>

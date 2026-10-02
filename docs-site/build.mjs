@@ -185,7 +185,8 @@ async function frameScreenshot(imagePath, urlText, outPath, frame = 'frame-deskt
     const img = document.querySelector('img');
     return !!img && img.complete && img.naturalWidth > 0;
   });
-  await page.locator('.frame').screenshot({ path: outPath });
+  // Transparent outside the frame's rounded corners, so it sits cleanly on light and dark pages.
+  await page.locator('.frame').screenshot({ path: outPath, omitBackground: true });
 }
 
 function readSitesConfigSafe() {
@@ -230,34 +231,31 @@ for (const site of readSitesConfigSafe()) {
   galleryEntries.push({ id: site.id, label: `${site.description} (real site)`, hasDemo: hasSnapshot, isRealWorld: true });
 }
 
-// Gallery per-fixture pages
-for (const entry of galleryEntries) {
-  const demoLink = entry.hasDemo
-    ? `<p><a class="demo-link" href="../../demos/${entry.id}/index.html">Try it live &rarr;</a></p>`
-    : '';
-  writePage(path.join(DIST, 'gallery', entry.id, 'index.html'), {
-    title: entry.label,
-    assetRoot: '../../',
-    bodyHtml: `
-      <h1>${entry.label}</h1>
-      <div class="shot-pair">
-        <figure><img src="before.png" alt="Before scaling"><figcaption>Before</figcaption></figure>
-        <figure><img src="after.png" alt="After scaling"><figcaption>After (2&times;)</figcaption></figure>
-      </div>
-      ${demoLink}
-    `,
-  });
-}
-
+// Gallery: one page with every before/after pair inline (real sites first — the most
+// relatable), each linking to its live demo.
+const galleryHtml = [...galleryEntries.filter((e) => e.isRealWorld), ...galleryEntries.filter((e) => !e.isRealWorld)]
+  .map((entry) => {
+    const demo = entry.hasDemo
+      ? `<a class="button button-secondary" href="../demos/${entry.id}/index.html">Try it live<span class="visually-hidden"> — ${entry.label}</span></a>`
+      : '';
+    return `
+      <section class="gallery-entry" aria-labelledby="g-${entry.id}">
+        <h2 id="g-${entry.id}">${entry.label}</h2>
+        <div class="shot-pair">
+          <figure><img src="${entry.id}/before.png" alt="${entry.label}: page at normal text size" loading="lazy"><figcaption>Before</figcaption></figure>
+          <figure><img src="${entry.id}/after.png" alt="${entry.label}: the same page with text at 200%" loading="lazy"><figcaption>After (2×)</figcaption></figure>
+        </div>
+        ${demo}
+      </section>`;
+  })
+  .join('');
 writePage(path.join(DIST, 'gallery', 'index.html'), {
   title: 'Screenshot gallery',
   assetRoot: '../',
   bodyHtml:
-    '<h1>Screenshot gallery</h1><p>Before/after examples across a range of page styles, including real sites.</p><div class="card-grid">' +
-    galleryEntries
-      .map((e) => `<div class="card"><h3>${e.label}</h3><a href="${e.id}/index.html">View</a></div>`)
-      .join('') +
-    '</div>',
+    '<h1>Screenshot gallery</h1><p class="lead">Each pair shows a page at normal size and with the text doubled. ' +
+    'Headings stay bigger than body text, pictures keep their size, and nothing needs sideways scrolling.</p>' +
+    galleryHtml,
 });
 
 // --- Live demos (TR5.5) ---
@@ -350,24 +348,18 @@ writePage(path.join(DIST, 'index.html'), {
   title: 'Text Size Adjuster',
   assetRoot: '',
   bodyHtml: `
-    <h1>${product.name}</h1>
-    <p>${product.summary} Pictures and layout keep their size, and the text still fits your
-    screen. Works in Firefox on your computer and on Android.</p>
-
-    <h2>Install</h2>
-    <div class="card-grid">
-      <div class="card">
-        <h3>Firefox — computer &amp; Android</h3>
-        <p>Add it to Firefox, then use the <strong>−/+</strong> control on any page. Remembers
-        your size for each site.</p>
-        <a href="guides/install.html">How to install</a>
+    <section class="hero" aria-labelledby="hero-title">
+      <img src="icon.svg" alt="" width="96" height="96" />
+      <div>
+        <h1 id="hero-title">${product.name}</h1>
+        <p class="lead">${product.summary} Pictures and layout keep their size, and the text
+        still fits your screen. Works in Firefox on your computer and on Android.</p>
+        <div class="actions">
+          <a class="button button-primary" href="guides/install.html">Install</a>
+          <a class="button button-secondary" href="gallery/index.html">See it in action</a>
+        </div>
       </div>
-      <div class="card">
-        <h3>See it first</h3>
-        <p>Before/after screenshots of real sites, and live demos you can try right here.</p>
-        <a href="gallery/index.html">Screenshot gallery</a>
-      </div>
-    </div>
+    </section>
 
     <h2>Learn more</h2>
     <ul>
