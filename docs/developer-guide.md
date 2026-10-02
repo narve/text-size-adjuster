@@ -54,9 +54,24 @@ npm run download -w fixtures
    AMO. You still get a Mozilla-signed `.xpi` (required for Firefox to install
    it at all outside of temporary `about:debugging` loading), but it isn't
    published to the public catalog.
-4. `web-ext sign` (from the `web-ext` devDependency) can drive the
-   unlisted-signing API call from the command line instead of the web UI, given
-   an AMO API key/secret.
+4. Signing is scripted: `npm run release:extension` builds the extension and
+   signs it as an unlisted add-on (`packages/extension/sign.mjs`, wrapping
+   `web-ext sign --channel unlisted`). The signed file ends up at
+   `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`, and the
+   next docs build publishes it as `downloads/text-size-adjuster.xpi`.
+
+   Credentials come from the gitignored `private.env` in the repo root (or the
+   `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` environment variables, e.g. in CI):
+
+   ```
+   firefox_jwt_issuer=user:12345678:123
+   firefox_auth_key=<64-character JWT secret>
+   ```
+
+   Both come from https://addons.mozilla.org/developers/addon/api/key/. They're
+   passed to `web-ext` as environment variables, never on the command line.
+   Mozilla signs each version number only once, so bump `version` in both
+   manifests before signing again.
 
 The three ways to install _without_ an AMO listing (temporary load,
 signed-unlisted `.xpi`, unsigned on Developer Edition/Nightly/ESR), with exact

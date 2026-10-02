@@ -307,6 +307,12 @@ if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
 } else {
   console.warn('[downloads] extension not built — skipping the .xpi. Run "npm run build -w packages/extension" first.');
 }
+// A Mozilla-signed build, if one has been produced (`npm run release:extension`, needs the
+// maintainer's AMO credentials in private.env) — the one regular Firefox and Android accept.
+const SIGNED_XPI = path.join(REPO_ROOT, 'packages', 'extension', 'web-ext-artifacts', 'text-size-adjuster-signed.xpi');
+if (fs.existsSync(SIGNED_XPI)) {
+  fs.copyFileSync(SIGNED_XPI, path.join(DIST, 'downloads', 'text-size-adjuster.xpi'));
+}
 
 // --- Website embed (FR3.4/TR5.6): the same self-starting bundle, published as a plain script a
 // site owner can include with one <script src> tag, plus a demo that loads it exactly that way. ---

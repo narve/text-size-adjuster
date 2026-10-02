@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint:webext": "web-ext lint --source-dir dist",
     "run:desktop": "web-ext run -t firefox-desktop --source-dir dist",
-    "run:android": "web-ext run -t firefox-android --source-dir dist"
+    "run:android": "web-ext run -t firefox-android --source-dir dist",
+    "sign": "node sign.mjs"
   },
   "dependencies": {
     "@tsa/core": "*",
