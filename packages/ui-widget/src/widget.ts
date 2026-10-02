@@ -36,16 +36,42 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
     hostEl = doc.createElement('div');
     hostEl.setAttribute(DEFAULT_IGNORE_ATTR, '');
     shadow = hostEl.attachShadow({ mode: 'open' });
-    shadow.innerHTML = `
-      <style>${WIDGET_CSS}</style>
-      <div class="tsa-widget" role="group" aria-label="Text size controls">
-        <button type="button" data-action="decrease" aria-label="Decrease text size">−</button>
-        <span data-tsa-display aria-live="polite">100%</span>
-        <button type="button" data-action="increase" aria-label="Increase text size">+</button>
-        <button type="button" data-action="reset" aria-label="Reset text size" title="Reset">↺</button>
-        <button type="button" data-action="close" aria-label="Hide text size controls" title="Hide">×</button>
-      </div>
-    `;
+
+    // Built via createElement/textContent rather than innerHTML — avoids the dynamic-innerHTML
+    // pattern AMO review (and web-ext lint) flags, even though WIDGET_CSS here is our own
+    // constant, not untrusted input.
+    const style = doc.createElement('style');
+    style.textContent = WIDGET_CSS;
+
+    const panel = doc.createElement('div');
+    panel.className = 'tsa-widget';
+    panel.setAttribute('role', 'group');
+    panel.setAttribute('aria-label', 'Text size controls');
+
+    function makeButton(action: string, ariaLabel: string, symbol: string, title?: string): HTMLButtonElement {
+      const button = doc.createElement('button');
+      button.type = 'button';
+      button.dataset.action = action;
+      button.setAttribute('aria-label', ariaLabel);
+      if (title) button.title = title;
+      button.textContent = symbol;
+      return button;
+    }
+
+    const display = doc.createElement('span');
+    display.setAttribute('data-tsa-display', '');
+    display.setAttribute('aria-live', 'polite');
+    display.textContent = '100%';
+
+    panel.append(
+      makeButton('decrease', 'Decrease text size', '−'),
+      display,
+      makeButton('increase', 'Increase text size', '+'),
+      makeButton('reset', 'Reset text size', '↺', 'Reset'),
+      makeButton('close', 'Hide text size controls', '×', 'Hide'),
+    );
+
+    shadow.append(style, panel);
 
     shadow.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;

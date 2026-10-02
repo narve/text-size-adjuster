@@ -31,9 +31,14 @@ text-size-adjuster/
   that pnpm adds nothing.
 - **vite-plugin-monkey** for the userscript build (current standard for Tampermonkey-targeted
   Vite output).
-- **Hand-rolled Vite multi-entry config** for the extension (content/background/popup entries
-  plus a small plugin to copy `manifest.json`), rather than a generic web-extension framework —
-  keeps full control over Firefox-Android's background-script constraints.
+- **Hand-rolled Vite config(s) for the extension**, rather than a generic web-extension framework
+  — keeps full control over Firefox-Android's background-script constraints. Not one multi-entry
+  config: Rollup's IIFE format doesn't support multiple inputs in one build (`output.codeSplitting`
+  can't be disabled with >1 entry, and IIFE requires it disabled). Three separate single-entry
+  `build.lib` configs instead (`vite.content.config.ts`, `vite.background.config.ts`,
+  `vite.popup.config.ts`, run in sequence, only the first clearing `dist/`), which also just makes
+  sense: content script, background, and popup run in genuinely independent contexts anyway.
+  Static files (`manifest.json`, `popup.html`) are copied by a plugin in the last config.
 - **`webextension-polyfill`** in the extension package so `browser.*` calls work unmodified in
   Chrome too (FR8.3). The build emits two manifest variants from one template
   (`manifest.firefox.json`, `manifest.chrome.json`) differing only in the `background` key
