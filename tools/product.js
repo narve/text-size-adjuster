@@ -15,18 +15,23 @@ export function stripComments(text) {
 }
 
 /**
+ * `store` picks the {{platforms}} text in the description: 'firefox' (addons.mozilla.org, the
+ * docs site) or 'chrome' (Chrome Web Store, Edge Add-ons).
+ *
  * The product's name, one-line summary, links and license (product.json), long store description
  * (product-description.txt) and version — the single source for all descriptive text. The version
  * lives in packages/extension/package.json, where `npm run release:extension` bumps it.
  */
-export function readProduct() {
-  const { name, summary, homepage, repository, license, limits } = JSON.parse(
+export function readProduct(store = 'firefox') {
+  const { name, summary, homepage, repository, license, platforms, limits } = JSON.parse(
     fs.readFileSync(path.join(REPO_ROOT, 'product.json'), 'utf8'),
   );
   const { version } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'packages', 'extension', 'package.json'), 'utf8'));
   const description = stripComments(
     fs.readFileSync(path.join(REPO_ROOT, 'product-description.txt'), 'utf8'),
-  ).replaceAll('{{homepage}}', homepage);
+  )
+    .replaceAll('{{homepage}}', homepage)
+    .replaceAll('{{platforms}}', platforms[store]);
   validateProduct({ name, summary, description }, limits);
   // The newest signed build, attached to the latest GitHub release by `npm run release:github`.
   const signedXpiUrl = `${repository}/releases/latest/download/${SIGNED_XPI_FILENAME}`;

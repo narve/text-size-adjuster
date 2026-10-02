@@ -1,10 +1,14 @@
 {
-  "_about": "Name, one-line summary, homepage, repository and license of the product, copied into the extension manifest, userscript header and docs by the build. The long store description is in product-description.txt, where {{homepage}} is replaced with the homepage URL. The build fails if a text exceeds its limit: name 50 (addons.mozilla.org), summary 132 (Chrome's limit for the manifest description; AMO allows 250), description 5000 (this project's own readability guideline).",
+  "_about": "Name, one-line summary, homepage, repository and license of the product, copied into the extension manifest, userscript header and docs by the build. The long store description is in product-description.txt, where {{homepage}} is replaced with the homepage URL and {{platforms}} with the store's entry in platforms. The build fails if a text exceeds its limit: name 50 (addons.mozilla.org), summary 132 (Chrome's limit for the manifest description; AMO allows 250), description 5000 (this project's own readability guideline).",
   "name": "Text Size Adjuster",
   "summary": "Make a page's text bigger or smaller with one tap — without zooming the whole page or scrolling sideways.",
   "homepage": "https://narve.github.io/text-size-adjuster/",
   "repository": "https://github.com/narve/text-size-adjuster",
   "license": "MIT",
+  "platforms": {
+    "firefox": "Firefox on your computer and on Android",
+    "chrome": "Chrome and Edge on your computer"
+  },
   "limits": {
     "name": 50,
     "summary": 132,

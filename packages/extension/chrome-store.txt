@@ -1,0 +1,19 @@
+# Chrome Web Store fields that only that store asks for (the Privacy practices tab). The name,
+# summary and description come from product.json / product-description.txt; chrome-store.js puts
+# everything together in web-ext-artifacts/chrome-store/listing.md. Lines starting with "#" are
+# comments. Each section starts with "== <field> ==".
+
+== Single purpose ==
+Makes the text on web pages bigger or smaller while keeping the page's layout and pictures at their normal size, so pages are easier to read without zooming the whole page.
+
+== Justification: storage ==
+Saves the user's settings (where the on-page control sits, when it is shown, whether sizes are remembered) and the text size the user chose for each website, so that size is applied again on the next visit. Stored locally with chrome.storage.local; nothing is sent anywhere.
+
+== Justification: host permissions ==
+The extension's only job is resizing the text of the pages the user reads, on any website, and applying a remembered size automatically when the user returns to a site. That needs a content script on all sites, including frames inside a page, so that text in embedded parts of the page resizes together with the rest. The content script reads computed font sizes and writes scaled font sizes; it does not read, store or send page content.
+
+== Remote code ==
+No, I am not using remote code. All JavaScript is included in the package.
+
+== Data usage ==
+Collects none of the listed data types. Certify all three statements (no selling or transfer, no unrelated use, no creditworthiness or lending use).
