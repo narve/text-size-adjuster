@@ -27,6 +27,11 @@ test('the built .user.js mounts its widget and scales the page via the widget al
   const before = await readLargeRefSize();
 
   const increaseButton = widgetHost.locator('[data-action="increase"]');
+  // Big enough to tap comfortably (WCAG's minimum is 24px; this tool's users need more).
+  for (const button of await widgetHost.locator('button').all()) {
+    const box = (await button.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(40);
+  }
   for (let i = 0; i < 5; i += 1) {
     await increaseButton.click();
   }

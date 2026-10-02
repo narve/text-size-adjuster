@@ -17,9 +17,9 @@ export const WIDGET_CSS = `
     background: #202124;
     color: #fff;
     border-radius: 999px;
-    padding: 6px;
+    padding: 4px;
     font-family: system-ui, sans-serif;
-    font-size: 13px;
+    font-size: 16px;
     line-height: 1;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   }
@@ -32,13 +32,14 @@ export const WIDGET_CSS = `
     all: unset;
     box-sizing: border-box;
     cursor: pointer;
-    width: 26px;
-    height: 26px;
+    /* Comfortable to tap, and to see, for the people who need this tool most. */
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 15px;
+    font-size: 22px;
   }
   .tsa-widget button:hover,
   .tsa-widget button:focus-visible {
@@ -51,10 +52,10 @@ export const WIDGET_CSS = `
   .tsa-widget [data-tsa-display] {
     min-width: 3.2em;
     text-align: center;
-    padding: 0 2px;
+    padding: 0 4px;
   }
   .tsa-widget [data-action='close'] {
-    font-size: 13px;
+    font-size: 18px;
     opacity: 0.7;
   }
 `;
