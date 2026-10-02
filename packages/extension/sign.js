@@ -10,9 +10,15 @@ import {
   readJson,
   requireBuilt,
 } from '../../tools/paths.js';
+import { writeAmoMetadata, writeSourceArchive } from './amo-listing.js';
 
 // Signs the built extension (dist/) with Mozilla as an *unlisted* add-on: signed, so release
 // Firefox (desktop and Android) installs it permanently, but not published on addons.mozilla.org.
+//
+// With --listed it instead submits it for the public listing on addons.mozilla.org, with the
+// listing metadata and source code archive from amo-listing.js. Listed versions go through
+// Mozilla's review, which can take days, so this doesn't wait for approval; Mozilla then publishes
+// the version itself. Every version number can only be uploaded once, across both channels.
 //
 // Credentials (from https://addons.mozilla.org/developers/addon/api/key/) come from the repo's
 // gitignored `private.env`, or from the environment (e.g. CI secrets):
@@ -52,17 +58,30 @@ const manifestFile = path.join(DIST, 'manifest.json');
 requireBuilt(manifestFile, 'packages/extension');
 
 const { version } = readJson(manifestFile);
-console.log(`Signing version ${version} as an unlisted add-on (usually takes a few minutes)...`);
-
-execFileSync(
-  'npx',
-  ['web-ext', 'sign', '--channel', 'unlisted', '--source-dir', DIST, '--artifacts-dir', ARTIFACTS],
-  {
+const listed = process.argv.includes('--listed');
+const webExt = (args) =>
+  execFileSync('npx', ['web-ext', 'sign', '--source-dir', DIST, '--artifacts-dir', ARTIFACTS, ...args], {
     cwd: EXTENSION_DIR,
     stdio: 'inherit',
     env: { ...process.env, WEB_EXT_API_KEY: issuer, WEB_EXT_API_SECRET: secret },
-  },
-);
+  });
+
+if (listed) {
+  const source = writeSourceArchive(version);
+  const metadata = writeAmoMetadata(version);
+  console.log(`Submitting version ${version} for the public listing on addons.mozilla.org...`);
+  webExt([
+    '--channel', 'listed',
+    '--amo-metadata', metadata,
+    '--upload-source-code', source,
+    '--approval-timeout', '0',
+  ]);
+  console.log('Submitted. Mozilla reviews it and publishes it on addons.mozilla.org when approved.');
+  process.exit(0);
+}
+
+console.log(`Signing version ${version} as an unlisted add-on (usually takes a few minutes)...`);
+webExt(['--channel', 'unlisted']);
 
 const signed = fs
   .readdirSync(ARTIFACTS)

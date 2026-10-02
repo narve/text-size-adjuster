@@ -13,6 +13,8 @@
     "run:android": "web-ext run -t firefox-android --source-dir dist",
     "sign": "node sign.js",
     "release:github": "node release-github.js",
+    "amo:listing": "node amo-listing.js",
+    "amo:screenshots": "node amo-screenshots.js",
     "version:bump": "node bump-version.js",
     "icons": "node render-icons.js"
   },

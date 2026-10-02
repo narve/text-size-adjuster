@@ -1,0 +1,16 @@
+# Notes for Mozilla's reviewers, sent with every listed submission (approval_notes). Lines
+# starting with "#" are comments and are dropped by amo-listing.js.
+What it does: scales the text on the current page up or down while keeping each element's size relative to the others, instead of zooming the whole layout. Controls: the toolbar button (popup), and a small on-page −/+ control. By default the on-page control only appears after the user pinch-zooms; set "Always" on the options page to see it straight away.
+
+Permissions:
+- host permission <all_urls> and a content script on all URLs and all frames: the user can change the text size on any page they visit, including text inside iframes on that page. The content script reads each element's computed font size and sets an inline scaled font-size. It does not read or send page content anywhere.
+- storage: the user's settings and the size remembered for each site (by origin), in browser.storage.local only.
+The extension makes no network requests, loads no remote code and collects no data (data_collection_permissions: none).
+
+Source code: the uploaded archive is the project's git repository at the submitted version. The extension is written in TypeScript and bundled and minified with Vite.
+To build it (Linux or macOS, Node.js 22, npm 10):
+  npm ci
+  npm run build -w packages/extension
+The output is packages/extension/dist/, identical to the submitted package. The bundles include one third-party library, webextension-polyfill (from npm).
+
+To test: open any article, click the toolbar button and use + and −, or zoom in on a phone to show the on-page control. Sizes are remembered per site by default; the options page lists them.

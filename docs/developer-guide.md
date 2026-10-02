@@ -54,6 +54,7 @@ npm run docs:build           # build docs-site/dist/ from existing screenshots
 npm run docs:serve           # serve docs-site/dist/ on port 8080
 npm run release:extension    # bump version, build and sign the extension
 npm run release:github       # publish the signed .xpi as a GitHub release
+npm run submit:amo           # submit for the public listing on AMO (reviewed)
 ```
 
 Per workspace (`-w <workspace>`):
@@ -102,8 +103,28 @@ contributor section). Edit the sources, not generated files.
 
 1. `npm run build -w packages/extension` produces `packages/extension/dist/`
    with `manifest.json` copied in as `manifest.json`.
-2. For a public listing: submit via <https://addons.mozilla.org/developers/>
-   (AMO), "listed" distribution — goes through Mozilla review.
+2. For a public listing on <https://addons.mozilla.org/> (AMO): every upload
+   needs a new version number, across both channels, so first
+   `npm run version:bump -w packages/extension`, then commit and push. Then
+   `npm run submit:amo` builds the extension and submits it as **listed**
+   (`sign.js --listed`), together with:
+   - the listing metadata (`packages/extension/amo-listing.js`): name, summary
+     and description from `product.json` and `product-description.txt`, the
+     category (Appearance; AMO's categories are shared by desktop and Android),
+     homepage, GitHub Issues as the support site, the license, and the notes for
+     Mozilla's reviewers from `packages/extension/amo-reviewer-notes.txt`;
+   - the source code: the repository at `HEAD` as a zip, since the bundles are
+     minified. The reviewer notes give the build steps; a clean checkout builds
+     a byte-identical `dist/`.
+
+   It doesn't wait for Mozilla's review, which can take days.
+   `npm run amo:listing -w packages/extension` writes the metadata and source
+   archive to `web-ext-artifacts/` without submitting, to check them first.
+   Store screenshots can't be uploaded by `web-ext`:
+   `npm run amo:screenshots -w packages/extension` renders them (1280×800, after
+   `npm run docs:build`) into `web-ext-artifacts/amo-screenshots/` for uploading
+   on the add-on's page in the developer hub.
+
 3. For self-distribution without a public listing: submit as **unlisted** on
    AMO. You still get a Mozilla-signed `.xpi` (required for Firefox to install
    it at all outside of temporary `about:debugging` loading), but it isn't
