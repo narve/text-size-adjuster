@@ -22,7 +22,7 @@ export default defineConfig({
       // reference directly, once all three JS bundles already exist in dist/.
       name: 'copy-extension-static-files',
       closeBundle() {
-        // Firefox is the primary target (FR3.2) — dist/manifest.json is the Firefox manifest.
+        // Firefox is the primary target (FR3.1) — dist/manifest.json is the Firefox manifest.
         // The Chrome variant (FR8, best-effort) is a separate opt-in step: `npm run build:chrome`.
         copyFileSync(
           path.resolve(__dirname, 'manifest.firefox.json'),

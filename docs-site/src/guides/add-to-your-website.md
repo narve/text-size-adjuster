@@ -18,5 +18,4 @@ page](../demos/script-tag/index.html).
 - The chosen size is not remembered between page loads; each visit starts at normal size. (The
   browser extension is the version that remembers a size per site.)
 - This only works on sites you control. To use the control on *other people's* sites, install the
-  [userscript](install-firefox-desktop-userscript.html) or the
-  [extension](install-firefox-desktop-extension.html) instead.
+  [Firefox add-on](install.html) instead.

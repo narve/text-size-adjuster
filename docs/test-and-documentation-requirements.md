@@ -50,7 +50,7 @@ fixtures miss:
   asset. Screenshots and demos for these sites use a phone viewport and phone frame.
 - Snapshots are written to `fixtures/real-world/snapshots/<id>/index.html` and are **not**
   committed to git (gitignored) — they go stale and redistributing copies of third-party site
-  markup in the repo is avoided; they're regenerated on demand via `npm run fixtures:download`
+  markup in the repo is avoided; they're regenerated on demand via `npm run download -w fixtures`
   before a test run that needs them.
 - The download script is polite: a small delay between requests, one request per site, and it
   only ever fetches a single top-level page per site (no crawling).
@@ -111,9 +111,11 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
   (`npm run build`), not a separate, easily-forgotten manual step. `npm run build` must leave
   behind a complete, up-to-date `docs-site/dist/`.
 - **TR5.2**: The site explains the functionality (what it does, the ratio-preserving scaling
-  approach, the known limitations from FR6) and installation for all four combinations: Firefox
-  Desktop userscript, Firefox Desktop extension, Firefox Android userscript, Firefox Android
-  extension (sideloading).
+  approach, the known limitations from FR6) and installation. The front page's install section
+  is for end users only: one path, the extension (FR3.1) on Firefox desktop and Android, plus
+  how to use it. The userscript (FR3.2) and manual extension installs (temporary load,
+  self-signed, unsigned, Android sideloading) are for technical users and sit under a separate
+  "Advanced installation" heading.
 - **TR5.2a**: The site briefly explains how this differs from permanently changing the browser's
   or OS's font-size/zoom accessibility settings (FR1.4): those apply everywhere, all the time,
   and often just zoom the whole layout (causing sideways scrolling) rather than reflowing text;

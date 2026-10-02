@@ -295,41 +295,50 @@ if (userscriptBundle) {
 
 await browser.close();
 
-// --- 5. Landing page (TR5.2/TR5.2a/TR5.2b) ---
-const installCards = [
-  ['install-firefox-desktop-userscript', 'Firefox Desktop — userscript'],
-  ['install-firefox-desktop-extension', 'Firefox Desktop — extension'],
-  ['install-firefox-android-userscript', 'Firefox Android — userscript'],
-  ['install-firefox-android-extension', 'Firefox Android — extension'],
-]
-  .map(
-    ([slug, label]) =>
-      `<div class="card"><h3>${label}</h3><a href="guides/${slug}.html">Install guide</a></div>`,
-  )
-  .join('');
-
+// --- 5. Landing page (TR5.0/TR5.2) — the install section is for end users; the userscript and
+// manual extension installs are for technical users and live under their own heading.
 writePage(path.join(DIST, 'index.html'), {
   title: 'Text Size Adjuster',
   assetRoot: '',
   bodyHtml: `
     <h1>Text Size Adjuster</h1>
-    <p>Scale a web page's text up or down, on the spot, without the sideways-scrolling mess
-    native pinch/page zoom causes. Available as a userscript (Tampermonkey/Violentmonkey) or a
-    Firefox extension, on both desktop and Android.</p>
+    <p>Make a web page's text bigger (or smaller) with one tap — without zooming the whole page
+    and scrolling sideways. Pictures and layout stay put; only the text grows, and it still fits
+    your screen. Works in Firefox on your computer and on Android.</p>
 
     <h2>Install</h2>
-    <div class="card-grid">${installCards}</div>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Firefox — computer &amp; Android</h3>
+        <p>Add it to Firefox, then use the <strong>−/+</strong> control on any page. Remembers
+        your size for each site.</p>
+        <a href="guides/install.html">How to install</a>
+      </div>
+      <div class="card">
+        <h3>See it first</h3>
+        <p>Before/after screenshots of real sites, and live demos you can try right here.</p>
+        <a href="gallery/index.html">Screenshot gallery</a>
+      </div>
+    </div>
+
+    <h2>Learn more</h2>
+    <ul>
+      <li><a href="guides/how-it-differs.html">How this differs from your browser's zoom/accessibility settings</a></li>
+      <li><a href="guides/limitations.html">What this can't fix (and why)</a></li>
+    </ul>
 
     <h2>Run a website?</h2>
     <p>Give every visitor the same +/− control with a single script tag —
     <a href="guides/add-to-your-website.html">see how</a>, or
     <a href="demos/script-tag/index.html">try the demo page</a> that does exactly that.</p>
 
-    <h2>Learn more</h2>
+    <h2 id="advanced">Advanced installation</h2>
+    <p>For technical users who want to try it before it's on Firefox Add-ons, run their own build,
+    or use it outside Firefox:</p>
     <ul>
-      <li><a href="guides/how-it-differs.html">How this differs from your browser's zoom/accessibility settings</a></li>
-      <li><a href="guides/limitations.html">What this can't fix (and why)</a></li>
-      <li><a href="gallery/index.html">Screenshot gallery</a> — before/after examples, including real sites, with live demos to try yourself</li>
+      <li><a href="guides/install-userscript.html">As a userscript</a> (Tampermonkey/Violentmonkey; also works in Chrome) — no signing needed, but doesn't remember sizes per site</li>
+      <li><a href="guides/install-extension-manually.html">The extension, installed manually</a> — temporary load, self-signed, or unsigned on Firefox Developer Edition/Nightly</li>
+      <li><a href="guides/install-extension-manually-android.html">The extension, installed manually on Android</a></li>
     </ul>
   `,
 });

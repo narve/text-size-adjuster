@@ -163,3 +163,15 @@ footer.site-footer {
   font-size: 13px;
   color: var(--muted);
 }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: 10px 16px;
+  background: var(--card-bg);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+}
+
+blockquote p {
+  margin: 0.3em 0;
+}

@@ -36,6 +36,16 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox
 
+      # Real-site snapshots aren't committed (TR1a), so fetch them here for the gallery and demos.
+      # Non-gating: a site being down or slow just leaves it out of the published gallery.
+      - name: Download real-world site snapshots
+        run: npm run download -w fixtures
+        continue-on-error: true
+
+      - name: Real-world screenshots (informative)
+        run: npm run test:real-world
+        continue-on-error: true
+
       - name: Build everything (packages, Layer 1 suite, docs site)
         run: npm run build
 

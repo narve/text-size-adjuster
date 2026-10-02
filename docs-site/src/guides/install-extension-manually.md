@@ -1,10 +1,8 @@
-# Install: Firefox Desktop (extension)
+# Advanced: install the extension manually
 
-The extension remembers your chosen size *per site* and reapplies it automatically next time you
-visit, and adds a toolbar button alongside the on-page control.
-
-Until it's listed on [addons.mozilla.org](https://addons.mozilla.org/), there are three ways to
-install it yourself. All three start from the built extension folder, `packages/extension/dist/`
+For technical users: ways to install the Firefox extension without it being listed on
+[addons.mozilla.org](https://addons.mozilla.org/) — useful before it's listed, or to run your own
+build. (Most people should use the [normal install](install.html) instead.) There are three ways. All three start from the built extension folder, `packages/extension/dist/`
 (see [the contributor section](../dev/index.html) for how to build it), and the commands below
 are run from `packages/extension/`.
 
@@ -39,7 +37,7 @@ but it is never shown in the add-ons store — it stays private to you.
 3. In Firefox, open `about:addons`, click the gear icon, choose **Install Add-on From File…**, and
    pick the `.xpi`. (Dragging the file onto a Firefox window also works.)
 
-The same signed `.xpi` also installs on [Firefox for Android](install-firefox-android-extension.html).
+The same signed `.xpi` also installs on [Firefox for Android](install-extension-manually-android.html).
 
 ## 3. Unsigned (Firefox Developer Edition, Nightly or ESR only)
 
@@ -61,5 +59,5 @@ Visit any page. The on-page **−/+** control appears, and the extension's toolb
 another way to adjust the size. Come back to that site later — your chosen size is already
 applied.
 
-Prefer not to deal with any of this? The [userscript](install-firefox-desktop-userscript.html)
+Prefer not to deal with any of this? The [userscript](install-userscript.html)
 needs no signing at all; it just doesn't remember a size per site.

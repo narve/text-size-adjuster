@@ -54,8 +54,8 @@ npm run download -w fixtures
    the command line instead of the web UI, given an AMO API key/secret.
 
 The three ways to install *without* an AMO listing (temporary load, signed-unlisted `.xpi`,
-unsigned on Developer Edition/Nightly/ESR), with exact commands, are documented for end users in
-`docs-site/src/guides/install-firefox-desktop-extension.md`.
+unsigned on Developer Edition/Nightly/ESR), with exact commands, are documented for technical users in
+`docs-site/src/guides/install-extension-manually.md`.
 
 ### Firefox Android extension
 
@@ -96,7 +96,7 @@ unsigned on Developer Edition/Nightly/ESR), with exact commands, are documented 
   stylesheet into a document you can't touch). *Impact on the userscript*: permanent limitation —
   it only ever runs as page-injected JS, so that iframe's content stays at its original size.
   *Impact on the extension*: **solved, by design, not deferred** (per FR3.3/FR6.1 — the user
-  explicitly signed off on the two delivery mechanisms differing in capability here). The
+  explicitly signed off on the extension and the userscript differing in capability here). The
   extension's content script is declared with `"all_frames": true` plus host permissions broad
   enough to cover embedded content (e.g. `<all_urls>`), which gets the engine injected directly
   into *every* frame's own realm, cross-origin or not — each frame runs its own independent

@@ -42,13 +42,14 @@ horizontal scrollbar.
   styling, including pages that use `!important` with ordinary selectors. (See FR6.4 for the
   one case this does not cover.)
 
-## FR3. Two delivery mechanisms, one engine
+## FR3. Multiple delivery mechanisms, one engine
 
-- **FR3.1**: A userscript installable via Tampermonkey/Violentmonkey, usable on Firefox Desktop
-  and Firefox for Android.
-- **FR3.2**: A Firefox WebExtension (Manifest V3) installable on both Firefox Desktop and
-  Firefox for Android.
-- **FR3.3**: Both mechanisms must use the same scaling engine code — no duplicated/forked
+- **FR3.1**: A Firefox WebExtension (Manifest V3) installable on both Firefox Desktop and
+  Firefox for Android. This is the primary delivery mechanism, and the one end users are pointed
+  to.
+- **FR3.2**: A userscript installable via Tampermonkey/Violentmonkey, usable on Firefox Desktop
+  and Firefox for Android — an alternative for technical users.
+- **FR3.3**: All delivery mechanisms must use the same scaling engine code — no duplicated/forked
   scaling logic between them. The one deliberate exception is reach: the extension may use its
   elevated permissions to scale content the userscript structurally cannot reach (see FR6.1) —
   that's a desirable capability difference to lean into, not a divergence to avoid.
@@ -60,7 +61,7 @@ horizontal scrollbar.
 
 - **FR4.1**: The scaling engine exposes a UI-agnostic API (increase/decrease/reset/set/get-factor
   plus change notifications). It has no knowledge of any specific UI.
-- **FR4.2**: An in-page floating +/- widget is one interchangeable UI, usable by both delivery
+- **FR4.2**: An in-page floating +/- widget is one interchangeable UI, usable by all delivery
   mechanisms (and the only UI option for the userscript, since userscript managers have no
   toolbar-button API).
 - **FR4.3**: The extension additionally offers a native browser-toolbar button/popup UI with its
@@ -89,7 +90,7 @@ horizontal scrollbar.
   into each cross-origin iframe's own realm — not reaching across the boundary (still
   impossible), but running independently *inside* it, the same way the top-level page's content
   script runs inside the top document. The extension's background script keeps all frames' factors
-  in sync via runtime messaging. This capability gap between the two delivery mechanisms is
+  in sync via runtime messaging. This capability gap between the extension and the userscript is
   intentional (see FR3.3) — the extension doing more here is the point, not a bug to fix in the
   userscript.
 - **FR6.2**: Closed shadow DOM content cannot be scaled; open shadow roots are supported.
@@ -106,13 +107,13 @@ horizontal scrollbar.
   required targets, and nothing here should compromise them.
 - **FR8.2**: The core engine (FR2) already only uses standard DOM/CSS APIs, so it is
   Chrome-compatible without special-casing.
-- **FR8.3**: The extension (FR3.2) should avoid Firefox-only extension APIs where a
+- **FR8.3**: The extension (FR3.1) should avoid Firefox-only extension APIs where a
   cross-browser equivalent exists (e.g. via the `webextension-polyfill` library), so that a
   Chrome build is a thin manifest variation rather than a rewrite. Publishing to the Chrome Web
   Store is out of scope; building and manually loading an unpacked Chrome build is enough to call
   this satisfied.
-- **FR8.4**: The userscript (FR3.1) already runs under Tampermonkey/Violentmonkey on Chrome with
-  no extra work, since those managers are cross-browser; no additional requirement beyond FR3.1.
+- **FR8.4**: The userscript (FR3.2) already runs under Tampermonkey/Violentmonkey on Chrome with
+  no extra work, since those managers are cross-browser; no additional requirement beyond FR3.2.
 
 ## FR7. Performance
 
