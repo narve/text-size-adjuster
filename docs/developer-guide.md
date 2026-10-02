@@ -53,6 +53,10 @@ npm run download -w fixtures
 4. `web-ext sign` (from the `web-ext` devDependency) can drive the unlisted-signing API call from
    the command line instead of the web UI, given an AMO API key/secret.
 
+The three ways to install *without* an AMO listing (temporary load, signed-unlisted `.xpi`,
+unsigned on Developer Edition/Nightly/ESR), with exact commands, are documented for end users in
+`docs-site/src/guides/install-firefox-desktop-extension.md`.
+
 ### Firefox Android extension
 
 - Requires the `browser_specific_settings.gecko_android` block in the manifest (already part of

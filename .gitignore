@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-chrome/
+web-ext-artifacts/
 *.tsbuildinfo
 docs-site/dist/
 e2e/screenshots/
