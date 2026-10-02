@@ -107,8 +107,9 @@ ID+class+`!important` page rules; does not beat literal inline `!important` (FR6
 8. Layer 2 best-effort extension integration test via `playwright-webextext`, non-gating.
    Commit.
 9. Docs site: guides + generated gallery (screenshots composited with browser/phone chrome per
-   TR5.4) from Layer 1/8 artifacts; wired into `npm run build` (TR5.1); `docs:serve` verified
-   locally. Commit.
+   TR5.4) from Layer 1/8 artifacts, plus a live interactive demo per fixture (TR5.5, with the
+   `iframe-cross-origin` caveat called out); wired into `npm run build` (TR5.1); `docs:serve`
+   verified locally. Commit.
 
 ## Risks
 

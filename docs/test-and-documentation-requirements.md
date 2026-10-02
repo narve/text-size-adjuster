@@ -127,9 +127,18 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
   stay bare because they're also used for internal pixel/ratio measurement (TR2); the docs site
   only ever shows the framed versions.
 
+- **TR5.5** (if feasible): each fixture's gallery page links to a **live, interactive demo** —
+  not just static before/after screenshots. The docs-site build copies each fixture page into
+  `docs-site/dist/demos/<fixture-id>/` with the built core engine and floating widget
+  auto-attached, so a reader can click real +/- buttons and see the effect themselves. This is
+  fully static (no backend beyond serving the docs site itself) for every fixture except
+  `iframe-cross-origin`, whose live demo depends on the local two-port test server setup and may
+  not work once the docs site is served/deployed elsewhere — document that one exception rather
+  than silently shipping a broken demo.
+
 **Acceptance**: `npm run build` produces a browsable `docs-site/dist/` with working internal
 links and all gallery images present in framed form; no manual copying or framing of
-screenshots.
+screenshots. Live demo links (TR5.5) work when the site is served via `npm run docs:serve`.
 
 ## TR6. Developer guide (separate from the docs site)
 
