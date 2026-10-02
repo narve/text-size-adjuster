@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 // @ts-expect-error plain JS helper shared with the other build scripts
 import { readProduct } from '../../tools/product.mjs';
 import monkey from 'vite-plugin-monkey';
+// @ts-expect-error plain JS helper shared with the other build scripts
+import { USERSCRIPT_FILENAME } from '../../tools/paths.mjs';
 
 const product = readProduct();
 const iconSvg = readFileSync(new URL('../extension/icons/icon.svg', import.meta.url), 'utf8');
@@ -13,14 +15,15 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       build: {
-        fileName: 'text-size-adjuster.user.js',
+        fileName: USERSCRIPT_FILENAME,
       },
       userscript: {
         name: product.name,
-        namespace: 'https://github.com/narve/text-size-adjuster',
+        namespace: product.repository,
+        version: product.version,
         description: product.summary,
         homepageURL: product.homepage,
-        license: 'MIT',
+        license: product.license,
         icon,
         match: ['*://*/*'],
         grant: ['GM.getValue', 'GM.setValue', 'GM_registerMenuCommand'],

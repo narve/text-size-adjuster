@@ -1,16 +1,12 @@
 import browser from 'webextension-polyfill';
-import { isSiteKey, normalizeSettings, SETTINGS_KEY, type ControlSettings } from '../settings.js';
+import { formatFactor } from '@tsa/ui-widget';
+import { isSiteKey, readSettings, SETTINGS_KEY, siteLabel, type ControlSettings } from '../settings.js';
 
 /**
  * Options page (FR9). Everything is read from and written to `browser.storage.local`; open tabs
  * react through `storage.onChanged` (see content-script.ts), so nothing here talks to tabs
  * directly.
  */
-
-async function readSettings(): Promise<ControlSettings> {
-  const stored = await browser.storage.local.get(SETTINGS_KEY);
-  return normalizeSettings(stored[SETTINGS_KEY]);
-}
 
 async function writeSettings(patch: Partial<ControlSettings>): Promise<void> {
   const next = { ...(await readSettings()), ...patch };
@@ -42,11 +38,11 @@ async function renderSites(): Promise<void> {
     const item = document.createElement('li');
     const name = document.createElement('span');
     name.className = 'origin';
-    name.textContent = origin.replace(/^https?:\/\//, '');
+    name.textContent = siteLabel(origin);
     name.title = origin;
     const size = document.createElement('span');
     size.className = 'size';
-    size.textContent = `${Math.round(factor * 100)}%`;
+    size.textContent = formatFactor(factor);
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.textContent = 'Remove';

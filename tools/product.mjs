@@ -14,16 +14,20 @@ export function stripComments(text) {
 }
 
 /**
- * The product's name, one-line summary (product.json) and long store description
- * (product-description.txt) — the single source for all descriptive text.
+ * The product's name, one-line summary, links and license (product.json), long store description
+ * (product-description.txt) and version — the single source for all descriptive text. The version
+ * lives in packages/extension/package.json, where `npm run release:extension` bumps it.
  */
 export function readProduct() {
-  const { name, summary, homepage, limits } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'product.json'), 'utf8'));
+  const { name, summary, homepage, repository, license, limits } = JSON.parse(
+    fs.readFileSync(path.join(REPO_ROOT, 'product.json'), 'utf8'),
+  );
+  const { version } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'packages', 'extension', 'package.json'), 'utf8'));
   const description = stripComments(
     fs.readFileSync(path.join(REPO_ROOT, 'product-description.txt'), 'utf8'),
   ).replaceAll('{{homepage}}', homepage);
   validateProduct({ name, summary, description }, limits);
-  return { name, summary, homepage, description };
+  return { name, summary, homepage, repository, license, version, description };
 }
 
 /** Checks each text against `limits` from product.json (see its `_about` for where they come from). */

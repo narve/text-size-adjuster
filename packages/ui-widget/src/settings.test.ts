@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePosition, parseShow } from './settings.js';
+import { formatFactor, normalizeWidgetSettings, parsePosition, parseShow } from './settings.js';
 
 describe('parsePosition', () => {
   it('accepts long forms', () => {
@@ -30,5 +30,28 @@ describe('parseShow', () => {
   it('returns null for missing or unknown values', () => {
     expect(parseShow(undefined)).toBeNull();
     expect(parseShow('sometimes')).toBeNull();
+  });
+});
+
+describe('normalizeWidgetSettings', () => {
+  const defaults = { position: 'bottom-right', show: 'always' } as const;
+
+  it('keeps valid values and falls back per field', () => {
+    expect(normalizeWidgetSettings({ position: 'tl', show: 'nonsense' }, defaults)).toEqual({
+      position: 'top-left',
+      show: 'always',
+    });
+  });
+
+  it('treats missing or non-object input as empty', () => {
+    expect(normalizeWidgetSettings(undefined, defaults)).toEqual(defaults);
+    expect(normalizeWidgetSettings({ position: 42 }, defaults)).toEqual(defaults);
+  });
+});
+
+describe('formatFactor', () => {
+  it('shows a rounded percentage', () => {
+    expect(formatFactor(1)).toBe('100%');
+    expect(formatFactor(1.249)).toBe('125%');
   });
 });

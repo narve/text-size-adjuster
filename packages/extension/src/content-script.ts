@@ -1,10 +1,9 @@
 import browser from 'webextension-polyfill';
 import { bindStore, createEngine } from '@tsa/core';
-import { createFloatingWidget } from '@tsa/ui-widget';
+import { createRemountableWidget } from '@tsa/ui-widget';
 import { createGatedStore, createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
 import type { FactorResponse, Message } from './protocol.js';
-import { normalizeSettings, SETTINGS_KEY } from './settings.js';
-import type { UIAdapter } from '@tsa/core';
+import { watchSettings } from './settings.js';
 
 const engine = createEngine();
 
@@ -18,33 +17,19 @@ const store = createGatedStore(
   () => autoRemember,
 );
 bindStore(engine, store, location.origin);
-void browser.storage.local.get(SETTINGS_KEY).then((stored) => {
-  autoRemember = normalizeSettings(stored[SETTINGS_KEY]).autoRemember;
-});
-browser.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && SETTINGS_KEY in changes) {
-    autoRemember = normalizeSettings(changes[SETTINGS_KEY]?.newValue).autoRemember;
-  }
-});
 
 engine.attach();
 
 // Only the top frame gets a visible widget — an iframe (same-origin or, via all_frames below,
 // cross-origin) still gets its own engine instance scaled in sync, but not its own floating
 // controls, which would make no visual sense inside e.g. an ad slot.
-if (window === window.top) {
-  let widget: UIAdapter | null = null;
-  const mountWidget = (rawSettings: unknown) => {
-    widget?.unmount();
-    widget = createFloatingWidget(normalizeSettings(rawSettings));
-    widget.mount(engine);
-  };
-  void browser.storage.local.get(SETTINGS_KEY).then((stored) => mountWidget(stored[SETTINGS_KEY]));
-  // FR9.3: a change on the options page applies to already-open pages straight away.
-  browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && SETTINGS_KEY in changes) mountWidget(changes[SETTINGS_KEY]?.newValue);
-  });
-}
+const widget = window === window.top ? createRemountableWidget(engine) : null;
+
+// FR9.3: a change on the options page applies to already-open pages straight away.
+watchSettings((settings) => {
+  autoRemember = settings.autoRemember;
+  widget?.apply(settings);
+});
 
 // Guards against re-broadcasting a factor change that just arrived *from* the background relay —
 // without this, every relayed update would bounce straight back out and loop.

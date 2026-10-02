@@ -1,33 +1,30 @@
-import { createEngine, type TextSizeEngine } from '@tsa/core';
+import { createEngine } from '@tsa/core';
+import type { GMValueApi } from '@tsa/stores';
 import {
-  createFloatingWidget,
+  createRemountableWidget,
   DEFAULT_POSITION,
+  normalizeWidgetSettings,
   parsePosition,
   parseShow,
+  POSITION_LABELS,
+  SETTINGS_KEY,
   type WidgetPosition,
-  type WidgetVisibility,
+  type WidgetSettings,
 } from '@tsa/ui-widget';
-import type { UIAdapter } from '@tsa/core';
 
 // Deliberately no per-site size persistence here: FR1.4/FR5.2 make "ad hoc, resets on reload" the
 // default for this bundle. Only the control's own settings (FR10) are remembered, in the
 // userscript manager's storage.
 
-interface ControlSettings {
-  position: WidgetPosition;
-  show: WidgetVisibility;
-}
-
 // FR10.4: the on-page control is the only way in for this bundle, so it's shown by default.
-const DEFAULTS: ControlSettings = { position: DEFAULT_POSITION, show: 'always' };
-const SETTINGS_KEY = 'tsa:settings';
+const DEFAULTS: WidgetSettings = { position: DEFAULT_POSITION, show: 'always' };
 
 /**
  * As a site-owner embed (FR3.4), settings come from the script tag: `data-*` attributes, else
  * URL parameters (FR10.3). `document.currentScript` only exists while the script first runs, so
  * this has to be read now, not later in start(). In a userscript manager there's no such tag.
  */
-function readEmbedSettings(): Partial<ControlSettings> {
+function readEmbedSettings(): Partial<WidgetSettings> {
   const script = document.currentScript;
   if (!(script instanceof HTMLScriptElement)) return {};
   let params: URLSearchParams | null = null;
@@ -36,7 +33,7 @@ function readEmbedSettings(): Partial<ControlSettings> {
   } catch {
     params = null;
   }
-  const settings: Partial<ControlSettings> = {};
+  const settings: Partial<WidgetSettings> = {};
   const position = parsePosition(script.dataset.position) ?? parsePosition(params?.get('position'));
   const show = parseShow(script.dataset.show) ?? parseShow(params?.get('show'));
   if (position) settings.position = position;
@@ -48,10 +45,7 @@ const embedSettings = readEmbedSettings();
 
 // --- Userscript manager APIs (FR10.3). Granted in the metadata block; absent when this same
 // bundle runs as a plain embed, so every use is guarded. ---
-interface GMStorage {
-  getValue(key: string, defaultValue?: unknown): Promise<unknown>;
-  setValue(key: string, value: unknown): Promise<void>;
-}
+type GMStorage = Pick<GMValueApi, 'getValue' | 'setValue'>;
 declare const GM: GMStorage | undefined;
 declare const GM_registerMenuCommand: ((caption: string, onClick: () => void) => unknown) | undefined;
 
@@ -59,32 +53,21 @@ function userscriptStorage(): GMStorage | null {
   return typeof GM !== 'undefined' && typeof GM?.getValue === 'function' ? GM : null;
 }
 
-async function loadSettings(): Promise<ControlSettings> {
-  const settings: ControlSettings = { ...DEFAULTS, ...embedSettings };
+async function loadSettings(): Promise<WidgetSettings> {
+  const settings: WidgetSettings = { ...DEFAULTS, ...embedSettings };
   const storage = userscriptStorage();
-  if (storage) {
-    const saved = (await storage.getValue(SETTINGS_KEY, {})) as Partial<Record<string, string>>;
-    settings.position = parsePosition(saved.position) ?? settings.position;
-    settings.show = parseShow(saved.show) ?? settings.show;
-  }
-  return settings;
+  return storage ? normalizeWidgetSettings(await storage.getValue(SETTINGS_KEY, {}), settings) : settings;
 }
 
-function registerMenuCommands(settings: ControlSettings, apply: (next: ControlSettings) => void): void {
+function registerMenuCommands(settings: WidgetSettings, apply: (next: WidgetSettings) => void): void {
   const storage = userscriptStorage();
   if (!storage || typeof GM_registerMenuCommand !== 'function') return;
-  const save = (next: ControlSettings) => {
+  const save = (next: WidgetSettings) => {
     Object.assign(settings, next);
     void storage.setValue(SETTINGS_KEY, next);
     apply(next);
   };
-  const corners: Array<[WidgetPosition, string]> = [
-    ['top-left', 'top left'],
-    ['top-right', 'top right'],
-    ['bottom-left', 'bottom left'],
-    ['bottom-right', 'bottom right'],
-  ];
-  for (const [position, label] of corners) {
+  for (const [position, label] of Object.entries(POSITION_LABELS) as Array<[WidgetPosition, string]>) {
     GM_registerMenuCommand(`Text size control: place ${label}`, () => save({ ...settings, position }));
   }
   GM_registerMenuCommand('Text size control: always show', () => save({ ...settings, show: 'always' }));
@@ -94,20 +77,16 @@ function registerMenuCommands(settings: ControlSettings, apply: (next: ControlSe
 }
 
 async function start(): Promise<void> {
-  const engine: TextSizeEngine = createEngine();
+  const engine = createEngine();
   engine.attach();
 
   const settings = await loadSettings();
-  let widget: UIAdapter = createFloatingWidget(settings);
-  widget.mount(engine);
+  const widget = createRemountableWidget(engine);
+  widget.apply(settings);
 
-  registerMenuCommands(settings, (next) => {
-    widget.unmount();
-    // A settings change from the menu is a deliberate request to see the control — show it now
-    // rather than waiting for a zoom.
-    widget = createFloatingWidget({ ...next, show: 'always' });
-    widget.mount(engine);
-  });
+  // A settings change from the menu is a deliberate request to see the control — show it now
+  // rather than waiting for a zoom.
+  registerMenuCommands(settings, (next) => widget.apply({ ...next, show: 'always' }));
 }
 
 // Defensive regardless of the userscript manager actually honoring `@run-at document-idle`

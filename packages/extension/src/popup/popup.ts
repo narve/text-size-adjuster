@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import type { FactorResponse, Message } from '../protocol.js';
+import { formatFactor } from '@tsa/ui-widget';
 import { isSiteKey, normalizeSettings, SETTINGS_KEY } from '../settings.js';
 
 /**
@@ -7,13 +8,13 @@ import { isSiteKey, normalizeSettings, SETTINGS_KEY } from '../settings.js';
  * frame (frameId 0) and renders whatever factor comes back. The content script there drives the
  * real engine and relays to other frames via the background (see background.ts).
  */
-async function getActiveTabId(): Promise<number | undefined> {
+async function getActiveTab(): Promise<browser.Tabs.Tab | undefined> {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  return tab?.id;
+  return tab;
 }
 
 async function send(message: Message): Promise<FactorResponse | undefined> {
-  const tabId = await getActiveTabId();
+  const tabId = (await getActiveTab())?.id;
   if (tabId === undefined) return undefined;
   try {
     return (await browser.tabs.sendMessage(tabId, message, { frameId: 0 })) as FactorResponse;
@@ -26,7 +27,7 @@ async function send(message: Message): Promise<FactorResponse | undefined> {
 const display = document.getElementById('display')!;
 
 function render(factor: number): void {
-  display.textContent = `${Math.round(factor * 100)}%`;
+  display.textContent = formatFactor(factor);
 }
 
 function wire(buttonId: string, message: Message): void {
@@ -57,7 +58,7 @@ document.getElementById('options')!.addEventListener('click', (event) => {
  * it on later changes (see createGatedStore).
  */
 async function setUpRememberButton(): Promise<void> {
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const tab = await getActiveTab();
   if (!tab?.url) return;
   const origin = new URL(tab.url).origin;
   if (!isSiteKey(origin)) return;

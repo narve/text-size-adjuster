@@ -1,33 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { bindStore } from './persistence.js';
-import type { EngineListener, Store, TextSizeEngine } from './types.js';
-
-function createFakeEngine(initial = 1): TextSizeEngine & { emit(factor: number): void } {
-  let factor = initial;
-  const listeners = new Set<EngineListener>();
-  return {
-    increase: vi.fn(),
-    decrease: vi.fn(),
-    reset: vi.fn(),
-    setFactor: vi.fn((k: number) => {
-      factor = k;
-      for (const l of listeners) l({ type: 'change', factor, origin: 'https://example.com' });
-      return factor;
-    }),
-    getFactor: () => factor,
-    onChange: (listener: EngineListener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    attach: vi.fn(),
-    detach: vi.fn(),
-    rescan: vi.fn(),
-    emit(f: number) {
-      factor = f;
-      for (const l of listeners) l({ type: 'change', factor, origin: 'https://example.com' });
-    },
-  };
-}
+import type { Store } from './types.js';
+import { createFakeEngine } from './test-helpers/fake-engine.js';
 
 function createFakeStore(initial?: number): Store & { data: Map<string, number> } {
   const data = new Map<string, number>();

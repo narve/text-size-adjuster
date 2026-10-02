@@ -1,44 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { EngineListener, TextSizeEngine } from '@tsa/core';
+import { afterEach, describe, expect, it } from 'vitest';
 import { DEFAULT_IGNORE_ATTR } from '@tsa/core';
+import { createFakeEngine } from '@tsa/core/test-helpers';
 import { createFloatingWidget } from './widget.js';
-
-function createFakeEngine(initial = 1): TextSizeEngine & {
-  emit(type: 'change' | 'reset', factor: number): void;
-} {
-  let factor = initial;
-  const listeners = new Set<EngineListener>();
-  return {
-    increase: vi.fn((step = 0.1) => {
-      factor += step;
-      return factor;
-    }),
-    decrease: vi.fn((step = 0.1) => {
-      factor -= step;
-      return factor;
-    }),
-    reset: vi.fn(() => {
-      factor = 1;
-      return factor;
-    }),
-    setFactor: vi.fn((k: number) => {
-      factor = k;
-      return factor;
-    }),
-    getFactor: () => factor,
-    onChange: (listener: EngineListener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    attach: vi.fn(),
-    detach: vi.fn(),
-    rescan: vi.fn(),
-    emit(type, f) {
-      factor = f;
-      for (const l of listeners) l({ type, factor, origin: 'https://example.com' });
-    },
-  };
-}
 
 function getHost(): HTMLElement | null {
   return document.body.querySelector(`[${DEFAULT_IGNORE_ATTR}]`);
@@ -93,7 +56,7 @@ describe('createFloatingWidget', () => {
     widget.mount(engine);
     const shadow = getHost()!.shadowRoot!;
 
-    engine.emit('change', 2);
+    engine.emit(2);
 
     expect(shadow.querySelector('[data-tsa-display]')?.textContent).toBe('200%');
   });

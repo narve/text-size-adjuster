@@ -1,7 +1,7 @@
 import type { TextSizeEngine, UIAdapter } from '@tsa/core';
 import { DEFAULT_IGNORE_ATTR } from '@tsa/core';
 import { WIDGET_CSS } from './widget-styles.js';
-import { DEFAULT_POSITION, type WidgetPosition, type WidgetVisibility } from './settings.js';
+import { DEFAULT_POSITION, formatFactor, type WidgetPosition, type WidgetSettings, type WidgetVisibility } from './settings.js';
 import { followVisualViewport, watchForZoom } from './viewport.js';
 
 export interface FloatingWidgetOptions {
@@ -30,7 +30,7 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
 
   function render(engine: TextSizeEngine): void {
     const display = shadow?.querySelector('[data-tsa-display]');
-    if (display) display.textContent = `${Math.round(engine.getFactor() * 100)}%`;
+    if (display) display.textContent = formatFactor(engine.getFactor());
   }
 
   function mount(engine: TextSizeEngine): void {
@@ -134,4 +134,19 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
   }
 
   return { mount, unmount };
+}
+
+/**
+ * A floating widget that can be re-created with new settings (FR9.3/FR10.3: a settings change
+ * applies to the open page straight away). The first `apply` mounts it.
+ */
+export function createRemountableWidget(engine: TextSizeEngine): { apply(settings: WidgetSettings): void } {
+  let widget: UIAdapter | null = null;
+  return {
+    apply(settings) {
+      widget?.unmount();
+      widget = createFloatingWidget(settings);
+      widget.mount(engine);
+    },
+  };
 }
