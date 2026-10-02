@@ -3,76 +3,90 @@ import { bindStore, createEngine } from '@tsa/core';
 import { createRemountableWidget } from '@tsa/ui-widget';
 import { createGatedStore, createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
 import { isFactor, type FactorResponse, type Message } from './protocol.js';
-import { watchSettings } from './settings.js';
+import { readSettings, watchSettings, type ControlSettings } from './settings.js';
 
+/**
+ * Runs in every frame of every page (`all_frames`): each frame, including a cross-origin iframe
+ * the top page's engine can't reach (FR6.1), gets its own engine. The *top* frame is the single
+ * source of truth for the tab's size: it alone has the on-page control, answers the popup,
+ * remembers the size for the site (FR5.1, keyed by the address-bar origin) and announces every
+ * change. Every other frame only follows, through the background's relay (see background.ts) —
+ * it never saves anything under its own origin, so an embed (an ad, a video, a comments widget)
+ * never shows up as a "site" of its own or carries a size from one site to another.
+ */
 const engine = createEngine();
-
-// Per-origin persistence (FR5.1). Keyed by *this frame's own* origin — for a cross-origin iframe
-// (ads, embeds) that means persistence is scoped to the embed's own origin, shared across
-// whichever pages embed it, which is a reasonable default for v1.
-// FR9.4: with automatic remembering off, only sites already remembered keep being saved.
-let autoRemember = true;
-const store = createGatedStore(
-  createLocalExtensionStore(browser as unknown as BrowserStorageLike),
-  () => autoRemember,
-);
-bindStore(engine, store, location.origin);
-
-engine.attach();
-
-// Only the top frame gets a visible widget — an iframe (same-origin or, via all_frames below,
-// cross-origin) still gets its own engine instance scaled in sync, but not its own floating
-// controls, which would make no visual sense inside e.g. an ad slot.
-const widget = window === window.top ? createRemountableWidget(engine) : null;
-
-// FR9.3: a change on the options page applies to already-open pages straight away.
-watchSettings((settings) => {
-  autoRemember = settings.autoRemember;
-  widget?.apply(settings);
-});
-
-// Guards against re-broadcasting a factor change that just arrived *from* the background relay —
-// without this, every relayed update would bounce straight back out and loop.
-let applyingExternal = false;
 
 function respond(factor: number): FactorResponse {
   return { factor };
 }
 
-browser.runtime.onMessage.addListener((raw: unknown): Promise<FactorResponse> | undefined => {
-  const message = raw as Message;
-  switch (message.type) {
-    case 'tsa:getFactor':
-      return Promise.resolve(respond(engine.getFactor()));
-    case 'tsa:setFactor':
-      if (!isFactor(message.factor)) return undefined;
-      applyingExternal = true;
-      try {
-        engine.setFactor(message.factor);
-      } finally {
-        // Even if applying throws, this frame must keep broadcasting its own later changes.
-        applyingExternal = false;
-      }
-      return Promise.resolve(respond(engine.getFactor()));
-    case 'tsa:increase':
-      return Promise.resolve(respond(engine.increase()));
-    case 'tsa:decrease':
-      return Promise.resolve(respond(engine.decrease()));
-    case 'tsa:reset':
-      return Promise.resolve(respond(engine.reset()));
-    default:
-      return undefined;
-  }
-});
+if (window === window.top) runTopFrame();
+else runSubframe();
 
-// Let the background know this frame exists, so it can relay this tab's other frames' factor
-// changes here too (see background.ts) — this is what keeps a cross-origin iframe (FR6.1/FR3.3)
-// in sync with the rest of the page despite running its own independent engine instance.
-void browser.runtime.sendMessage({ type: 'tsa:registerFrame' } satisfies Message).catch(() => {});
+engine.attach();
 
-engine.onChange((event) => {
-  if (applyingExternal) return;
+function runTopFrame(): void {
+  // FR9.4: with automatic remembering off, only sites already remembered keep being saved. Until
+  // the settings have been read, a save waits for them rather than assuming either way.
+  let autoRemember: Promise<boolean> = readSettings().then((settings) => settings.autoRemember);
+  const store = createGatedStore(createLocalExtensionStore(browser as unknown as BrowserStorageLike), () => autoRemember);
+  bindStore(engine, store, location.origin);
+
+  // FR9.3: a change on the options page applies to already-open pages straight away. The control
+  // is only re-created when its own settings changed, so toggling an unrelated setting doesn't
+  // hide a control the user has just revealed by zooming.
+  const widget = createRemountableWidget(engine);
+  let shown: ControlSettings | null = null;
+  watchSettings((settings) => {
+    autoRemember = Promise.resolve(settings.autoRemember);
+    if (shown?.position === settings.position && shown.show === settings.show) return;
+    shown = settings;
+    widget.apply(settings);
+  });
+
+  browser.runtime.onMessage.addListener((raw: unknown): Promise<FactorResponse> | undefined => {
+    const message = raw as Message;
+    switch (message.type) {
+      case 'tsa:getFactor':
+        return Promise.resolve(respond(engine.getFactor()));
+      case 'tsa:increase':
+        return Promise.resolve(respond(engine.increase()));
+      case 'tsa:decrease':
+        return Promise.resolve(respond(engine.decrease()));
+      case 'tsa:reset':
+        return Promise.resolve(respond(engine.reset()));
+      default:
+        // Including the relay's own tsa:setFactor, which reaches this frame too: the top frame
+        // is where changes come from, it never follows.
+        return undefined;
+    }
+  });
+
+  // Every change — from the control, the popup, the stored size or the options page — goes to
+  // the tab's other frames.
+  engine.onChange((event) => {
+    void browser.runtime
+      .sendMessage({ type: 'tsa:factorChanged', factor: event.factor } satisfies Message)
+      .catch(() => {});
+  });
+}
+
+function runSubframe(): void {
+  const follow = (factor: unknown) => {
+    if (isFactor(factor) && factor !== engine.getFactor()) engine.setFactor(factor);
+  };
+
+  browser.runtime.onMessage.addListener((raw: unknown): Promise<FactorResponse> | undefined => {
+    const message = raw as Message;
+    if (message.type !== 'tsa:setFactor') return undefined;
+    follow(message.factor);
+    return undefined;
+  });
+
+  // Catch up with a size the top frame already has (e.g. its remembered size); if the top frame
+  // isn't ready yet, its own later change reaches this frame through the relay instead.
   void browser.runtime
-    .sendMessage({ type: 'tsa:factorChanged', factor: event.factor } satisfies Message)
+    .sendMessage({ type: 'tsa:getTopFactor' } satisfies Message)
+    .then((response) => follow((response as FactorResponse | undefined)?.factor))
     .catch(() => {});
-});
+}

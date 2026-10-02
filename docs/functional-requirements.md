@@ -98,10 +98,12 @@ the unscaled page, and produces no new horizontal scrollbar.
   injected directly into each cross-origin iframe's own realm — not reaching
   across the boundary (still impossible), but running independently _inside_ it,
   the same way the top-level page's content script runs inside the top document.
-  The extension's background script keeps all frames' factors in sync via
-  runtime messaging. This capability gap between the extension and the
-  userscript is intentional (see FR3.3) — the extension doing more here is the
-  point, not a bug to fix in the userscript.
+  The top frame is the source of truth: it holds the controls and the size
+  remembered for the site in the address bar (FR5.1), and every other frame
+  follows it via runtime messaging. An embedded frame never stores a size under
+  its own origin. This capability gap between the extension and the userscript
+  is intentional (see FR3.3) — the extension doing more here is the point, not a
+  bug to fix in the userscript.
 - **FR6.2**: Closed shadow DOM content cannot be scaled; open shadow roots are
   supported.
 - **FR6.3**: Elements in fixed-height/`overflow:hidden` containers may visually

@@ -1,44 +1,42 @@
 import browser, { type Runtime } from 'webextension-polyfill';
-import type { Message } from './protocol.js';
+import { isFactor, type FactorResponse, type Message } from './protocol.js';
 
 /**
- * Keeps every frame of a tab in sync (FR6.1/FR3.3's cross-origin iframe capability): each frame
- * runs its own independent content-script engine (see content-script.ts), so when one frame's
- * factor changes, this relays it to every *other* frame registered for that tab. Built from
- * `sender.tab.id`/`sender.frameId` on incoming messages rather than the `webNavigation`
- * permission's frame-enumeration API, to avoid requesting a permission just for this.
+ * Keeps every frame of a tab in sync with its top frame (FR6.1/FR3.3's cross-origin iframe
+ * capability): each frame runs its own content-script engine (see content-script.ts), and the top
+ * frame is the source of truth.
+ *
+ * Deliberately stateless. Firefox unloads an idle MV3 background (an event page) and starts it
+ * again with fresh globals for the next message, so a registry of frames kept in memory would
+ * silently be empty after a few seconds. Instead, a change is broadcast to every frame of the
+ * tab (`tabs.sendMessage` without a `frameId`); the top frame ignores the echo.
+ *
+ * Messages from extension pages (the popup, the options page) have no `sender.tab` and are
+ * ignored here: those pages talk to the content scripts directly.
  */
-const tabFrames = new Map<number, Set<number>>();
+browser.runtime.onMessage.addListener(
+  (raw: unknown, sender: Runtime.MessageSender): Promise<FactorResponse | undefined> | undefined => {
+    const message = raw as Message;
+    const tabId = sender.tab?.id;
+    if (tabId === undefined) return undefined;
 
-browser.runtime.onMessage.addListener((raw: unknown, sender: Runtime.MessageSender) => {
-  const message = raw as Message;
-  const tabId = sender.tab?.id;
-  const frameId = sender.frameId;
-  if (tabId === undefined || frameId === undefined) return undefined;
-
-  if (message.type === 'tsa:registerFrame') {
-    let frames = tabFrames.get(tabId);
-    if (!frames) {
-      frames = new Set();
-      tabFrames.set(tabId, frames);
+    switch (message.type) {
+      case 'tsa:getTopFactor': {
+        const query: Message = { type: 'tsa:getFactor' };
+        return browser.tabs
+          .sendMessage(tabId, query, { frameId: 0 })
+          .then((response) => response as FactorResponse | undefined)
+          .catch(() => undefined);
+      }
+      case 'tsa:factorChanged': {
+        // Only the top frame decides the tab's size.
+        if (sender.frameId !== 0 || !isFactor(message.factor)) return undefined;
+        const relay: Message = { type: 'tsa:setFactor', factor: message.factor };
+        void browser.tabs.sendMessage(tabId, relay).catch(() => {});
+        return undefined;
+      }
+      default:
+        return undefined;
     }
-    frames.add(frameId);
-    return undefined;
-  }
-
-  if (message.type === 'tsa:factorChanged') {
-    const frames = tabFrames.get(tabId);
-    if (!frames) return undefined;
-    for (const otherFrameId of frames) {
-      if (otherFrameId === frameId) continue;
-      const relay: Message = { type: 'tsa:setFactor', factor: message.factor };
-      void browser.tabs.sendMessage(tabId, relay, { frameId: otherFrameId }).catch(() => {});
-    }
-  }
-
-  return undefined;
-});
-
-browser.tabs.onRemoved.addListener((tabId) => {
-  tabFrames.delete(tabId);
-});
+  },
+);

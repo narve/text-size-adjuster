@@ -66,9 +66,11 @@ function bindStore(engine, store, key): () => void   // outside the engine, wire
 // extension messaging (popup has zero engine logic — pure relay);
 // the source is packages/extension/src/protocol.ts
 type Message =
-  | { type: 'tsa:getFactor' } | { type: 'tsa:setFactor'; factor: number }
+  | { type: 'tsa:getFactor' }                          // popup → top frame
   | { type: 'tsa:increase' } | { type: 'tsa:decrease' } | { type: 'tsa:reset' }
-  | { type: 'tsa:factorChanged'; factor: number } | { type: 'tsa:registerFrame' };
+  | { type: 'tsa:factorChanged'; factor: number }      // top frame → background
+  | { type: 'tsa:setFactor'; factor: number }          // background → subframes
+  | { type: 'tsa:getTopFactor' };                      // subframe → background
 ```
 
 Override mechanism (FR2.5): each captured element gets its scaled
@@ -107,10 +109,10 @@ afterwards (FR6.4, accepted).
 6. Extension package, desktop first: manifest (content script declared with
    `"all_frames": true` and host permissions covering embedded content, so it
    also injects into cross-origin iframes — FR6.1/FR3.3's intentional extra
-   capability over the userscript), content script, background (relays factor
-   changes to every frame via
-   `browser.tabs.sendMessage(tabId, msg, { frameId })` so they move together),
-   popup; manual `web-ext run` check. Commit.
+   capability over the userscript), content script, background (relays the top
+   frame's factor changes to every frame of the tab via
+   `browser.tabs.sendMessage(tabId, msg)`, keeping no state of its own), popup;
+   manual `web-ext run` check. Commit.
 7. Firefox-for-Android compatibility: `browser_specific_settings.gecko_android`,
    `background.scripts` (not `service_worker`) for Android, `web-ext lint`
    clean. Commit. 7a. (Best-effort, FR8) Chrome manifest variant +

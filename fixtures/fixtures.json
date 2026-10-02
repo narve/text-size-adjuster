@@ -96,7 +96,7 @@
       "id": "iframe-cross-origin",
       "label": "Cross-origin iframe",
       "exercises": "genuinely different origin (second host:port)",
-      "traces": "FR6.1 — Layer 1: the bare engine leaves it alone without erroring; Layer 2: the extension scales it via `all_frames`",
+      "traces": "FR6.1 — Layer 1: the bare engine leaves it alone without erroring; Layer 2: the extension scales it via `all_frames`, including a late-loading frame (delayed.html)",
       "entry": "parent.html",
       "standard": false,
       "demo": false

@@ -212,21 +212,33 @@ or package it with `npx web-ext build --source-dir dist` from
   even via `postMessage` (you can't inject a stylesheet into a document you
   can't touch). _Impact on the userscript_: permanent limitation — it only ever
   runs as page-injected JS, so that iframe's content stays at its original size.
-  _Impact on the extension_: **solved, by design, not deferred** (per
-  FR3.3/FR6.1 — the user explicitly signed off on the extension and the
-  userscript differing in capability here). The extension's content script is
-  declared with `"all_frames": true` plus host permissions broad enough to cover
-  embedded content (e.g. `<all_urls>`), which gets the engine injected directly
-  into _every_ frame's own realm, cross-origin or not — each frame runs its own
+  _Impact on the extension_: **handled by design** (per FR3.3/FR6.1 — the user
+  explicitly signed off on the extension and the userscript differing in
+  capability here). The extension's content script is declared with
+  `"all_frames": true` plus host permissions broad enough to cover embedded
+  content (e.g. `<all_urls>`), which gets the engine injected directly into
+  _every_ frame's own realm, cross-origin or not — each frame runs its own
   independent engine instance over its own document (still never reaching
   _across_ a frame boundary, which stays impossible regardless of permissions;
   the trick is running inside each frame instead of reaching into it from
-  outside). The background script relays factor changes to every frame in the
-  tab via `browser.tabs.sendMessage(tabId, msg, { frameId })` so they move
-  together. This is why `iframe-cross-origin` is a useful Layer 2 (best-effort)
-  fixture too, not just a Layer 1 one: Layer 1 confirms the
-  userscript-equivalent (bare core engine) correctly leaves it alone; Layer 2
-  would confirm the packaged extension actually scales it.
+  outside). The top frame is the single source of truth: only it has the on-page
+  control, answers the popup and remembers the size (keyed by the address-bar
+  origin, so embeds never appear as sites of their own). It reports every change
+  to the background, which broadcasts it to all frames of the tab
+  (`browser.tabs.sendMessage(tabId, msg)` without a `frameId`); a subframe asks
+  for the top frame's size when it starts (`tsa:getTopFactor`). The background
+  keeps no state, because Firefox unloads an idle MV3 background and starts it
+  again with empty globals. Layer 1 confirms the userscript-equivalent (bare
+  core engine) leaves the `iframe-cross-origin` fixture alone; Layer 2 confirms
+  the packaged extension scales it, also when the frame loads late
+  (`delayed.html`) and after the background was unloaded while idle.
+- **Iframes that load or navigate later**: an iframe starts with a same-origin
+  `about:blank` placeholder that its real document replaces. The engine doesn't
+  adopt that placeholder when the iframe has a `src`, and re-examines the frame
+  on every `load`, replacing its child engine. Calls into a child engine are
+  isolated: in Firefox's content scripts a navigated-away document becomes a
+  "dead object" that throws on any use, and one such child must never stop the
+  parent from applying a change, notifying listeners or saving.
 - **Closed shadow DOM**: deliberately inaccessible to _any_ outside script by
   platform design — not a bug, not something an extension's elevated permissions
   can bypass either. _Impact_: rare in practice; closed roots are mostly used

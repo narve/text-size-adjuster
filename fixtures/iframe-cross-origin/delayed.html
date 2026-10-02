@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>iframe-cross-origin (late-loading frame)</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  h1 { font-size: 30px; }
+  small { font-size: 11px; color: #666; display: block; }
+  iframe { width: 100%; height: 160px; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+  <h1 data-tsa-ref="large">Outer page heading</h1>
+  <small data-tsa-ref="small">Outer page fine print</small>
+  <p>Same as parent.html, but the cross-origin frame's document is held back by the fixture
+  server, so the frame is still its initial about:blank placeholder when the page has
+  finished loading — like an ad or embed that arrives late.</p>
+  <iframe src="http://127.0.0.1:4311/iframe-cross-origin/child.html?delay=1500" title="cross-origin child"></iframe>
+</body>
+</html>
