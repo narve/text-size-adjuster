@@ -1,0 +1,20 @@
+# Long description of Text Size Adjuster, for the add-on store listing.
+#
+# Format: plain text. Lines starting with "#" are comments and are stripped by
+# the build; everything else is used verbatim. Separate paragraphs with a blank
+# line. The short name and one-line summary live in product.json.
+#
+Text too small on a website, and zooming in makes you scroll sideways to read each line?
+Text Size Adjuster makes just the text bigger or smaller.
+The page still fits your screen, and pictures and layout keep their size.
+
+• Zoom in on a page (pinch, or Ctrl/Cmd and +) and a small control appears: tap + or − to resize the text.
+• Or use the Text Size Adjuster button in the toolbar at any time.
+• Headings stay bigger than body text — everything scales together.
+• Your chosen size is remembered for each website and applied automatically next time.
+• Choose which corner the control sits in, and whether to always show it.
+• Works in Firefox on your computer and on Android.
+
+No tracking and no data collection: your settings stay in your browser.
+
+NOTE: It is not perfect. On some pages, some text may not resize, or may be cut off inside small fixed-size boxes.

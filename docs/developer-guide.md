@@ -42,12 +42,28 @@ should include them:
 npm run download -w fixtures
 ```
 
+## Single sources of truth
+
+- **Name and one-line summary:** `product.json` in the repo root (summary at
+  most 132 characters, Chrome's limit).
+- **Long store description:** `product-description.txt` in the repo root. Lines
+  starting with `#` are comments and are stripped by the build.
+- **Extension version:** `packages/extension/package.json`.
+- **Extension manifest:** `packages/extension/manifest.json`, without name,
+  description or version — the build injects those. The Chrome manifest is
+  derived from the built Firefox one (Firefox-only keys dropped).
+
+`tools/product.mjs` reads the name, summary and description for every consumer:
+the manifests, the userscript header, the docs site's front page and its "Store
+listing text" page in the contributor section. Edit the sources, not generated
+files.
+
 ## Publishing
 
 ### Firefox Desktop extension
 
 1. `npm run build -w packages/extension` produces `packages/extension/dist/`
-   with `manifest.firefox.json` copied in as `manifest.json`.
+   with `manifest.json` copied in as `manifest.json`.
 2. For a public listing: submit via <https://addons.mozilla.org/developers/>
    (AMO), "listed" distribution — goes through Mozilla review.
 3. For self-distribution without a public listing: submit as **unlisted** on
@@ -55,9 +71,9 @@ npm run download -w fixtures
    it at all outside of temporary `about:debugging` loading), but it isn't
    published to the public catalog.
 4. Signing is scripted: `npm run release:extension` bumps the extension's minor
-   version (in both manifests and `packages/extension/package.json`), builds the
-   extension and signs it as an unlisted add-on (`packages/extension/sign.mjs`,
-   wrapping `web-ext sign --channel unlisted`). The signed file ends up at
+   version (in `packages/extension/package.json`), builds the extension and
+   signs it as an unlisted add-on (`packages/extension/sign.mjs`, wrapping
+   `web-ext sign --channel unlisted`). The signed file ends up at
    `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`, and the
    next docs build publishes it as `downloads/text-size-adjuster.xpi`.
 
@@ -98,7 +114,7 @@ commands, are documented for technical users in
 - `npm run build:chrome -w packages/extension` (after the normal `build`) reuses
   the already-built JS bundles as-is — cross-browser already via
   `webextension-polyfill`'s `browser` global — and writes `dist-chrome/` with
-  `manifest.chrome.json` (service-worker background only, no
+  the derived Chrome manifest (service-worker background only, no
   `browser_specific_settings`) already named `manifest.json`.
 - Zip `dist-chrome/` and upload via the
   [Chrome Web Store Developer Dashboard](https://chromewebstore.google.com/devconsole)

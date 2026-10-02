@@ -200,9 +200,9 @@ served via `npm run docs:serve`.
   - Firefox Android extension: the `gecko_android` manifest requirement and the
     unlisted self-distribution signing path used for the manual QA checklist,
     plus what store listing would additionally require.
-  - Chrome extension (FR8, best-effort): packaging the `manifest.chrome.json`
-    variant and the Chrome Web Store developer dashboard submission flow, kept
-    brief since it's not a primary target.
+  - Chrome extension (FR8, best-effort): packaging the the derived Chrome
+    manifest variant and the Chrome Web Store developer dashboard submission
+    flow, kept brief since it's not a primary target.
   - Userscript: direct `.user.js` distribution vs. optionally publishing to
     Greasy Fork.
 - **TR6.2**: `README.md` at the repo root documents the reading order across all

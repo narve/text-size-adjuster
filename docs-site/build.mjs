@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import MarkdownIt from 'markdown-it';
 import { chromium } from 'playwright';
+import { readProduct } from '../tools/product.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -19,6 +20,10 @@ const USERSCRIPT_BUNDLE = path.join(
   'dist',
   'text-size-adjuster.user.js',
 );
+
+// Name and descriptive text: product.json is the single source (also used by the manifests,
+// the userscript header and the store listing).
+const product = readProduct();
 
 const md = new MarkdownIt({ html: false, linkify: true });
 
@@ -139,6 +144,17 @@ for (const { file, title } of DEV_DOCS) {
     isDev: true,
   });
 }
+writePage(path.join(DIST, 'dev', 'store-listing.html'), {
+  title: 'Store listing text',
+  assetRoot: '../',
+  isDev: true,
+  bodyHtml:
+    `<h1>Store listing text</h1><p>From <code>product.json</code> (name, summary) and ` +
+    `<code>product-description.txt</code> (description), as used for the add-on store.</p>` +
+    `<h2>Name</h2><p>${product.name}</p><h2>Summary</h2><p>${product.summary}</p>` +
+    `<h2>Description</h2>` +
+    product.description.split(/\n\s*\n/).map((para) => `<p>${para.replace(/\n/g, '<br>')}</p>`).join(''),
+});
 writePage(path.join(DIST, 'dev', 'index.html'), {
   title: 'For contributors',
   assetRoot: '../',
@@ -146,7 +162,7 @@ writePage(path.join(DIST, 'dev', 'index.html'), {
   bodyHtml:
     '<h1>For contributors</h1><p>Build/test instructions, architecture, and the project\'s requirements docs.</p><ul>' +
     DEV_DOCS.map((d) => `<li><a href="${d.file.replace(/\.md$/, '.html')}">${d.title}</a></li>`).join('') +
-    '</ul>',
+    '<li><a href="store-listing.html">Store listing text</a></li></ul>',
 });
 
 // --- 4. Gallery (TR5.3/TR5.4) + live demos (TR5.5), via a headless browser for compositing ---
@@ -334,10 +350,9 @@ writePage(path.join(DIST, 'index.html'), {
   title: 'Text Size Adjuster',
   assetRoot: '',
   bodyHtml: `
-    <h1>Text Size Adjuster</h1>
-    <p>Make a web page's text bigger (or smaller) with one tap — without zooming the whole page
-    and scrolling sideways. Pictures and layout stay put; only the text grows, and it still fits
-    your screen. Works in Firefox on your computer and on Android.</p>
+    <h1>${product.name}</h1>
+    <p>${product.summary} Pictures and layout keep their size, and the text still fits your
+    screen. Works in Firefox on your computer and on Android.</p>
 
     <h2>Install</h2>
     <div class="card-grid">

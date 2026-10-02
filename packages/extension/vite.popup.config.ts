@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
-import { copyFileSync, cpSync } from 'node:fs';
+// @ts-expect-error plain JS helper shared with the other build scripts
+import { readProduct } from '../../tools/product.mjs';
+import { copyFileSync, cpSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,10 +26,19 @@ export default defineConfig({
       closeBundle() {
         // Firefox is the primary target (FR3.1) — dist/manifest.json is the Firefox manifest.
         // The Chrome variant (FR8, best-effort) is a separate opt-in step: `npm run build:chrome`.
-        copyFileSync(
-          path.resolve(__dirname, 'manifest.firefox.json'),
-          path.resolve(__dirname, 'dist/manifest.json'),
-        );
+        // Single sources: name and summary from the repo's product.json, version from this
+        // package's package.json. manifest.json carries neither.
+        const product = readProduct();
+        const { version } = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+        const manifest = JSON.parse(readFileSync(path.resolve(__dirname, 'manifest.json'), 'utf8'));
+        const full = {
+          manifest_version: manifest.manifest_version,
+          name: product.name,
+          version,
+          description: product.summary,
+          ...manifest,
+        };
+        writeFileSync(path.resolve(__dirname, 'dist/manifest.json'), `${JSON.stringify(full, null, 2)}\n`);
         copyFileSync(
           path.resolve(__dirname, 'src/popup/popup.html'),
           path.resolve(__dirname, 'dist/popup.html'),

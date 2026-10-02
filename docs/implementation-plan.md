@@ -44,9 +44,9 @@ text-size-adjuster/
   config.
 - **`webextension-polyfill`** in the extension package so `browser.*` calls work
   unmodified in Chrome too (FR8.3). The build emits two manifest variants from
-  one template (`manifest.firefox.json`, `manifest.chrome.json`) differing only
-  in the `background` key (Firefox: `background.scripts`, required for Android;
-  Chrome: `background.service_worker`, required by Chrome MV3) and
+  one template (`manifest.json` (Firefox)) differing only in the `background`
+  key (Firefox: `background.scripts`, required for Android; Chrome:
+  `background.service_worker`, required by Chrome MV3) and
   `browser_specific_settings` — all other code (content script, background
   logic, popup) is shared unchanged.
 - **@playwright/test** for Layer 1/2; **web-ext** as a devDependency for manual

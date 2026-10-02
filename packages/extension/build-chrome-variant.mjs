@@ -22,6 +22,11 @@ for (const file of ['content.js', 'background.js', 'popup.js', 'popup.html', 'op
   fs.copyFileSync(path.join(SRC_DIST, file), path.join(CHROME_DIST, file));
 }
 fs.cpSync(path.join(SRC_DIST, 'icons'), path.join(CHROME_DIST, 'icons'), { recursive: true });
-fs.copyFileSync(path.join(__dirname, 'manifest.chrome.json'), path.join(CHROME_DIST, 'manifest.json'));
+// Derived from the built Firefox manifest (single source): drop the Firefox-only keys. Chrome
+// MV3 wants only a service worker background, and has no browser_specific_settings.
+const manifest = JSON.parse(fs.readFileSync(path.join(SRC_DIST, 'manifest.json'), 'utf8'));
+delete manifest.browser_specific_settings;
+manifest.background = { service_worker: manifest.background.service_worker };
+fs.writeFileSync(path.join(CHROME_DIST, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 console.log('Chrome-targeted build written to dist-chrome/ (best-effort, FR8 — not a primary target).');

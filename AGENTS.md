@@ -4,6 +4,12 @@
 
 - Commit when appropriate, but don't push unless told to.
 
+## Single source of truth
+
+- Don't duplicate information. Keep each fact (names, descriptions, versions,
+  configuration) in one place and derive or copy it during the build where
+  feasible.
+
 ## Markdown style
 
 - Wrap prose at **80 characters per line**. Exceptions: tables, and lines that
