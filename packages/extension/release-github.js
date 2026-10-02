@@ -29,6 +29,11 @@ if (git('status', '--porcelain', '--untracked-files=no') !== '') {
   process.exit(1);
 }
 git('fetch', '--quiet', 'origin');
+const tag = `v${version}`;
+if (git('tag', '--list', tag) || git('ls-remote', '--tags', 'origin', `refs/tags/${tag}`)) {
+  console.error(`Tag ${tag} already exists. Release a new version (npm run release:extension) first.`);
+  process.exit(1);
+}
 if (!git('branch', '--remotes', '--contains', head)) {
   console.error(`Commit ${head.slice(0, 7)} isn't on GitHub yet. Push it before releasing.`);
   process.exit(1);
@@ -45,7 +50,7 @@ const notes =
   `Install guide: ${product.homepage}guides/install.html`;
 execFileSync(
   'gh',
-  ['release', 'create', `v${version}`, asset, '--target', head, '--title', `${product.name} ${version}`, '--notes', notes],
+  ['release', 'create', tag, asset, '--target', head, '--title', `${product.name} ${version}`, '--notes', notes],
   { cwd: REPO_ROOT, stdio: 'inherit' },
 );
 fs.rmSync(dir, { recursive: true, force: true });
