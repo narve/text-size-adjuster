@@ -145,6 +145,21 @@ describe('visibility', () => {
     expect(panel()?.hidden).toBe(false);
   });
 
+  it('with show: on-zoom, measures pinch-zoom from the starting scale (pages without a viewport meta tag)', () => {
+    const viewport = fakeVisualViewport();
+    viewport.scale = 0.42; // a desktop-only page, fitted to a phone screen
+    createFloatingWidget({ show: 'on-zoom' }).mount(createFakeEngine());
+    expect(panel()?.hidden).toBe(true);
+
+    viewport.scale = 0.43; // a wobble, not a zoom
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.hidden).toBe(true);
+
+    viewport.scale = 1; // pinched up to read: a 2.4× zoom, though still "scale 1"
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.hidden).toBe(false);
+  });
+
   it('while pinch-zoomed, counter-scales the control so it keeps its normal size', () => {
     const viewport = fakeVisualViewport();
     createFloatingWidget().mount(createFakeEngine());

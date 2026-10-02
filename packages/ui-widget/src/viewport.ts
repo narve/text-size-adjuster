@@ -6,15 +6,21 @@ const ZOOM_THRESHOLD = 1.05;
 
 /**
  * Calls `onZoom` once the user zooms in: pinch-zoom (visualViewport.scale) or browser page zoom
- * (devicePixelRatio rising above what it was when this started). Returns a stop function.
- * Page zoom is measured relative to the starting value, so a page that was *already* zoomed when
- * it loaded doesn't count — only zooming during this visit does.
+ * (devicePixelRatio). Both are measured relative to where they started, so a page that was
+ * *already* zoomed when it loaded doesn't count — only zooming in during this visit does.
+ *
+ * For pinch-zoom that matters on phones: a page without a viewport meta tag (a desktop-only
+ * page, the kind this tool is most needed on) starts zoomed *out* to fit, at a scale around 0.4,
+ * and pinching it up to 1 to read is already a 2.5× zoom. The baseline is the lowest scale seen,
+ * in case the page settles at its fitted scale only after this started.
  */
 export function watchForZoom(win: Window, onZoom: () => void): () => void {
   const viewport = win.visualViewport;
   const startRatio = win.devicePixelRatio;
+  let baseScale = viewport?.scale ?? 1;
   const check = () => {
-    const pinched = !!viewport && viewport.scale > ZOOM_THRESHOLD;
+    if (viewport) baseScale = Math.min(baseScale, viewport.scale);
+    const pinched = !!viewport && viewport.scale > baseScale * ZOOM_THRESHOLD;
     const pageZoomed = win.devicePixelRatio > startRatio * ZOOM_THRESHOLD;
     if (pinched || pageZoomed) onZoom();
   };
