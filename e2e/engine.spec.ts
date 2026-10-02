@@ -1,38 +1,14 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { CORE_BUNDLE, PHONE_SCALE, PHONE_VIEWPORT, SCREENSHOT_DIR, fixtureScreenshot, requireBuilt } from '../tools/paths.mjs';
 import { STANDARD_FIXTURES, FACTORS } from './fixtures.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CORE_BUNDLE = path.resolve(__dirname, '../packages/core/dist/index.global.js');
-const SCREENSHOT_DIR = path.resolve(__dirname, 'screenshots');
+import { gotoAndAttach, setFactor, type TsaWindow } from './helpers.js';
 
 test.beforeAll(() => {
-  if (!fs.existsSync(CORE_BUNDLE)) {
-    throw new Error(
-      `Core bundle not found at ${CORE_BUNDLE}. Run "npm run build -w packages/core" first.`,
-    );
-  }
+  requireBuilt(CORE_BUNDLE, 'packages/core');
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 });
-
-/** Registers the init script, navigates, then creates and attaches an engine on `window.__tsa`. */
-async function gotoAndAttach(page: Page, url: string): Promise<void> {
-  await page.addInitScript({ path: CORE_BUNDLE });
-  await page.goto(url);
-  await page.evaluate(() => {
-    const w = window as unknown as { TSA_CORE: { createEngine: () => unknown }; __tsa?: unknown };
-    w.__tsa = w.TSA_CORE.createEngine();
-    (w.__tsa as { attach: () => void }).attach();
-  });
-}
-
-function setFactor(page: Page, factor: number): Promise<void> {
-  return page.evaluate((k) => {
-    (window as unknown as { __tsa: { setFactor: (k: number) => number } }).__tsa.setFactor(k);
-  }, factor);
-}
 
 async function readRefSizes(page: Page): Promise<{ small: number; large: number }> {
   return page.evaluate(() => {
@@ -228,11 +204,7 @@ test.describe('large-dom-performance', () => {
     await page.goto('/large-dom-performance/');
 
     const timings = await page.evaluate(() => {
-      interface MinimalEngine {
-        attach(): void;
-        setFactor(k: number): number;
-      }
-      const w = window as unknown as { TSA_CORE: { createEngine: () => MinimalEngine } };
+      const w = window as unknown as TsaWindow;
       const engine = w.TSA_CORE.createEngine();
       const t0 = performance.now();
       engine.attach();
@@ -252,22 +224,14 @@ test.describe('large-dom-performance', () => {
 
 test.describe('ignoreAttr exclusion', () => {
   test('an element marked data-tsa-ignore, and its subtree, are left untouched', async ({ page }) => {
-    await page.addInitScript({ path: CORE_BUNDLE });
-    await page.goto('/ignore-attr/');
-    await page.evaluate(() => {
-      const w = window as unknown as { TSA_CORE: { createEngine: () => { attach: () => void; setFactor: (k: number) => number } }; __tsa?: unknown };
-      w.__tsa = w.TSA_CORE.createEngine();
-      (w.__tsa as { attach: () => void }).attach();
-    });
+    await gotoAndAttach(page, '/ignore-attr/');
 
     const before = await page.evaluate(() => ({
       normal: getComputedStyle(document.querySelector('#normal')!).fontSize,
       ignored: getComputedStyle(document.querySelector('#ignored')!).fontSize,
     }));
 
-    await page.evaluate(() => {
-      (window as unknown as { __tsa: { setFactor: (k: number) => number } }).__tsa.setFactor(2);
-    });
+    await setFactor(page, 2);
 
     const after = await page.evaluate(() => ({
       normal: getComputedStyle(document.querySelector('#normal')!).fontSize,
@@ -288,16 +252,16 @@ test.describe('ignoreAttr exclusion', () => {
  * guarantees are asserted above.
  */
 test.describe('phone gallery screenshots', () => {
-  test.use({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2 });
+  test.use({ viewport: PHONE_VIEWPORT, deviceScaleFactor: PHONE_SCALE });
 
   for (const fixture of STANDARD_FIXTURES) {
     test(`${fixture.id} at 1x and 2x`, async ({ page, browserName }) => {
       test.skip(browserName !== 'chromium', 'one set of gallery screenshots is enough');
       await gotoAndAttach(page, fixture.path);
       const imageBefore = await readImageSize(page);
-      await page.screenshot({ path: path.join(SCREENSHOT_DIR, fixture.id, 'phone-1x.png') });
+      await page.screenshot({ path: fixtureScreenshot(fixture.id, 1) });
       await setFactor(page, 2);
-      await page.screenshot({ path: path.join(SCREENSHOT_DIR, fixture.id, 'phone-2x.png') });
+      await page.screenshot({ path: fixtureScreenshot(fixture.id, 2) });
       expect(await readImageSize(page)).toEqual(imageBefore);
     });
   }

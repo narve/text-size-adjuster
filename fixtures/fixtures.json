@@ -1,0 +1,123 @@
+{
+  "_about": "Single source for the synthetic test fixtures (TR1). e2e/fixtures.ts reads it for the Layer 1 specs, docs-site/build.mjs for the gallery and live demos. 'standard': covered by the generic ratio check and the phone screenshots (shown in the gallery). 'demo': copied into the docs site as a live demo. 'entry'/'extraFiles' are relative to fixtures/<id>/.",
+  "fixtures": [
+    {
+      "id": "plain-px",
+      "label": "Plain px sizing",
+      "exercises": "hardcoded px sizes everywhere",
+      "traces": "FR1.2, FR2.1",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "rem-em",
+      "label": "Root-relative sizing (rem/em)",
+      "exercises": "root-relative sizing",
+      "traces": "FR1.2, FR2.1",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "nested-em",
+      "label": "Deeply nested em inheritance",
+      "exercises": "deeply nested relative inheritance",
+      "traces": "FR2.1, FR2.4",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "shadow-dom-open",
+      "label": "Open shadow DOM content",
+      "exercises": "open shadow root content",
+      "traces": "FR4, FR6.2 boundary",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "overflow-clipping",
+      "label": "Fixed-height container",
+      "exercises": "fixed-height/overflow containers",
+      "traces": "FR6.3 (documented, not \"fixed\")",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "important-high-specificity",
+      "label": "Stubborn !important styling",
+      "exercises": "page CSS with `!important` + ID/class selectors",
+      "traces": "FR2.5",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "line-height-mixed",
+      "label": "Mixed line-height styles",
+      "exercises": "`normal`, unitless, and explicit px line-heights side by side",
+      "traces": "FR2.3",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "large-dom-performance",
+      "label": "Large page (performance)",
+      "exercises": "a few thousand text nodes (simulated feed/article)",
+      "traces": "FR7.1, FR7.2",
+      "entry": "index.html",
+      "standard": true,
+      "demo": true
+    },
+    {
+      "id": "iframe-same-origin",
+      "label": "Same-origin iframe",
+      "exercises": "same-origin embedded frame",
+      "traces": "engine reach boundary",
+      "entry": "parent.html",
+      "extraFiles": ["child.html"],
+      "standard": false,
+      "demo": true
+    },
+    {
+      "id": "spa-mutation",
+      "label": "Content added after load",
+      "exercises": "content injected after load via JS",
+      "traces": "FR2.4",
+      "entry": "index.html",
+      "standard": false,
+      "demo": true
+    },
+    {
+      "id": "iframe-cross-origin",
+      "label": "Cross-origin iframe",
+      "exercises": "genuinely different origin (second host:port)",
+      "traces": "FR6.1 — Layer 1: the bare engine leaves it alone without erroring; Layer 2: the extension scales it via `all_frames`",
+      "entry": "parent.html",
+      "standard": false,
+      "demo": false
+    },
+    {
+      "id": "ignore-attr",
+      "label": "Opt-out attribute",
+      "exercises": "elements marked `data-tsa-ignore` keep their size",
+      "traces": "FR4.2 (the widget must not scale itself)",
+      "entry": "index.html",
+      "standard": false,
+      "demo": false
+    },
+    {
+      "id": "script-tag",
+      "label": "Script-tag embed",
+      "exercises": "the embed's settings via attributes and URL parameters",
+      "traces": "FR3.4, FR10",
+      "entry": "default.html",
+      "standard": false,
+      "demo": false
+    }
+  ]
+}

@@ -1,21 +1,7 @@
 import { test, expect } from '@playwright/test';
-import path from 'node:path';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { USERSCRIPT_BUNDLE, requireBuilt } from '../tools/paths.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const USERSCRIPT_BUNDLE = path.resolve(
-  __dirname,
-  '../packages/userscript/dist/text-size-adjuster.user.js',
-);
-
-test.beforeAll(() => {
-  if (!fs.existsSync(USERSCRIPT_BUNDLE)) {
-    throw new Error(
-      `Userscript bundle not found at ${USERSCRIPT_BUNDLE}. Run "npm run build -w packages/userscript" first.`,
-    );
-  }
-});
+test.beforeAll(() => requireBuilt(USERSCRIPT_BUNDLE, 'packages/userscript'));
 
 /**
  * Sanity-checks the actual distributed artifact, not hand-copied source: injects the real built

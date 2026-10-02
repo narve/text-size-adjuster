@@ -1,7 +1,7 @@
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readSites, realWorldSnapshot } from '../../tools/paths.mjs';
 
 // TR1a: snapshots a representative page from popular real-world sites, as an additional,
 // non-gating fixture set alongside the synthetic TR1 fixtures. Snapshots are NOT committed to git
@@ -20,9 +20,9 @@ import { fileURLToPath } from 'node:url';
 // - a <base href> keeps relative URLs (CSS, images, fonts) pointing at the live site, so the
 //   snapshot keeps its real styling without mirroring every asset.
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sites = JSON.parse(fs.readFileSync(path.join(__dirname, 'sites.json'), 'utf8'));
-const OUT_DIR = path.join(__dirname, 'snapshots');
+const sites = readSites();
+// The full device (mobile user agent, touch), not just its size, so sites serve their mobile
+// layout. Its width matches PHONE_VIEWPORT in tools/paths.mjs, which the screenshots use.
 const DEVICE = devices['Pixel 7'];
 
 const CONSENT_SELECTORS = [
@@ -88,9 +88,9 @@ async function downloadSite({ id, url }, browser) {
 
     const snapshot = makeStatic(await page.content(), url);
 
-    const dir = path.join(OUT_DIR, id);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'index.html'), snapshot, 'utf8');
+    const file = realWorldSnapshot(id);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, snapshot, 'utf8');
     console.log(`[ok]   ${id} <- ${url}`);
     return true;
   } catch (err) {

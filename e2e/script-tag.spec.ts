@@ -1,16 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
-import path from 'node:path';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { USERSCRIPT_BUNDLE, requireBuilt } from '../tools/paths.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BUNDLE = path.resolve(__dirname, '../packages/userscript/dist/text-size-adjuster.user.js');
-
-test.beforeAll(() => {
-  if (!fs.existsSync(BUNDLE)) {
-    throw new Error(`Bundle not found at ${BUNDLE}. Run "npm run build -w packages/userscript" first.`);
-  }
-});
+test.beforeAll(() => requireBuilt(USERSCRIPT_BUNDLE, 'packages/userscript'));
 
 /**
  * FR10.3: a site owner embedding the built bundle with a real `<script src>` tag (served by the

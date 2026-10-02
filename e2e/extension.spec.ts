@@ -1,6 +1,6 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect, EXTENSION_DIR } from './webextext-fixture.js';
+import { EXTENSION_DIST, requireBuilt } from '../tools/paths.mjs';
+import { test, expect } from './webextext-fixture.js';
 
 /**
  * Layer 2 (TR3) — best-effort, non-gating. Drives the *real packaged extension* in real Firefox
@@ -17,13 +17,7 @@ import { test, expect, EXTENSION_DIR } from './webextext-fixture.js';
  * message-relay code path (content-script.ts's `browser.runtime.onMessage` handling) is simple
  * enough to be low-risk left uncovered here.
  */
-test.beforeAll(() => {
-  if (!fs.existsSync(path.join(EXTENSION_DIR, 'manifest.json'))) {
-    throw new Error(
-      `Extension not built at ${EXTENSION_DIR}. Run "npm run build -w packages/extension" first.`,
-    );
-  }
-});
+test.beforeAll(() => requireBuilt(path.join(EXTENSION_DIST, 'manifest.json'), 'packages/extension'));
 
 function readLargeRefSize(page: import('@playwright/test').Page) {
   return page.evaluate(
@@ -34,7 +28,7 @@ function readLargeRefSize(page: import('@playwright/test').Page) {
 test('content script auto-attaches, the widget scales the page, and the factor persists per origin on reload', async ({
   page,
 }) => {
-  await page.goto('http://127.0.0.1:4310/plain-px/');
+  await page.goto('/plain-px/');
 
   const widgetHost = page.locator('[data-tsa-ignore]');
   await expect(widgetHost).toBeAttached();
