@@ -51,8 +51,8 @@ Firefox's Add-ons page). There you can:
 - choose which **corner** the control sits in;
 - choose to show the control **always**, instead of only after you zoom in;
 - turn off **remembering sizes automatically** — then size changes last until
-  you reload, and you can keep a site's size with **Remember this site** in the
-  {{name}} button's menu;
+  you reload, and you can keep a site's size with the **Remember this site**
+  button that appears when you click the {{name}} button;
 - see the **list of sites** where you've changed the text size, and remove any
   of them to put that site back to normal.
 

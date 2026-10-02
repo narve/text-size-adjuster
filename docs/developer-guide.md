@@ -17,7 +17,8 @@ text-size-adjuster/
   packages/
     core/          # the scaling engine — framework/UI/storage-agnostic
     stores/        # createMemoryStore, createLocalExtensionStore,
-                   #   createGMValueStore, createGatedStore
+                   #   createGatedStore; createGMValueStore is ready for
+                   #   FR5.3 (optional) but no delivery uses it yet
     ui-widget/     # shadow-DOM floating +/- widget and its settings parsing
     theme/         # shared CSS (colours, buttons, panels) for the docs site and
                    #   the extension's options page and popup
@@ -62,7 +63,6 @@ Per workspace (`-w <workspace>`):
 
 ```bash
 npm run build -w packages/core               # likewise userscript, extension
-npm run dev -w packages/extension            # rebuild on change
 npm run build:chrome -w packages/extension   # derive dist-chrome/ after build
 npm run lint:webext -w packages/extension    # web-ext lint, incl. Android APIs
 npm run run:desktop -w packages/extension    # try it in a fresh Firefox
@@ -258,7 +258,8 @@ or package it with `npx web-ext build --source-dir dist` from
   What it doesn't handle is a page script that later rewrites the element's
   `style` attribute (e.g. a framework re-render): the engine's
   `MutationObserver` watches added nodes, not attribute changes, so that element
-  drops back to the page's size. Watching `style` attributes would mean
+  drops back to the page's size (until the next capture, after a viewport width
+  change, picks it up again). Watching `style` attributes would mean
   re-capturing on every attribute write the engine itself also triggers — real
   complexity for a case that's rare in practice. Flagged as a possible future
   enhancement, not attempted in v1.

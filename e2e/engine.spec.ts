@@ -429,7 +429,9 @@ test.describe('large-dom-performance', () => {
     expect(timings.initialCaptureMs).toBeLessThan(3000);
     // The whole point of the CSS-variable design (FR7.2): a later change only touches one
     // property, no DOM walk, so it should be dramatically cheaper than the initial capture.
-    expect(timings.factorChangeMs).toBeLessThan(Math.max(5, timings.initialCaptureMs / 3));
+    // TR2: at least an order of magnitude (measured: over 100×); the 5 ms floor absorbs timer
+    // resolution on a fast machine, where the capture itself takes only a few milliseconds.
+    expect(timings.factorChangeMs).toBeLessThan(Math.max(5, timings.initialCaptureMs / 10));
   });
 });
 

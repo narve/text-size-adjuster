@@ -41,12 +41,34 @@ or a temporarily deployed copy) and record pass/fail:
 | `important-high-specificity` | Increase/decrease                                     | The page's own bold/forced font-size styling is overridden    |
 | `spa-mutation`               | Trigger the fixture's "load more" action, then adjust | Newly added content scales too, without needing a reload      |
 
+For both variants, also check:
+
+- **A page without a viewport meta tag** (a desktop-only page, e.g. the `norvig`
+  real-world site, or the `script-tag/on-zoom.html` fixture for the embed): it
+  opens zoomed out to fit; with "show after zooming", pinching it up to a
+  readable size reveals the control (FR10.2).
+- **Rotation**: set a larger size, rotate the phone to landscape and back; the
+  text keeps the chosen size relative to the page's own layout, with no sideways
+  scrolling (FR6.5).
+- **An iframe-heavy page** (a news article with embedded videos or social
+  posts): text inside the embeds follows the size (extension), or the page has
+  exactly one control and no extra controls appear inside the embeds
+  (userscript).
+
 For the extension variant only, also check:
 
+- **Default visibility**: right after installing, the control is hidden until
+  you zoom in (FR10.4); the `⋮` → extensions menu entry works without zooming.
 - Closing and reopening the page on the same site reapplies the last-used factor
   automatically (FR5.1 per-site persistence).
 - The toolbar/popup +/- controls and the in-page floating widget (if both are
   present) stay in sync with each other.
+- **Remember this site**: with "remember sizes automatically" turned off in the
+  options, change the size, open the popup and tap **Remember this site**; the
+  site appears in the options page's list, and reopening it reapplies the size
+  (FR9.5).
+- **Firefox's own pages** (e.g. `about:addons`): the popup says it can't change
+  the page and its buttons are disabled.
 
 ## Reporting
 

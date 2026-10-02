@@ -49,5 +49,7 @@ Unknown values are ignored.
 - The chosen size is not remembered between page loads; each visit starts at
   normal size. (The browser extension is the version that remembers a size per
   site.)
+- A visitor who hides the control with **×** gets it back when the page is
+  loaded again.
 - This only works on sites you control. To use the control on _other people's_
   sites, install the [Firefox add-on](install.html) instead.
