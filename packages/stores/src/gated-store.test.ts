@@ -30,6 +30,17 @@ describe('createGatedStore', () => {
     expect(await inner.get('https://a.example')).toBe(1.6);
   });
 
+  it('waits for an asynchronous autoSave answer', async () => {
+    let answer: (value: boolean) => void = () => {};
+    const inner = createMemoryStore();
+    const store = createGatedStore(inner, () => new Promise<boolean>((resolve) => (answer = resolve)));
+    const saving = store.set('https://a.example', 1.5);
+    expect(await inner.get('https://a.example')).toBeUndefined();
+    answer(false);
+    await saving;
+    expect(await inner.get('https://a.example')).toBeUndefined();
+  });
+
   it('passes removals through', async () => {
     const inner = createMemoryStore();
     await inner.set('https://a.example', 1.5);

@@ -17,6 +17,7 @@
     .actions { display: grid; gap: 6px; margin-top: 10px; }
     .actions .button { width: 100%; min-height: 38px; font-size: 0.92rem; }
     .options-link { display: block; margin-top: 10px; text-align: center; font-size: 0.88rem; }
+    .unavailable { margin: 10px 0 0; font-size: 0.88rem; }
   </style>
 </head>
 <body>
@@ -30,6 +31,10 @@
     <button class="button" id="reset">Reset to 100%</button>
     <button class="button button-primary" id="remember" hidden>Remember this site</button>
   </div>
+  <p class="unavailable" id="unavailable" hidden>
+    Can't change this page. {{name}} doesn't work on Firefox's own pages, and on other sites it
+    needs permission to access the site.
+  </p>
   <a class="options-link" href="#" id="options">Options…</a>
   <script src="popup.js"></script>
 </body>

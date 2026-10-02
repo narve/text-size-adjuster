@@ -20,6 +20,12 @@ export interface CaptureOptions {
  * can still undo the scaling is a page script rewriting that element's `style` attribute later —
  * the MutationObserver only watches for added nodes (an accepted, documented limitation, FR6.4).
  *
+ * The element's own inline font-size/line-height (if any) is recorded in the `scaledAttr`
+ * attribute's value before being replaced, so `releaseElements` can put it back exactly. It lives
+ * in the DOM rather than in this engine's memory because a frame can be scaled by more than one
+ * engine instance (the top page's, and the frame's own content script's in the extension), each in
+ * its own JS realm, and whichever of them releases an element needs the original.
+ *
  * All reads happen before any writes (read phase, then write phase) to avoid layout-thrashing —
  * interleaving `getComputedStyle` with style mutations forces a synchronous reflow per element on
  * a large page.
@@ -48,6 +54,7 @@ export function captureElements(
 
   for (const { el, fontSize, lineHeight } of reads) {
     const htmlEl = el as HTMLElement;
+    const original = recordOriginal(htmlEl);
     htmlEl.style.setProperty('font-size', `calc(${fontSize} * var(${factorVar}, 1))`, 'important');
     if (isPxLineHeight(lineHeight)) {
       htmlEl.style.setProperty(
@@ -56,9 +63,53 @@ export function captureElements(
         'important',
       );
     }
-    el.setAttribute(opts.scaledAttr, '');
+    el.setAttribute(opts.scaledAttr, original);
   }
 
   if (prevFactor) styleTarget.style.setProperty(factorVar, prevFactor);
   else styleTarget.style.removeProperty(factorVar);
+}
+
+const SCALED_PROPS = ['font-size', 'line-height'] as const;
+type ScaledProp = (typeof SCALED_PROPS)[number];
+/** An element's own inline value and priority for each scaled property it had one for. */
+type Original = Partial<Record<ScaledProp, [value: string, priority: string]>>;
+
+/** The element's own inline declarations, as the `scaledAttr` value ('' when it had none). */
+function recordOriginal(el: HTMLElement): string {
+  const original: Original = {};
+  for (const prop of SCALED_PROPS) {
+    const value = el.style.getPropertyValue(prop);
+    if (value) original[prop] = [value, el.style.getPropertyPriority(prop)];
+  }
+  return Object.keys(original).length > 0 ? JSON.stringify(original) : '';
+}
+
+function parseOriginal(raw: string | null): Original {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Original;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Undoes `captureElements` for these elements: each scaled declaration that is still ours goes
+ * back to the element's own original inline value (or is removed), and the marker attribute is
+ * removed, so a later capture reads the page's own current styling again. A declaration a page
+ * script has since replaced with its own is left as the page set it.
+ */
+export function releaseElements(elements: Element[], factorVar: string, opts: CaptureOptions): void {
+  for (const el of elements) {
+    const htmlEl = el as HTMLElement;
+    const original = parseOriginal(el.getAttribute(opts.scaledAttr));
+    for (const prop of SCALED_PROPS) {
+      if (!htmlEl.style.getPropertyValue(prop).includes(`var(${factorVar}`)) continue;
+      const own = original[prop];
+      if (own) htmlEl.style.setProperty(prop, own[0], own[1]);
+      else htmlEl.style.removeProperty(prop);
+    }
+    el.removeAttribute(opts.scaledAttr);
+  }
 }

@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { CORE_BUNDLE, PHONE_SCALE, PHONE_VIEWPORT, SCREENSHOT_DIR, fixtureScreenshot, requireBuilt } from '../tools/paths.js';
 import { STANDARD_FIXTURES, FACTORS } from './fixtures.js';
-import { gotoAndAttach, setFactor, type TsaWindow } from './helpers.js';
+import { attachEngine, gotoAndAttach, setFactor, type TsaWindow } from './helpers.js';
 
 test.beforeAll(() => {
   requireBuilt(CORE_BUNDLE, 'packages/core');
@@ -117,6 +117,92 @@ test.describe('iframe-same-origin', () => {
   }
 });
 
+/**
+ * An iframe's *initial* document is a same-origin, already-complete about:blank placeholder until
+ * its real document arrives. The engine must not adopt that placeholder and then consider the
+ * frame done: the real document (and every later navigation of the frame) has to be picked up.
+ * In Firefox's content scripts, the stale child engine also turned into a "dead object" that made
+ * every later factor change throw (code review C1).
+ */
+test.describe('iframe lifecycle', () => {
+  const readChildLarge = (page: Page) =>
+    page
+      .frameLocator('iframe')
+      .locator('[data-tsa-ref="large"]')
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+
+  async function waitForChildLoad(page: Page, trigger: () => Promise<void>): Promise<void> {
+    const loaded = page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          document.querySelector('iframe')!.addEventListener('load', () => resolve(), { once: true }),
+        ),
+    );
+    await trigger();
+    await loaded;
+  }
+
+  test('a frame whose document arrives after the engine attached is scaled', async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (error) => errors.push(error));
+    await gotoAndAttach(page, '/iframe-same-origin/parent.html');
+    // Replace the fixture's frame with one whose document is held back by the server; the
+    // engine sees it (via its MutationObserver) while it is still the about:blank placeholder.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          const iframe = document.createElement('iframe');
+          iframe.addEventListener('load', () => resolve(), { once: true });
+          iframe.src = 'child.html?delay=800';
+          document.querySelector('iframe')!.replaceWith(iframe);
+        }),
+    );
+    const before = await readChildLarge(page);
+    await setFactor(page, 2);
+    expect((await readChildLarge(page)) / before).toBeCloseTo(2, 1);
+    expect(errors).toEqual([]);
+  });
+
+  test('a frame that navigates after it was scaled is scaled again', async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (error) => errors.push(error));
+    await gotoAndAttach(page, '/iframe-same-origin/parent.html');
+    const original = await readChildLarge(page);
+    await setFactor(page, 2);
+    expect((await readChildLarge(page)) / original).toBeCloseTo(2, 1);
+
+    await waitForChildLoad(page, () =>
+      page.evaluate(() => {
+        document.querySelector('iframe')!.src = 'child.html?navigated';
+      }),
+    );
+    // The new document picks up the current factor as soon as it is attached…
+    expect((await readChildLarge(page)) / original).toBeCloseTo(2, 1);
+    // …and keeps following later changes.
+    await setFactor(page, 3);
+    expect((await readChildLarge(page)) / original).toBeCloseTo(3, 1);
+    expect(errors).toEqual([]);
+  });
+
+  test('a frame without src that is filled in with document.write is scaled', async ({ page }) => {
+    await gotoAndAttach(page, '/iframe-same-origin/parent.html');
+    await page.evaluate(() => {
+      const iframe = document.createElement('iframe');
+      document.querySelector('iframe')!.replaceWith(iframe);
+    });
+    // Give the MutationObserver a turn to adopt the (genuine, src-less) about:blank document.
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    await page.evaluate(() => {
+      const doc = document.querySelector('iframe')!.contentDocument!;
+      doc.open();
+      doc.write('<!doctype html><p data-tsa-ref="large" style="font-size: 20px">written</p>');
+      doc.close();
+    });
+    await setFactor(page, 2);
+    expect(await readChildLarge(page)).toBeCloseTo(40, 0);
+  });
+});
+
 test.describe('iframe-cross-origin', () => {
   for (const factor of FACTORS) {
     test(`outer page scales while the cross-origin iframe is left untouched at factor ${factor}`, async ({
@@ -144,6 +230,131 @@ test.describe('iframe-cross-origin', () => {
       expect(afterOuter.large / beforeOuter.large).toBeCloseTo(factor, 1);
     });
   }
+});
+
+/**
+ * Only text is scaled, never the page's root font size: `rem` lengths are also used for layout
+ * (widths, grid tracks, gaps), and scaling <html> made those grow with the text and spill
+ * sideways on a phone (code review M1).
+ */
+test.describe('rem-based layout', () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+
+  test('rem widths and grid tracks keep their size while rem text scales', async ({ page }) => {
+    await gotoAndAttach(page, '/rem-em/');
+    const measure = () =>
+      page.evaluate(() => {
+        const box = document.querySelector('[data-tsa-ref="rem-box"]')!;
+        const grid = document.querySelector('[data-tsa-ref="rem-grid"]')!;
+        return {
+          boxWidth: box.getBoundingClientRect().width,
+          columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+          heading: parseFloat(getComputedStyle(document.querySelector('[data-tsa-ref="large"]')!).fontSize),
+        };
+      });
+    const before = await measure();
+    await setFactor(page, 2);
+    const after = await measure();
+
+    expect(after.heading / before.heading).toBeCloseTo(2, 1);
+    expect(after.boxWidth).toBe(before.boxWidth);
+    expect(after.columns).toBe(before.columns);
+    expect(await hasHorizontalOverflow(page)).toBe(false);
+  });
+
+  test('the root element, <head> contents, line breaks and SVG are left alone', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/rem-em/');
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<p>a<br>b<wbr>c</p><svg width="200" height="40"><text id="svg-label" x="0" y="30" font-size="20">Logo</text></svg>',
+      );
+    });
+    await attachEngine(page);
+    await setFactor(page, 2);
+    const result = await page.evaluate(() => ({
+      scaled: ['html', 'head', 'title', 'style', 'meta', 'br', 'wbr', 'svg', '#svg-label'].filter((sel) =>
+        document.querySelector(sel)!.hasAttribute('data-tsa-scaled'),
+      ),
+      svgText: getComputedStyle(document.querySelector('#svg-label')!).fontSize,
+      body: document.body.hasAttribute('data-tsa-scaled'),
+    }));
+    expect(result.scaled).toEqual([]);
+    expect(result.svgText).toBe('20px');
+    expect(result.body).toBe(true);
+  });
+});
+
+test.describe('late shadow roots', () => {
+  test('a custom element defined after the engine attached has its shadow content scaled', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/shadow-dom-open/');
+    // In the page, but not defined yet: no shadow root when the engine scans it (code review M3).
+    await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<late-card></late-card>'));
+    await attachEngine(page);
+    await page.evaluate(() => {
+      customElements.define(
+        'late-card',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            this.attachShadow({ mode: 'open' }).innerHTML = '<p id="late" style="font-size: 20px">Late</p>';
+          }
+        },
+      );
+    });
+    // whenDefined resolves asynchronously.
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    await setFactor(page, 2);
+    const size = await page.evaluate(
+      () => getComputedStyle(document.querySelector('late-card')!.shadowRoot!.querySelector('#late')!).fontSize,
+    );
+    expect(size).toBe('40px');
+  });
+});
+
+/**
+ * Sizes are captured as pixels. When the viewport width changes (a phone rotated, a window
+ * resized), viewport-relative sizes and media queries must apply again (code review M2).
+ */
+test.describe('viewport width changes', () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+
+  test('viewport-relative sizes and media queries follow a resize, at the current factor', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.head.insertAdjacentHTML(
+        'beforeend',
+        '<style>#vw { font-size: 4vw } #mq { font-size: 16px } @media (min-width: 600px) { #mq { font-size: 24px } }</style>',
+      );
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<p id="vw">vw</p><p id="mq">media query</p><p id="inline" style="font-size: 10px !important">inline</p>',
+      );
+    });
+    await attachEngine(page);
+    await setFactor(page, 2);
+    const read = () =>
+      page.evaluate(() =>
+        Object.fromEntries(
+          // Rounded: Firefox resolves font sizes to 1/16 px.
+          ['vw', 'mq', 'inline'].map((id) => [
+            id,
+            Math.round(parseFloat(getComputedStyle(document.getElementById(id)!).fontSize) * 10) / 10,
+          ]),
+        ),
+      );
+    expect(await read()).toEqual({ vw: 28.8, mq: 32, inline: 20 });
+
+    await page.setViewportSize({ width: 800, height: 740 });
+    await expect.poll(read).toEqual({ vw: 64, mq: 48, inline: 20 });
+
+    // The page's own inline size was kept, not lost, when the engine let go of it.
+    await setFactor(page, 1);
+    expect(await read()).toEqual({ vw: 32, mq: 24, inline: 10 });
+  });
 });
 
 test.describe('spa-mutation', () => {
@@ -218,7 +429,9 @@ test.describe('large-dom-performance', () => {
     expect(timings.initialCaptureMs).toBeLessThan(3000);
     // The whole point of the CSS-variable design (FR7.2): a later change only touches one
     // property, no DOM walk, so it should be dramatically cheaper than the initial capture.
-    expect(timings.factorChangeMs).toBeLessThan(Math.max(5, timings.initialCaptureMs / 3));
+    // TR2: at least an order of magnitude (measured: over 100×); the 5 ms floor absorbs timer
+    // resolution on a fast machine, where the capture itself takes only a few milliseconds.
+    expect(timings.factorChangeMs).toBeLessThan(Math.max(5, timings.initialCaptureMs / 10));
   });
 });
 

@@ -35,6 +35,11 @@ const product = readProduct();
 
 const md = new MarkdownIt({ html: false, linkify: true });
 
+// Wide tables scroll sideways inside a wrapper rather than via `display: block` on the table
+// itself, which would take away its table semantics for screen readers.
+md.renderer.rules.table_open = () => '<div class="table-scroll">\n<table>\n';
+md.renderer.rules.table_close = () => '</table>\n</div>\n';
+
 // --- TR1 fixtures (fixtures/fixtures.json): `standard` ones are in the gallery, `demo` ones get a
 // live demo page. ---
 const fixtures = readFixtures();

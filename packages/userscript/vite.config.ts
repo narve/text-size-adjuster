@@ -28,6 +28,9 @@ export default defineConfig({
         match: ['*://*/*'],
         grant: ['GM.getValue', 'GM.setValue', 'GM_registerMenuCommand'],
         'run-at': 'document-idle',
+        // The control belongs on the page, not inside every ad, video or comments frame on it.
+        // Same-origin frames are still scaled, from the top page's engine (FR6.1).
+        noframes: true,
       },
     }),
   ],

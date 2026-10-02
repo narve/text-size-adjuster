@@ -16,11 +16,10 @@
   <script>
     const feed = document.getElementById('feed');
     const html = [];
-    // Kept well under ~600 elements: large enough to be a meaningful capture/apply performance
-    // stress test, small enough that a full-page screenshot at factor 3 stays under browsers'
-    // ~32767px screenshot height limit.
-    for (let i = 0; i < 600; i++) {
-      html.push('<p>Feed item number ' + i + ' — simulated article/social feed text content for a performance check.</p>');
+    // 2,500 items of two elements each: a real article or feed page has thousands of elements.
+    // (The tests take viewport screenshots of this fixture, so its height doesn't matter.)
+    for (let i = 0; i < 2500; i++) {
+      html.push('<p>Feed item number ' + i + ' — <span>simulated article/social feed text</span> for a performance check.</p>');
     }
     feed.innerHTML = html.join('');
   </script>

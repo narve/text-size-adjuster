@@ -64,3 +64,23 @@ test('show=on-zoom keeps the control hidden until the page is pinch-zoomed', asy
   });
   expect(visible.inside).toBe(true);
 });
+
+test.describe('on a phone, on a page without a viewport meta tag', () => {
+  test.use({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+
+  test('show=on-zoom reveals the control once the user pinches the fitted page up to read it', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'mobile emulation and pinch-zoom need Chromium');
+    // on-zoom.html has no viewport meta tag: a phone lays it out 980px wide and shows it zoomed
+    // out to fit, the way it shows desktop-only pages (code review M4).
+    await page.goto('/script-tag/on-zoom.html');
+    expect(await page.evaluate(() => window.visualViewport!.scale)).toBeLessThan(0.6);
+    expect((await panelState(page)).hidden).toBe(true);
+
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 });
+    await expect.poll(async () => (await panelState(page)).hidden).toBe(false);
+  });
+});

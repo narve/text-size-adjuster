@@ -66,24 +66,20 @@ function bindStore(engine, store, key): () => void   // outside the engine, wire
 // extension messaging (popup has zero engine logic — pure relay);
 // the source is packages/extension/src/protocol.ts
 type Message =
-  | { type: 'tsa:getFactor' } | { type: 'tsa:setFactor'; factor: number }
+  | { type: 'tsa:getFactor' }                          // popup → top frame
   | { type: 'tsa:increase' } | { type: 'tsa:decrease' } | { type: 'tsa:reset' }
-  | { type: 'tsa:factorChanged'; factor: number } | { type: 'tsa:registerFrame' };
+  | { type: 'tsa:factorChanged'; factor: number }      // top frame → background
+  | { type: 'tsa:setFactor'; factor: number }          // background → subframes
+  | { type: 'tsa:getTopFactor' };                      // subframe → background
 ```
 
 Override mechanism (FR2.5): each captured element gets its scaled
 font-size/line-height set as an **inline**
-`calc(original * var(--tsa-k, 1)) !important` style, not a shared stylesheet
-rule matched by selector. CSS gives an element's own inline `!important` the
-highest priority of any stylesheet declaration regardless of specificity — this
-beats ID-selector `!important` page rules without needing any specificity trick.
-(An earlier design tried to win via a high-specificity injected selector,
-repeating an attribute selector; that failed against ID-based page rules because
-CSS specificity is tiered, not additive — confirmed broken by the
-`important-high-specificity` fixture before switching to this.) Setting the
-property also replaces a page's own static inline `!important` font-size. The
-one case still unhandled is a page script rewriting the element's inline style
-afterwards (FR6.4, accepted).
+`calc(original * var(--tsa-k, 1)) !important` style, which outranks every
+stylesheet declaration regardless of specificity. Why that, and not a
+high-specificity injected rule, is explained in the header comment of
+`packages/core/src/capture.ts`. The one case still unhandled is a page script
+rewriting the element's inline style afterwards (FR6.4, accepted).
 
 ## Phased build order (one commit per phase)
 
@@ -107,10 +103,10 @@ afterwards (FR6.4, accepted).
 6. Extension package, desktop first: manifest (content script declared with
    `"all_frames": true` and host permissions covering embedded content, so it
    also injects into cross-origin iframes — FR6.1/FR3.3's intentional extra
-   capability over the userscript), content script, background (relays factor
-   changes to every frame via
-   `browser.tabs.sendMessage(tabId, msg, { frameId })` so they move together),
-   popup; manual `web-ext run` check. Commit.
+   capability over the userscript), content script, background (relays the top
+   frame's factor changes to every frame of the tab via
+   `browser.tabs.sendMessage(tabId, msg)`, keeping no state of its own), popup;
+   manual `web-ext run` check. Commit.
 7. Firefox-for-Android compatibility: `browser_specific_settings.gecko_android`,
    `background.scripts` (not `service_worker`) for Android, `web-ext lint`
    clean. Commit. 7a. (Best-effort, FR8) Chrome manifest variant +
@@ -145,8 +141,9 @@ afterwards (FR6.4, accepted).
     keyed by origin), and content scripts re-mount the widget when it changes.
     `bindStore` removes the stored value instead of saving the default factor,
     so "sites with a saved size" means sites not at 100%, and resets the engine
-    when a value is removed elsewhere (options page "remove"). A fourth
-    single-entry build (`vite.options.config.ts`) produces `options.js` for
+    when a value is removed elsewhere (options page "remove"). The extension's
+    one `vite.config.ts` gains an `options` mode (selected with `--mode`, one
+    single-entry build per script) that produces `options.js` for
     `options.html`, declared via `options_ui`. Tests: unit tests for widget
     placement/visibility and parsing, and for the `bindStore` changes; Layer 1
     tests loading the built bundle through real `<script src>` tags with each

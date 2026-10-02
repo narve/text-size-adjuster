@@ -73,8 +73,14 @@ combinations the synthetic fixtures miss:
 - Uses the real packaged extension loaded into Firefox via the community
   `playwright-webextext` mechanism.
 - Covers: content script auto-attaches and the widget appears; adjusting the
-  factor persists per-origin and reapplies after reload; the popup page (opened
-  directly by URL) drives the same engine via messaging.
+  factor persists per-origin and reapplies after reload; on
+  `iframe-cross-origin` (also with a late-loading frame) the frame follows the
+  top frame, the control shows the new size, the size is remembered for the site
+  and not for the embed's origin, and sync survives the background being
+  unloaded while idle. Every test fails on an uncaught page error or console
+  error. Not covered: the popup page itself (its `moz-extension://` address is
+  random per temporary install); it sends the same `tsa:*` messages the tests
+  exercise through the content script.
 - Runs as a separate, explicitly non-gating test command. If
   `playwright-webextext` breaks on a Playwright/Firefox version bump, this layer
   may be skipped without blocking the project — documented as a known risk, not

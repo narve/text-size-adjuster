@@ -1,0 +1,63 @@
+name: Checks
+
+# Fast correctness checks on every push and pull request: lint, types and the unit tests, no
+# browsers. The Playwright suites (Layer 1, and the best-effort Layer 2 extension tests, TR3) take
+# longer and need browsers installed, so they only run when started by hand ("Run workflow").
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_browser_tests:
+        description: Also run the Playwright suites (Layer 1 in Firefox and Chromium, Layer 2)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+
+  browser-tests:
+    if: ${{ inputs.run_browser_tests }}
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npx playwright install --with-deps chromium firefox
+
+      - name: Layer 1 (Firefox and Chromium)
+        run: npm run test:e2e
+
+      # Best-effort and non-gating (TR3): playwright-webextext may break on a Firefox update.
+      - name: Layer 2 (packaged extension in Firefox)
+        run: npm run build -w packages/extension && npm run test:e2e:extension
+        continue-on-error: true

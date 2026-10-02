@@ -98,20 +98,33 @@ the unscaled page, and produces no new horizontal scrollbar.
   injected directly into each cross-origin iframe's own realm — not reaching
   across the boundary (still impossible), but running independently _inside_ it,
   the same way the top-level page's content script runs inside the top document.
-  The extension's background script keeps all frames' factors in sync via
-  runtime messaging. This capability gap between the extension and the
-  userscript is intentional (see FR3.3) — the extension doing more here is the
-  point, not a bug to fix in the userscript.
+  The top frame is the source of truth: it holds the controls and the size
+  remembered for the site in the address bar (FR5.1), and every other frame
+  follows it via runtime messaging. An embedded frame never stores a size under
+  its own origin. This capability gap between the extension and the userscript
+  is intentional (see FR3.3) — the extension doing more here is the point, not a
+  bug to fix in the userscript.
 - **FR6.2**: Closed shadow DOM content cannot be scaled; open shadow roots are
-  supported.
+  supported. An open shadow root is found when its host element is scanned, or
+  when a custom element that wasn't defined yet gets its definition; one
+  attached at any other later moment is not scaled.
 - **FR6.3**: Elements in fixed-height/`overflow:hidden` containers may visually
   clip when enlarged — this is a layout limitation of the host page, not fixed
-  by this tool.
+  by this tool. Likewise, a box whose width is set relative to its own text size
+  (`em`) grows with the text and can overflow at large factors. (Layout sized in
+  `rem` keeps its size: the page's root font size is never scaled.)
 - **FR6.4**: If a page's own script rewrites an element's inline style after it
   has been scaled (e.g. a framework re-rendering that element), the element
   returns to the page's size. Static styling, including `!important` rules and
   inline `!important` styles, is handled (FR2.5); this narrower dynamic case is
   not.
+- **FR6.5**: Each element's size is captured as pixels from the page's styling
+  at that moment (FR2.1). When the viewport's width changes (a phone rotated, a
+  window resized), everything is captured again, so viewport-relative sizes and
+  media queries keep applying. Other later changes driven by the page's own
+  state are not followed: a class added afterwards (hover/open states, a site's
+  dark or reading mode) or the site's own text-size switch leaves the affected
+  elements at the size captured before, until the next capture or a reload.
 
 ## FR8. Cross-browser compatibility (best-effort)
 

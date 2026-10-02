@@ -181,12 +181,14 @@ blockquote p {
   margin: 0.3rem 0;
 }
 
+.table-scroll {
+  margin: 1.2rem 0;
+  overflow-x: auto;
+}
+
 table {
   border-collapse: collapse;
-  margin: 1.2rem 0;
   font-size: 0.95rem;
-  display: block;
-  overflow-x: auto;
 }
 
 th,

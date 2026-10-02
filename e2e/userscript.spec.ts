@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { USERSCRIPT_BUNDLE, requireBuilt } from '../tools/paths.js';
 
@@ -26,10 +27,26 @@ test('the built .user.js mounts its widget and scales the page via the widget al
   const before = await readLargeRefSize();
 
   const increaseButton = widgetHost.locator('[data-action="increase"]');
+  // Big enough to tap comfortably (WCAG's minimum is 24px; this tool's users need more).
+  for (const button of await widgetHost.locator('button').all()) {
+    const box = (await button.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(40);
+  }
   for (let i = 0; i < 5; i += 1) {
     await increaseButton.click();
   }
 
   const after = await readLargeRefSize();
   expect(after).toBeGreaterThan(before);
+});
+
+/**
+ * Userscript managers run a script in every frame unless its header says otherwise; without
+ * `@noframes`, every ad, video and comments frame got its own control, scaling on its own (code
+ * review H3).
+ */
+test('the built .user.js only runs in the top frame', ({ browserName }) => {
+  test.skip(browserName !== 'chromium', 'reads the file, no browser involved');
+  const header = fs.readFileSync(USERSCRIPT_BUNDLE, 'utf8').split('// ==/UserScript==')[0];
+  expect(header).toMatch(/^\/\/ @noframes\s*$/m);
 });

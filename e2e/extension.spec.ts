@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { EXTENSION_DIST, requireBuilt } from '../tools/paths.js';
-import { test, expect } from './webextext-fixture.js';
+import { BACKGROUND_IDLE_TIMEOUT_MS, test, expect } from './webextext-fixture.js';
 
 /**
  * Layer 2 (TR3) — best-effort, non-gating. Drives the *real packaged extension* in real Firefox
@@ -13,16 +13,51 @@ import { test, expect } from './webextext-fixture.js';
  * `moz-extension://<id>/popup.html` URL. Firefox assigns that id as a random UUID per temporary
  * install (not the stable `browser_specific_settings.gecko.id` from the manifest), and Playwright
  * has no Firefox equivalent of Chromium's background-page/service-worker introspection to
- * discover it reliably. A flaky guess isn't worth it for a best-effort layer — the popup's actual
- * message-relay code path (content-script.ts's `browser.runtime.onMessage` handling) is simple
- * enough to be low-risk left uncovered here.
+ * discover it reliably. A flaky guess isn't worth it for a best-effort layer. The popup only sends
+ * `tsa:*` messages to the top frame's content script, which applies them to the same engine the
+ * on-page control drives here.
  */
 test.beforeAll(() => requireBuilt(path.join(EXTENSION_DIST, 'manifest.json'), 'packages/extension'));
 
-function readLargeRefSize(page: import('@playwright/test').Page) {
+type Page = import('@playwright/test').Page;
+
+function readLargeRefSize(page: Page) {
   return page.evaluate(
     () => parseFloat(getComputedStyle(document.querySelector('[data-tsa-ref="large"]')!).fontSize),
   );
+}
+
+function readCrossOriginSize(page: Page) {
+  return page
+    .frameLocator('iframe')
+    .locator('[data-tsa-ref="cross-origin-check"]')
+    .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+}
+
+/**
+ * Collects uncaught page errors and console errors. A content script's uncaught exception (e.g.
+ * Firefox's "can't access dead object", code review C1) is reported on the page's console, so
+ * this catches the extension failing silently even when the visible result looks plausible.
+ */
+function collectErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
+  return errors;
+}
+
+/** Clicks the (possibly hidden, FR10.4) on-page control's button `times` times. */
+async function clickWidget(page: Page, action: string, times = 1): Promise<void> {
+  const button = page.locator('[data-tsa-ignore]').locator(`[data-action="${action}"]`);
+  for (let i = 0; i < times; i += 1) {
+    await button.evaluate((el) => (el as HTMLButtonElement).click());
+  }
+}
+
+function widgetDisplay(page: Page) {
+  return page.locator('[data-tsa-ignore]').locator('[data-tsa-display]');
 }
 
 test('content script auto-attaches, the widget scales the page, and the factor persists per origin on reload', async ({
@@ -53,4 +88,109 @@ test('content script auto-attaches, the widget scales the page, and the factor p
   await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
   const afterReload = await readLargeRefSize(page);
   expect(afterReload).toBeCloseTo(afterClicks, 0);
+});
+
+/**
+ * FR6.1/FR3.3: a cross-origin frame runs its own engine and follows the top frame, and a size
+ * change still updates the control and is remembered. `delayed.html` holds the frame's document
+ * back until well after the top frame's content script ran, which used to leave a dead child
+ * engine behind that broke every later change (code review C1).
+ */
+for (const fixture of ['parent.html', 'delayed.html']) {
+  test(`iframe-cross-origin/${fixture}: the frame follows, the control updates, the size is remembered`, async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await page.goto(`/iframe-cross-origin/${fixture}`);
+    await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+    // All Layer 2 tests share one browser profile and this fixture origin: start from normal size.
+    await clickWidget(page, 'reset');
+    await expect(widgetDisplay(page)).toHaveText('100%');
+    // The frame's own content script has to be running before it can follow.
+    await expect.poll(() => readCrossOriginSize(page)).toBe(18);
+    const outerBefore = await readLargeRefSize(page);
+
+    await clickWidget(page, 'increase', 5);
+
+    await expect(widgetDisplay(page)).toHaveText('150%');
+    expect(await readLargeRefSize(page)).toBeCloseTo(outerBefore * 1.5, 0);
+    await expect.poll(() => readCrossOriginSize(page)).toBeCloseTo(27, 0);
+
+    // FR5.1: remembered for the site, frame included, after a reload.
+    await page.reload();
+    await expect(widgetDisplay(page)).toHaveText('150%');
+    await expect.poll(() => readLargeRefSize(page)).toBeCloseTo(outerBefore * 1.5, 0);
+    await expect.poll(() => readCrossOriginSize(page)).toBeCloseTo(27, 0);
+
+    // Only the site in the address bar is remembered, never the embed's own origin: opened on
+    // its own, the embedded page is at normal size (code review H1).
+    const embed = await page.context().newPage();
+    const embedErrors = collectErrors(embed);
+    await embed.goto('http://127.0.0.1:4311/iframe-cross-origin/child.html');
+    await expect(widgetDisplay(embed)).toHaveText('100%');
+    expect(
+      await embed.evaluate(() =>
+        parseFloat(getComputedStyle(document.querySelector('[data-tsa-ref="cross-origin-check"]')!).fontSize),
+      ),
+    ).toBe(18);
+    await embed.close();
+    expect(embedErrors).toEqual([]);
+
+    await clickWidget(page, 'reset');
+    await expect(widgetDisplay(page)).toHaveText('100%');
+    await expect.poll(() => readCrossOriginSize(page)).toBe(18);
+
+    expect(errors).toEqual([]);
+  });
+}
+
+/**
+ * Firefox unloads an idle background and restarts it with fresh globals (see
+ * webextext-fixture.ts); frame sync must not depend on anything the background kept in memory
+ * (code review H2).
+ */
+test('the frame still follows after the background has been unloaded while idle', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/iframe-cross-origin/parent.html');
+  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await clickWidget(page, 'reset');
+  await expect.poll(() => readCrossOriginSize(page)).toBe(18);
+
+  await page.waitForTimeout(BACKGROUND_IDLE_TIMEOUT_MS * 4);
+  await clickWidget(page, 'increase', 5);
+  await expect(widgetDisplay(page)).toHaveText('150%');
+  await expect.poll(() => readCrossOriginSize(page)).toBeCloseTo(27, 0);
+
+  await clickWidget(page, 'reset');
+  await expect.poll(() => readCrossOriginSize(page)).toBe(18);
+  expect(errors).toEqual([]);
+});
+
+/** The engine's wait for late custom-element definitions also works from a content script (M3). */
+test('a custom element defined after the content script ran has its shadow content scaled', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/shadow-dom-open/');
+  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await clickWidget(page, 'reset');
+  await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<late-card></late-card>'));
+  await page.evaluate(() => {
+    customElements.define(
+      'late-card',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' }).innerHTML = '<p id="late" style="font-size: 20px">Late</p>';
+        }
+      },
+    );
+  });
+  await clickWidget(page, 'increase', 5);
+  await expect(widgetDisplay(page)).toHaveText('150%');
+  await expect
+    .poll(() =>
+      page.evaluate(() => getComputedStyle(document.querySelector('late-card')!.shadowRoot!.querySelector('#late')!).fontSize),
+    )
+    .toBe('30px');
+  await clickWidget(page, 'reset');
+  expect(errors).toEqual([]);
 });

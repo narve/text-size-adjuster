@@ -86,6 +86,23 @@ describe('bindStore', () => {
     expect(store.set).not.toHaveBeenCalledWith('https://example.com', 1);
   });
 
+  it('keeps saving later changes even if applying an external value threw', () => {
+    const engine = createFakeEngine();
+    const store = createFakeStore();
+    let externalUpdate: ((value: number | undefined) => void) | undefined;
+    store.subscribe = vi.fn((_key: string, cb) => {
+      externalUpdate = cb;
+      return () => {};
+    });
+    bindStore(engine, store, 'https://example.com');
+    vi.mocked(engine.setFactor).mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    expect(() => externalUpdate?.(2)).toThrow('boom');
+    engine.increase();
+    expect(store.set).toHaveBeenCalledWith('https://example.com', 1.1);
+  });
+
   it('resets the engine to normal size when the key is removed elsewhere', () => {
     const engine = createFakeEngine(1.8);
     const store = createFakeStore();
