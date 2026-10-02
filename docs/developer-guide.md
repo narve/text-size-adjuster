@@ -66,9 +66,11 @@ npm run download -w fixtures
 
 ### Chrome extension (best-effort, FR8)
 
-- `manifest.chrome.json` (service-worker background, no `gecko_android`/`gecko` keys) is the
-  Chrome-targeted manifest variant produced by the same build.
-- Zip `dist/` (with `manifest.chrome.json` renamed to `manifest.json`) and upload via the
+- `npm run build:chrome -w packages/extension` (after the normal `build`) reuses the already-built
+  JS bundles as-is — cross-browser already via `webextension-polyfill`'s `browser` global — and
+  writes `dist-chrome/` with `manifest.chrome.json` (service-worker background only, no
+  `browser_specific_settings`) already named `manifest.json`.
+- Zip `dist-chrome/` and upload via the
   [Chrome Web Store Developer Dashboard](https://chromewebstore.google.com/devconsole) — requires
   a one-time developer registration fee and goes through Google's review.
 - This is not a primary target (Firefox Desktop + Android are); treat Chrome publishing as

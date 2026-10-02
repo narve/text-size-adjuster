@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Text Size Adjuster",
+  "version": "0.1.0",
+  "description": "Ad-hoc, per-page text scaling that preserves size ratios instead of zooming the whole layout.",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Text Size Adjuster",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "all_frames": true,
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
