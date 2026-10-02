@@ -41,9 +41,13 @@ fixtures miss:
   entries — starting with `ap.no` and `news.ycombinator.com`, plus a handful of other popular,
   internationally-known sites with varied styling approaches (final list finalized during
   implementation; aim for a mix of news, reference/wiki-style, and app-like/SPA sites) — loads
-  each with Playwright, waits for network idle, and saves the rendered HTML with relative
-  asset URLs rewritten to absolute ones (so the snapshot keeps the live site's real CSS/images
-  without fully mirroring every asset).
+  each with Playwright on an emulated phone (the motivating use case; sites serve their mobile
+  layout), waits for network idle, and saves the rendered DOM as a **static** page: the site's
+  scripts are stripped (re-running them on an already-rendered copy duplicated content, brought
+  back consent overlays, and made the live demos hang), runtime CSS-in-JS rules are written into
+  their `<style>` tags so styling survives without scripts, common consent overlays are removed,
+  and a `<base href>` keeps the live site's real CSS/images loading without mirroring every
+  asset. Screenshots and demos for these sites use a phone viewport and phone frame.
 - Snapshots are written to `fixtures/real-world/snapshots/<id>/index.html` and are **not**
   committed to git (gitignored) — they go stale and redistributing copies of third-party site
   markup in the repo is avoided; they're regenerated on demand via `npm run fixtures:download`

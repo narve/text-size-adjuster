@@ -51,8 +51,6 @@ const EXTRA_DEMO_FIXTURES = [
   { id: 'spa-mutation', sourceDir: 'spa-mutation', entry: 'index.html' },
 ];
 
-const GALLERY_FACTOR = '2'; // the representative "after" factor shown per fixture (TR5.3)
-
 function readSitesConfig() {
   if (!fs.existsSync(SITES_FILE)) return [];
   return JSON.parse(fs.readFileSync(SITES_FILE, 'utf8'));
@@ -153,12 +151,12 @@ writePage(path.join(DIST, 'dev', 'index.html'), {
 const browser = await chromium.launch();
 const page = await browser.newPage();
 
-async function frameScreenshot(imagePath, urlText, outPath) {
+async function frameScreenshot(imagePath, urlText, outPath, frame = 'frame-desktop.html') {
   // A data: URI rather than file:// — a page loaded via setContent() has no origin that's
   // allowed to load local files, so an img pointed at file://... never fires `load` and the
   // screenshot would time out waiting for it.
   const dataUri = `data:image/png;base64,${fs.readFileSync(imagePath).toString('base64')}`;
-  const template = readTemplate('frame-desktop.html')
+  const template = readTemplate(frame)
     .replace('{{IMAGE_SRC}}', dataUri)
     .replace('{{URL_TEXT}}', urlText);
   await page.setContent(template);
@@ -183,8 +181,9 @@ function readSitesConfigSafe() {
 const galleryEntries = [];
 
 for (const fixture of SYNTHETIC_GALLERY_FIXTURES) {
-  const beforePng = path.join(SCREENSHOT_DIR, fixture.id, `${GALLERY_FACTOR}-before.png`);
-  const afterPng = path.join(SCREENSHOT_DIR, fixture.id, `${GALLERY_FACTOR}-after.png`);
+  // Phone-viewport shots (see the 'phone gallery screenshots' block in e2e/engine.spec.ts).
+  const beforePng = path.join(SCREENSHOT_DIR, fixture.id, 'phone-1x.png');
+  const afterPng = path.join(SCREENSHOT_DIR, fixture.id, 'phone-2x.png');
   if (!fs.existsSync(beforePng) || !fs.existsSync(afterPng)) {
     console.warn(`[gallery] skipping ${fixture.id}: screenshots not found (run the Layer 1 suite first)`);
     continue;
@@ -192,22 +191,23 @@ for (const fixture of SYNTHETIC_GALLERY_FIXTURES) {
   const outDir = path.join(DIST, 'gallery', fixture.id);
   ensureDir(outDir);
   const urlText = `https://example.com/${fixture.id}/`;
-  await frameScreenshot(beforePng, urlText, path.join(outDir, 'before.png'));
-  await frameScreenshot(afterPng, urlText, path.join(outDir, 'after.png'));
+  await frameScreenshot(beforePng, urlText, path.join(outDir, 'before.png'), 'frame-mobile.html');
+  await frameScreenshot(afterPng, urlText, path.join(outDir, 'after.png'), 'frame-mobile.html');
   galleryEntries.push({ id: fixture.id, label: fixture.label, hasDemo: true });
 }
 
 for (const site of readSitesConfigSafe()) {
   const beforePng = path.join(SCREENSHOT_DIR, 'real-world', `${site.id}-1x.png`);
-  const afterPng = path.join(SCREENSHOT_DIR, 'real-world', `${site.id}-1.5x.png`);
+  const afterPng = path.join(SCREENSHOT_DIR, 'real-world', `${site.id}-2x.png`);
   if (!fs.existsSync(beforePng) || !fs.existsSync(afterPng)) {
     console.warn(`[gallery] skipping real-world/${site.id}: screenshots not found (run "npm run test:real-world" first)`);
     continue;
   }
   const outDir = path.join(DIST, 'gallery', site.id);
   ensureDir(outDir);
-  await frameScreenshot(beforePng, site.url, path.join(outDir, 'before.png'));
-  await frameScreenshot(afterPng, site.url, path.join(outDir, 'after.png'));
+  // Real sites are captured on a phone viewport (see fixtures/real-world/download.mjs).
+  await frameScreenshot(beforePng, site.url, path.join(outDir, 'before.png'), 'frame-mobile.html');
+  await frameScreenshot(afterPng, site.url, path.join(outDir, 'after.png'), 'frame-mobile.html');
   const hasSnapshot = fs.existsSync(path.join(FIXTURES_DIR, 'real-world', 'snapshots', site.id, 'index.html'));
   galleryEntries.push({ id: site.id, label: `${site.description} (real site)`, hasDemo: hasSnapshot, isRealWorld: true });
 }
@@ -266,6 +266,9 @@ if (!userscriptBundle) {
       fs.copyFileSync(path.join(FIXTURES_DIR, fixture.sourceDir, extra), path.join(outDir, extra));
     }
   }
+
+  // Fixture pages reference shared files (e.g. the sample image) as ../assets/…
+  fs.cpSync(path.join(FIXTURES_DIR, 'assets'), path.join(DIST, 'demos', 'assets'), { recursive: true });
 
   for (const site of readSitesConfigSafe()) {
     const snapshotPath = path.join(FIXTURES_DIR, 'real-world', 'snapshots', site.id, 'index.html');

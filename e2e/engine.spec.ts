@@ -58,6 +58,17 @@ async function readRefSizes(page: Page): Promise<{ small: number; large: number 
   });
 }
 
+async function readImageSize(page: Page): Promise<{ width: number; height: number } | null> {
+  return page.evaluate(() => {
+    const img = document.querySelector<HTMLImageElement>('[data-tsa-ref="image"]');
+    // A broken image renders its alt text instead, which *does* scale — so only a loaded image
+    // counts.
+    if (!img || !img.complete || img.naturalWidth === 0) return null;
+    const rect = img.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  });
+}
+
 async function hasHorizontalOverflow(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
 }
@@ -77,6 +88,8 @@ for (const fixture of STANDARD_FIXTURES) {
         const fullPage = fixture.id !== 'large-dom-performance';
 
         const before = await readRefSizes(page);
+        const imageBefore = await readImageSize(page);
+        expect(imageBefore).not.toBeNull();
         expect(await hasHorizontalOverflow(page)).toBe(false);
         await page.screenshot({
           path: path.join(SCREENSHOT_DIR, fixture.id, `${factor}-before.png`),
@@ -99,6 +112,8 @@ for (const fixture of STANDARD_FIXTURES) {
         expect(after.large / before.large).toBeCloseTo(factor, 1);
         // FR1.3: no sideways scrolling introduced.
         expect(await hasHorizontalOverflow(page)).toBe(false);
+        // Only text scales — an image keeps exactly its size (unlike page zoom).
+        expect(await readImageSize(page)).toEqual(imageBefore);
       });
     }
   });
@@ -264,4 +279,26 @@ test.describe('ignoreAttr exclusion', () => {
     expect(after.ignored).toBe(before.ignored); // the ignored subtree is completely untouched
     expect(after.ignoredScanned).toBe(false);
   });
+});
+
+/**
+ * Gallery screenshots on a phone-sized viewport (the tool's motivating use case), separate from
+ * the desktop-viewport assertions above: a 1280px-wide desktop shot squeezed into half a docs
+ * column is unreadable. Screenshot-only apart from the image-size check — the ratio and overflow
+ * guarantees are asserted above.
+ */
+test.describe('phone gallery screenshots', () => {
+  test.use({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2 });
+
+  for (const fixture of STANDARD_FIXTURES) {
+    test(`${fixture.id} at 1x and 2x`, async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'one set of gallery screenshots is enough');
+      await gotoAndAttach(page, fixture.path);
+      const imageBefore = await readImageSize(page);
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, fixture.id, 'phone-1x.png') });
+      await setFactor(page, 2);
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, fixture.id, 'phone-2x.png') });
+      expect(await readImageSize(page)).toEqual(imageBefore);
+    });
+  }
 });

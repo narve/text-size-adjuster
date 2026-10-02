@@ -17,6 +17,10 @@ interface SiteDef {
 
 const sites: SiteDef[] = JSON.parse(fs.readFileSync(SITES_FILE, 'utf8'));
 
+// A phone-sized viewport: the tool's motivating use case, and the layout the snapshots were
+// captured in (see fixtures/real-world/download.mjs). deviceScaleFactor 2 keeps screenshots crisp.
+test.use({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2 });
+
 test.beforeAll(() => {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 });
@@ -63,14 +67,13 @@ for (const site of sites) {
     expect(scaledCount).toBeGreaterThan(10);
 
     await page.evaluate(() => {
-      (window as unknown as { __tsa: { setFactor: (k: number) => number } }).__tsa.setFactor(1.5);
+      (window as unknown as { __tsa: { setFactor: (k: number) => number } }).__tsa.setFactor(2);
     });
 
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${site.id}-1.5x.png`) });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${site.id}-2x.png`) });
 
-    // Deliberately not asserted on: a static snapshot often breaks the site's own third-party
-    // analytics/ad scripts (missing a server-side config endpoint they'd normally fetch), which
-    // is unrelated to our engine and out of our control. Logged for visibility, not failed on.
+    // Not asserted on: snapshots have their own scripts stripped, so errors here would come from
+    // live third-party iframes (ads, embeds) — out of our control. Logged for visibility only.
     if (pageErrors.length > 0) {
       console.warn(`[${site.id}] ${pageErrors.length} uncaught page error(s), likely unrelated third-party scripts:`, pageErrors);
     }
