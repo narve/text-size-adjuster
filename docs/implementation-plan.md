@@ -22,6 +22,7 @@ text-size-adjuster/
   docs-site/         # build.mjs (custom static generator) + guides + templates
   docs/              # the three requirement/plan docs + android-manual-qa-checklist.md + developer-guide.md
   README.md          # project overview + documentation reading order (TR6.2)
+  .github/workflows/docs.yml  # builds + publishes the docs site (user + dev sections) to GitHub Pages (TR7)
 ```
 
 ## Tooling choices
@@ -116,6 +117,12 @@ page's own *inline* `!important` on that element (FR6.4, accepted).
    TR5.4) from Layer 1/8 artifacts, plus a live interactive demo per fixture (TR5.5, with the
    `iframe-cross-origin` caveat called out); wired into `npm run build` (TR5.1); `docs:serve`
    verified locally. Commit.
+10. GitHub Pages publishing (TR7): extend `docs-site/build.mjs` to also render TR6.1's developer
+    docs into a `/dev/` section (reusing the markdown-it rendering already used for the end-user
+    guides), linked from, but not part of, the default landing page. Add
+    `.github/workflows/docs.yml` (checkout, Node setup, `npx playwright install --with-deps`,
+    `npm run build`, then `actions/upload-pages-artifact` + `actions/deploy-pages`) triggered on
+    push to the default branch. Commit.
 
 ## Risks
 

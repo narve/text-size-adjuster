@@ -172,3 +172,19 @@ screenshots. Live demo links (TR5.5) work when the site is served via `npm run d
   angle: root cause, actual impact/frequency, and what workaround — if any — was considered and
   why it was or wasn't taken. This is the mirror of TR5.2b's plain-language version for the
   implementation audience.
+
+## TR7. Publishing to GitHub Pages
+
+- **TR7.1**: A GitHub Actions workflow builds the complete documentation — both the end-user
+  site (TR5) and the developer/contributor docs (TR6) — and publishes it to GitHub Pages on push
+  to the default branch.
+- **TR7.2**: The published site keeps the same separation as TR5.0/TR6: the site's default
+  landing experience is the end-user guide; the developer/contributor docs (rendered from
+  `docs/developer-guide.md`, `docs/implementation-plan.md`, `docs/functional-requirements.md`,
+  `docs/test-and-documentation-requirements.md`) live in a clearly labeled, separate section (a
+  `/dev/` subpath) reached via an explicit "For contributors" link, never the default page a
+  first-time visitor lands on. Publishing both together is for convenience of having one URL, not
+  a reason to blur who each part is for.
+- **TR7.3**: This workflow depends on TR5's docs-site build being extended to also render the
+  TR6.1 developer docs into the `/dev/` section; until that build work lands, the workflow is
+  expected to fail, not a regression to chase before then.

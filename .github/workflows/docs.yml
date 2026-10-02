@@ -1,0 +1,54 @@
+name: Publish documentation
+
+# Builds the complete documentation (end-user site + developer/contributor section, see
+# docs/test-and-documentation-requirements.md TR7) and publishes it to GitHub Pages.
+#
+# Depends on docs-site/build.mjs existing and producing both sections (implementation-plan.md
+# phase 10) — until that lands, this workflow is expected to fail (TR7.3), not a regression.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
+
+      - name: Build everything (packages, Layer 1 suite, docs site)
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs-site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

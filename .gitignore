@@ -7,3 +7,4 @@ e2e/test-results/
 playwright-report/
 .DS_Store
 *.log
+.docs-preview-server.mjs

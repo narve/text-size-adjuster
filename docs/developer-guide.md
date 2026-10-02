@@ -110,6 +110,17 @@ npm run download -w fixtures
   real complexity for a case that's rare in practice. Flagged as a possible future enhancement,
   not attempted in v1.
 
+## Documentation publishing (GitHub Pages)
+
+`.github/workflows/docs.yml` builds and publishes the complete documentation site — both the
+end-user guide and this developer section — to GitHub Pages on every push to `master`. One-time
+setup required on GitHub (not something a workflow run can do for you): repo **Settings → Pages →
+Build and deployment → Source**, set to **GitHub Actions**.
+
+This workflow depends on `docs-site/build.mjs` existing and rendering both sections (see
+`implementation-plan.md`'s phase 10) — until that build step is implemented, expect this workflow
+to fail at the `npm run build` step. That's expected, not a regression to chase down early.
+
 ## Release checklist
 
 1. `npm run build` passes (includes the hard-requirement Layer 1 suite).
