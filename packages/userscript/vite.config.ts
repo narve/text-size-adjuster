@@ -13,6 +13,7 @@ export default defineConfig({
         namespace: 'https://github.com/narve/text-size-adjuster',
         description:
           'Ad-hoc, per-page text scaling that preserves size ratios instead of zooming the whole layout.',
+        license: 'MIT',
         match: ['*://*/*'],
         grant: ['GM.getValue', 'GM.setValue', 'GM_registerMenuCommand'],
         'run-at': 'document-idle',

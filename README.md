@@ -40,3 +40,8 @@ npm run build   # builds every package, runs the required test suite, builds the
 ```
 
 See `docs/developer-guide.md` for the full command reference.
+
+## License
+
+[MIT](LICENSE) — free to use, modify and redistribute, as long as the copyright
+notice and license text are kept with the code.
