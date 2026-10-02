@@ -1,0 +1,109 @@
+# Implementation Plan — Text Size Adjuster
+
+This document describes **how and when** the project gets built. References functional
+requirements as FR* and test requirements as TR* (see the other two docs) rather than restating
+them.
+
+## Repo layout
+
+```
+text-size-adjuster/
+  package.json                      # npm workspaces root (no extra package manager install needed)
+  tsconfig.base.json
+  packages/
+    core/            # engine.ts, capture.ts, style-injector.ts, mutation-observer.ts, iframe.ts, shadow-dom.ts
+    stores/          # MemoryStore, LocalExtensionStore (browser.storage.local), GMValueStore
+    ui-widget/       # shadow-root floating +/- widget (framework-free)
+    userscript/      # vite-plugin-monkey build wiring core+widget+GMValueStore
+    extension/       # manifest.json, content-script.ts, background.ts, popup/
+  fixtures/          # the 11 TR1 fixture pages + server.mjs (two ports, for genuine cross-origin)
+  e2e/               # playwright.config.ts, engine.spec.ts (Layer 1), extension-smoke.spec.ts (Layer 2)
+  docs-site/         # build.mjs (custom static generator) + guides + templates
+  docs/              # the three requirement/plan docs + android-manual-qa-checklist.md
+```
+
+## Tooling choices
+
+- **npm workspaces** (already available, no install needed) over pnpm — project is small enough
+  that pnpm adds nothing.
+- **vite-plugin-monkey** for the userscript build (current standard for Tampermonkey-targeted
+  Vite output).
+- **Hand-rolled Vite multi-entry config** for the extension (content/background/popup entries
+  plus a small plugin to copy `manifest.json`), rather than a generic web-extension framework —
+  keeps full control over Firefox-Android's background-script constraints.
+- **@playwright/test** for Layer 1/2; **web-ext** as a devDependency for manual `run`/`lint`
+  only.
+- **Custom Node script** (`docs-site/build.mjs`, using `markdown-it`) for the docs site instead of
+  a full SSG — content volume doesn't justify a framework.
+
+## Engine/UI/Store contracts
+
+```ts
+// core
+createEngine(options?): TextSizeEngine
+interface TextSizeEngine {
+  increase(step?): number; decrease(step?): number; reset(): number;
+  setFactor(k): number; getFactor(): number;
+  onChange(listener): () => void;
+  attach(): void; detach(): void; rescan(): void;
+}
+
+// stores (core never imports these — satisfies FR4/FR5 decoupling)
+interface Store {
+  get(key): Promise<number|undefined>; set(key, value): Promise<void>;
+  remove?(key): Promise<void>; subscribe?(key, cb): () => void;
+}
+function bindStore(engine, store, key): () => void   // outside the engine, wires persistence
+
+// extension messaging (popup has zero engine logic — pure relay)
+type Message =
+  | { type: 'tsa:getFactor' } | { type: 'tsa:setFactor'; factor: number }
+  | { type: 'tsa:increase' } | { type: 'tsa:decrease' } | { type: 'tsa:reset' }
+  | { type: 'tsa:factorChanged'; factor: number; origin: string };
+```
+
+Specificity defense for the injected override rule (FR2.5): repeat the scaled-element attribute
+selector ~10x in one rule to stack specificity without changing what it matches — beats realistic
+ID+class+`!important` page rules; does not beat literal inline `!important` (FR6.4, accepted).
+
+## Phased build order (one commit per phase)
+
+0. **This plan approved** → split into real files under `docs/` (+
+   `docs/android-manual-qa-checklist.md`). `git init` + first commit. *(this step)*
+1. Scaffold: root `package.json`/workspaces, `tsconfig.base.json`, lint/format config, package
+   stubs. Commit.
+2. Core engine + **vitest** unit tests (specificity-rule generation, factor clamping,
+   px-vs-unitless line-height detection) — no browser yet. Commit.
+3. **Fixtures + Layer 1 Playwright harness**, all 11 fixtures green against Firefox and
+   Chromium, screenshots captured. This is the load-bearing checkpoint — the hard requirement —
+   get it solid before any UI work. Commit.
+4. UI widget (shadow-DOM, standalone) + the three Store implementations with a shared contract
+   test. Commit.
+5. Userscript package via `vite-plugin-monkey`; manual Tampermonkey smoke check; extend Layer 1
+   to also sanity-check the built `.user.js`. Commit.
+6. Extension package, desktop first: manifest, content script, background, popup; manual
+   `web-ext run` check. Commit.
+7. Firefox-for-Android compatibility: `browser_specific_settings.gecko_android`,
+   `background.scripts` (not `service_worker`) for Android, `web-ext lint` clean. Commit.
+8. Layer 2 best-effort extension integration test via `playwright-webextext`, non-gating.
+   Commit.
+9. Docs site: guides + generated gallery from Layer 1/8 artifacts; `docs:build`/`docs:serve`
+   verified locally. Commit.
+
+## Risks
+
+| Risk | Mitigation |
+|---|---|
+| `playwright-webextext` breaks on a version bump | Layer 2 is non-gating by design (TR3); documented, not silently dropped |
+| AMO Android review/signing turnaround for real sideload testing | Manual checklist (TR4) uses unlisted self-distribution, not store review |
+| Firefox-for-Android MV3 background limitations | Addressed directly in phase 7, not deferred |
+
+## Verification
+
+- `npm test` runs unit tests + Layer 1 Playwright suite (must pass — the hard requirement).
+- `npm run test:e2e:extension` runs Layer 2 (best-effort, allowed to be skipped/red without
+  blocking).
+- `npm run docs:build && npm run docs:serve` produces a locally browsable documentation site
+  with galleries populated from the latest Layer 1 screenshot run.
+- Manual: walk `docs/android-manual-qa-checklist.md` on a real or emulated Firefox for Android
+  before calling an Android release done.
