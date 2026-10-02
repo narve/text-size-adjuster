@@ -237,8 +237,8 @@ for (const site of readSitesConfigSafe()) {
   });
 }
 
-// Gallery: one page with every before/after pair inline, in two sections — function demos
-// (synthetic pages, one technique each) and real sites — each linking to its live demo.
+// Gallery: one page with every before/after pair inline, in two sections — real sites first,
+// then function demos (synthetic pages, one technique each) — each linking to its live demo.
 function galleryEntryHtml(entry) {
   const demo = entry.hasDemo
     ? `<a class="button button-secondary" href="../demos/${entry.id}/index.html">Try it live<span class="visually-hidden"> — ${entry.label}</span></a>`
@@ -256,10 +256,10 @@ function galleryEntryHtml(entry) {
     </section>`;
 }
 const galleryHtml =
-  '<h2>Function demos</h2><p>Small test pages, each showing one way websites size their text.</p>' +
-  galleryEntries.filter((e) => !e.isRealWorld).map(galleryEntryHtml).join('') +
   '<h2>Real sites</h2><p>Saved copies of real websites, shown on a phone.</p>' +
-  galleryEntries.filter((e) => e.isRealWorld).map(galleryEntryHtml).join('');
+  galleryEntries.filter((e) => e.isRealWorld).map(galleryEntryHtml).join('') +
+  '<h2>Function demos</h2><p>Small test pages, each showing one way websites size their text.</p>' +
+  galleryEntries.filter((e) => !e.isRealWorld).map(galleryEntryHtml).join('');
 writePage(path.join(DIST, 'gallery', 'index.html'), {
   title: 'Screenshot gallery',
   assetRoot: '../',
