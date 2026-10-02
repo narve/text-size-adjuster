@@ -14,7 +14,8 @@ import { readSites, realWorldSnapshot } from '../../tools/paths.js';
 //   second time on top of it duplicates script-inserted content, re-triggers consent/login
 //   overlays, and throws errors once the scripts can't reach their own backends.
 // - CSP <meta> tags are removed, so they can't block the tool's own script in the live demos.
-// - common consent-overlay containers are removed, so they don't cover the page in screenshots.
+// - common consent-overlay containers are removed, so they don't cover the page in screenshots,
+//   along with the scroll lock they put on the page.
 // - CSS that the site inserted at runtime via the CSSOM is written into the snapshot (see
 //   inlineRuntimeStyles), since it would otherwise be lost along with the scripts.
 // - a <base href> keeps relative URLs (CSS, images, fonts) pointing at the live site, so the
@@ -35,7 +36,12 @@ const CONSENT_SELECTORS = [
   '.qc-cmp2-container',
   '#sp-cc',
   '#bbccookies',
+  '#data-controller-stripe',
 ];
+
+// Classes consent tools put on <html>/<body> to lock scrolling while their overlay is open. The
+// overlay is removed above, so the lock has to go too, or the snapshot can't scroll.
+const SCROLL_LOCK_CLASSES = ['sp-message-open'];
 
 /**
  * CSS-in-JS libraries (styled-components, emotion, ...) in production mode insert rules through
@@ -81,9 +87,13 @@ async function downloadSite({ id, url }, browser) {
     await page.waitForTimeout(1500);
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    await page.evaluate((selectors) => {
-      for (const el of document.querySelectorAll(selectors.join(','))) el.remove();
-    }, CONSENT_SELECTORS);
+    await page.evaluate(
+      ({ selectors, lockClasses }) => {
+        for (const el of document.querySelectorAll(selectors.join(','))) el.remove();
+        for (const el of [document.documentElement, document.body]) el.classList.remove(...lockClasses);
+      },
+      { selectors: CONSENT_SELECTORS, lockClasses: SCROLL_LOCK_CLASSES },
+    );
     await page.evaluate(inlineRuntimeStyles);
 
     const snapshot = makeStatic(await page.content(), url);

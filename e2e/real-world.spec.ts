@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import {
   CORE_BUNDLE,
@@ -15,6 +15,26 @@ const sites = readSites();
 // A phone-sized viewport: the tool's motivating use case, and the layout the snapshots were
 // captured in (see fixtures/real-world/download.js). deviceScaleFactor 2 keeps screenshots crisp.
 test.use({ viewport: PHONE_VIEWPORT, deviceScaleFactor: PHONE_SCALE });
+
+/**
+ * Scrolls so the element matching the Playwright `selector` (e.g. an article's first paragraph, past its big headline) sits
+ * at the top of the screen, just below any fixed or sticky header. Re-run after scaling, since
+ * everything above it grows.
+ */
+async function scrollToElement(page: Page, selector: string | undefined): Promise<void> {
+  if (!selector) return;
+  await page
+    .locator(selector)
+    .first()
+    .evaluate((el) => {
+      el.scrollIntoView({ block: 'start' });
+      const header = document
+        .elementsFromPoint(window.innerWidth / 2, 1)
+        .filter((e) => ['fixed', 'sticky'].includes(getComputedStyle(e).position))
+        .reduce((bottom, e) => Math.max(bottom, e.getBoundingClientRect().bottom), 0);
+      window.scrollBy(0, el.getBoundingClientRect().top - header - 16);
+    });
+}
 
 /**
  * TR1a: informative, non-gating checks against real-world site snapshots (run them first via
@@ -35,6 +55,7 @@ for (const site of sites) {
 
     await gotoAndAttach(page, `/real-world/snapshots/${site.id}/`, { waitUntil: 'load', timeout: 30_000 });
 
+    await scrollToElement(page, site.screenshotFrom);
     await page.screenshot({ path: realWorldScreenshot(site.id, 1) });
 
     const scaledCount = await page.evaluate(() => document.querySelectorAll('[data-tsa-scaled]').length);
@@ -43,6 +64,7 @@ for (const site of sites) {
     expect(scaledCount).toBeGreaterThan(10);
 
     await setFactor(page, 2);
+    await scrollToElement(page, site.screenshotFrom);
 
     await page.screenshot({ path: realWorldScreenshot(site.id, 2) });
 

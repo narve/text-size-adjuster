@@ -3,7 +3,8 @@
     "id": "ap-no",
     "name": "Aftenposten",
     "url": "https://www.aftenposten.no/norge/i/2pQaLv/regjeringen-vil-utvide-samspill-prosjekt-for-aa-redusere-sykefravaer",
-    "description": "Norwegian news article — the original motivating example"
+    "description": "Norwegian news article — the original motivating example",
+    "screenshotFrom": "article p.paywall"
   },
   {
     "id": "hacker-news",
@@ -21,6 +22,7 @@
     "id": "bbc-news",
     "name": "BBC News",
     "url": "https://www.bbc.com/news/articles/c3kgqw7zvz47o",
-    "description": "International news article"
+    "description": "International news article",
+    "screenshotFrom": "[data-component='text-block'] >> nth=1"
   }
 ]

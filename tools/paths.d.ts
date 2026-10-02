@@ -14,6 +14,8 @@ export interface Site {
   name: string;
   url: string;
   description: string;
+  /** Playwright selector; screenshots start at this element (e.g. the article's first paragraph). */
+  screenshotFrom?: string;
 }
 
 export const REPO_ROOT: string;
