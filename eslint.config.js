@@ -23,6 +23,9 @@ export default tseslint.config(
   {
     // Plain Node scripts (fixture/docs-site tooling) — not type-checked by tsc, so they need
     // their runtime globals declared explicitly for no-undef rather than relying on @types/node.
+    // Also covers browser globals: some of these scripts (docs-site/build.mjs) pass inline
+    // callbacks to Playwright's page.evaluate()/waitForFunction(), which execute in the browser,
+    // not Node — textually still part of the same file, so ESLint needs both sets of globals.
     files: ['**/*.mjs', '**/*.cjs'],
     languageOptions: {
       globals: {
@@ -32,6 +35,9 @@ export default tseslint.config(
         clearTimeout: 'readonly',
         URL: 'readonly',
         fetch: 'readonly',
+        document: 'readonly',
+        window: 'readonly',
+        getComputedStyle: 'readonly',
       },
     },
   },

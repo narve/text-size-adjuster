@@ -1,0 +1,165 @@
+:root {
+  color-scheme: light dark;
+  --fg: #1a1a1a;
+  --bg: #ffffff;
+  --muted: #5a5a5a;
+  --accent: #2957a4;
+  --border: #e2e2e2;
+  --card-bg: #f7f7f8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e8e8e8;
+    --bg: #15161a;
+    --muted: #a9a9a9;
+    --accent: #7fb0ff;
+    --border: #2d2f36;
+    --card-bg: #1d1f26;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+header.site-header {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+}
+
+header.site-header nav a {
+  margin-right: 16px;
+  font-size: 14px;
+}
+
+.dev-banner {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 1.9rem;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin-top: 2.2rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+code,
+pre {
+  background: var(--card-bg);
+  border-radius: 4px;
+}
+
+code {
+  padding: 0.1em 0.4em;
+  font-size: 0.92em;
+}
+
+pre {
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--card-bg);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.shot-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 16px 0 28px;
+}
+
+.shot-pair figure {
+  margin: 0;
+  flex: 1 1 320px;
+}
+
+.shot-pair img {
+  max-width: 100%;
+  border-radius: 6px;
+  display: block;
+}
+
+.shot-pair figcaption {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+  text-align: center;
+}
+
+.demo-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+footer.site-footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}

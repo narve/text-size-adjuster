@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  body { margin: 0; background: transparent; display: inline-block; }
+  .frame {
+    display: inline-block;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: #fff;
+  }
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: #e7e7e7;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.red { background: #ff5f57; }
+  .dot.yellow { background: #febc2e; }
+  .dot.green { background: #28c840; }
+  .addressbar {
+    flex: 1;
+    margin-left: 10px;
+    background: #fff;
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #444;
+    border: 1px solid #d0d0d0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  img { display: block; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="titlebar">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      <span class="addressbar">{{URL_TEXT}}</span>
+    </div>
+    <img src="{{IMAGE_SRC}}" />
+  </div>
+</body>
+</html>
