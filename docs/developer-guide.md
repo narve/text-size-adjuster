@@ -39,9 +39,9 @@ the repo root.
 
 ```bash
 npm install                  # installs all workspaces
-npm run build                # builds every package, runs Layer 1, builds the docs site
-npm test                     # unit tests of every package (vitest) + Layer 1
-npm run test:unit            # unit tests of packages/core only
+npm run build                # builds packages/*, runs Layer 1, builds the docs site
+npm test                     # test:unit + Layer 1
+npm run test:unit            # unit tests (vitest) of every package in packages/
 npm run test:e2e             # Layer 1 Playwright suite (the hard requirement)
 npm run test:e2e:extension   # Layer 2, best-effort — allowed to fail/skip
 npm run test:real-world      # real-world snapshots (TR1a), informative only

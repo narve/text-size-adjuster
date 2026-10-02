@@ -16,8 +16,9 @@ export interface CaptureOptions {
  * additive: any number of class/attribute selectors still loses to a single ID selector, so that
  * approach silently failed against ID-based page rules. Confirmed broken by the
  * `important-high-specificity` fixture in the Layer 1 Playwright suite before switching to this.)
- * The one thing that still beats an inline `!important` is the page's own *inline* `!important`
- * on that same element — an accepted, documented limitation (FR6.4).
+ * A page's own inline `!important` on the same element is simply replaced by `setProperty`. What
+ * can still undo the scaling is a page script rewriting that element's `style` attribute later —
+ * the MutationObserver only watches for added nodes (an accepted, documented limitation, FR6.4).
  *
  * All reads happen before any writes (read phase, then write phase) to avoid layout-thrashing —
  * interleaving `getComputedStyle` with style mutations forces a synchronous reflow per element on
