@@ -263,6 +263,13 @@ or package it with `npx web-ext build --source-dir dist` from
   complexity for a case that's rare in practice. Flagged as a possible future
   enhancement, not attempted in v1.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs `npm run lint`, `npm run typecheck` and
+`npm run test:unit` on every push and pull request — fast, no browsers. To also
+run Layer 1 (Firefox and Chromium) and Layer 2 (non-gating), start it by hand
+(**Actions → Checks → Run workflow**) with **run_browser_tests** checked.
+
 ## Documentation publishing (GitHub Pages)
 
 `.github/workflows/docs.yml` builds and publishes the complete documentation
