@@ -21,6 +21,7 @@ fs.mkdirSync(CHROME_DIST, { recursive: true });
 for (const file of ['content.js', 'background.js', 'popup.js', 'popup.html', 'options.js', 'options.html']) {
   fs.copyFileSync(path.join(SRC_DIST, file), path.join(CHROME_DIST, file));
 }
+fs.cpSync(path.join(SRC_DIST, 'icons'), path.join(CHROME_DIST, 'icons'), { recursive: true });
 fs.copyFileSync(path.join(__dirname, 'manifest.chrome.json'), path.join(CHROME_DIST, 'manifest.json'));
 
 console.log('Chrome-targeted build written to dist-chrome/ (best-effort, FR8 — not a primary target).');

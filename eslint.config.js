@@ -35,6 +35,7 @@ export default tseslint.config(
         clearTimeout: 'readonly',
         URL: 'readonly',
         fetch: 'readonly',
+        Buffer: 'readonly',
         document: 'readonly',
         window: 'readonly',
         getComputedStyle: 'readonly',

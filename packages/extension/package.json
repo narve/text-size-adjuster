@@ -13,7 +13,8 @@
     "run:desktop": "web-ext run -t firefox-desktop --source-dir dist",
     "run:android": "web-ext run -t firefox-android --source-dir dist",
     "sign": "node sign.mjs",
-    "version:bump": "node bump-version.mjs"
+    "version:bump": "node bump-version.mjs",
+    "icons": "node render-icons.mjs"
   },
   "dependencies": {
     "@tsa/core": "*",
@@ -25,6 +26,7 @@
     "vite": "^8.3.2",
     "web-ext": "^10.7.0",
     "@types/firefox-webext-browser": "^143.0.1",
-    "@types/webextension-polyfill": "^0.12.3"
+    "@types/webextension-polyfill": "^0.12.3",
+    "playwright": "^1.63.0"
   }
 }

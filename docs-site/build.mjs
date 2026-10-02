@@ -101,6 +101,7 @@ function slugTitle(filename) {
 rimrafSync(DIST);
 ensureDir(DIST);
 fs.copyFileSync(path.join(SRC, 'style.css'), path.join(DIST, 'style.css'));
+fs.copyFileSync(path.join(REPO_ROOT, 'packages', 'extension', 'icons', 'icon.svg'), path.join(DIST, 'icon.svg'));
 
 // --- 2. End-user guides (TR5.2/5.2a/5.2b) ---
 const guidesDir = path.join(SRC, 'guides');

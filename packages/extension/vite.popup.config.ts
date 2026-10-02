@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { copyFileSync } from 'node:fs';
+import { copyFileSync, cpSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +36,10 @@ export default defineConfig({
           path.resolve(__dirname, 'src/options/options.html'),
           path.resolve(__dirname, 'dist/options.html'),
         );
+        cpSync(path.resolve(__dirname, 'icons'), path.resolve(__dirname, 'dist/icons'), {
+          recursive: true,
+          filter: (src) => !src.endsWith('.svg'),
+        });
       },
     },
   ],

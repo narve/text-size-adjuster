@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <title>Text Size Adjuster</title>
+  <rect width="128" height="128" rx="26" fill="#2957a4"/>
+  <g fill="#ffffff">
+    <!-- small italic T, slanted around its vertical middle (y=86) -->
+    <g transform="translate(22 86) skewX(-14) translate(-22 -86)">
+      <rect x="8" y="66" width="28" height="8" rx="1.5"/>
+      <rect x="17.5" y="66" width="9" height="40" rx="1.5"/>
+    </g>
+    <!-- double-headed arrow: bigger or smaller -->
+    <rect x="40" y="83" width="20" height="6" rx="1"/>
+    <path d="M33 86 L42 78 L42 94 Z"/>
+    <path d="M67 86 L58 78 L58 94 Z"/>
+    <!-- big italic T, slanted around its vertical middle (y=66) -->
+    <g transform="translate(85 66) skewX(-14) translate(-85 -66)">
+      <rect x="58" y="22" width="54" height="16" rx="3"/>
+      <rect x="76" y="22" width="18" height="88" rx="3"/>
+    </g>
+  </g>
+</svg>
