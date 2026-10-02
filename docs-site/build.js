@@ -11,6 +11,7 @@ import {
   EXTENSION_DIST,
   FIXTURES_DIR,
   SIGNED_XPI,
+  THEME_CSS,
   UNSIGNED_XPI_FILENAME,
   USERSCRIPT_BUNDLE,
   USERSCRIPT_FILENAME,
@@ -90,6 +91,7 @@ function slugTitle(filename) {
 // --- 1. Clean + shared assets ---
 rimrafSync(DIST);
 ensureDir(DIST);
+fs.copyFileSync(THEME_CSS, path.join(DIST, 'theme.css'));
 fs.copyFileSync(path.join(SRC, 'style.css'), path.join(DIST, 'style.css'));
 fs.copyFileSync(path.join(EXTENSION_DIR, 'icons', 'icon.svg'), path.join(DIST, 'icon.svg'));
 
@@ -210,11 +212,11 @@ for (const site of readSitesSafe()) {
 // then function demos (synthetic pages, one technique each) — each linking to its live demo.
 function galleryEntryHtml(entry) {
   const demo = entry.hasDemo
-    ? `<a class="button button-secondary" href="../demos/${entry.id}/index.html">Try it live<span class="visually-hidden"> — ${entry.label}</span></a>`
+    ? `<a class="button" href="../demos/${entry.id}/index.html">Try it live<span class="visually-hidden"> — ${entry.label}</span></a>`
     : '';
   const subtitle = entry.subtitle ? `<p class="gallery-subtitle">${entry.subtitle}</p>` : '';
   return `
-    <section class="gallery-entry" aria-labelledby="g-${entry.id}">
+    <section class="gallery-entry panel" aria-labelledby="g-${entry.id}">
       <h3 id="g-${entry.id}">${entry.label}</h3>
       ${subtitle}
       <div class="shot-pair">
@@ -335,7 +337,7 @@ writePage(path.join(DIST, 'index.html'), {
         <p class="lead">${product.summary}</p>
         <div class="actions">
           <a class="button button-primary" href="guides/install.html">Install</a>
-          <a class="button button-secondary" href="gallery/index.html">See it in action</a>
+          <a class="button" href="gallery/index.html">See it in action</a>
         </div>
       </div>
     </section>

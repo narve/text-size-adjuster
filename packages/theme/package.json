@@ -1,0 +1,8 @@
+{
+  "name": "@tsa/theme",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "description": "Shared CSS (colours, buttons, panels) for the docs site and the extension's pages."
+}

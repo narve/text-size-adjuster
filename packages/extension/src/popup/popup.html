@@ -1,57 +1,36 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>{{name}}</title>
+  <link rel="stylesheet" href="theme.css" />
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 12px;
-      width: 180px;
+    body { width: 240px; padding: 14px; background: var(--surface); }
+    .title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 0.95rem; font-weight: 650; }
+    .title img { width: 20px; height: 20px; }
+    .stepper {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
     }
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    button {
-      font-size: 18px;
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #f5f5f5;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #ebebeb;
-    }
-    #display {
-      font-size: 16px;
-      min-width: 3.5em;
-      text-align: center;
-    }
-    #reset {
-      width: auto;
-      padding: 0 10px;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-    #remember { width: 100%; font-size: 13px; margin-top: 8px; }
-    .options-link { margin: 10px 0 0; font-size: 13px; }
+    .stepper .button { width: 44px; padding: 0; font-size: 1.4rem; line-height: 1; }
+    #display { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .actions { display: grid; gap: 6px; margin-top: 10px; }
+    .actions .button { width: 100%; min-height: 38px; font-size: 0.92rem; }
+    .options-link { display: block; margin-top: 10px; text-align: center; font-size: 0.88rem; }
   </style>
 </head>
 <body>
-  <div class="row">
-    <button id="decrease" aria-label="Decrease text size">−</button>
-    <span id="display">100%</span>
-    <button id="increase" aria-label="Increase text size">+</button>
+  <p class="title"><img src="icons/icon-48.png" alt="" />{{name}}</p>
+  <div class="stepper">
+    <button class="button button-primary" id="decrease" aria-label="Decrease text size">−</button>
+    <span id="display" aria-live="polite">100%</span>
+    <button class="button button-primary" id="increase" aria-label="Increase text size">+</button>
   </div>
-  <button id="reset">Reset</button>
-  <button id="remember" hidden>Remember this site</button>
-  <p class="options-link"><a href="#" id="options">Options…</a></p>
+  <div class="actions">
+    <button class="button" id="reset">Reset to 100%</button>
+    <button class="button button-primary" id="remember" hidden>Remember this site</button>
+  </div>
+  <a class="options-link" href="#" id="options">Options…</a>
   <script src="popup.js"></script>
 </body>
 </html>

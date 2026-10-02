@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 // @ts-expect-error plain JS helper shared with the other build scripts
 import { readProduct } from '../../tools/product.js';
-import { EXTENSION_DIR, EXTENSION_DIST, readJson, writeJson } from '../../tools/paths.js';
+import { EXTENSION_DIR, EXTENSION_DIST, THEME_CSS, readJson, writeJson } from '../../tools/paths.js';
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -19,7 +19,7 @@ const ENTRIES = {
 type EntryName = keyof typeof ENTRIES;
 const ORDER = Object.keys(ENTRIES) as EntryName[];
 
-/** HTML pages copied into dist/, with {{name}} replaced by the product name. */
+/** HTML pages copied into dist/, with {{name}} replaced by the product name. They share theme.css. */
 const PAGES = ['src/popup/popup.html', 'src/options/options.html'];
 
 function copyStaticFiles(): Plugin {
@@ -54,6 +54,7 @@ function copyStaticFiles(): Plugin {
         );
         writeFileSync(path.join(EXTENSION_DIST, path.basename(page)), html);
       }
+      cpSync(THEME_CSS, path.join(EXTENSION_DIST, 'theme.css'));
       cpSync(path.join(EXTENSION_DIR, 'icons'), path.join(EXTENSION_DIST, 'icons'), {
         recursive: true,
         filter: (src) => !src.endsWith('.svg'),

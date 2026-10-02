@@ -1,0 +1,148 @@
+/*
+ * Shared look for every page we ship: the docs site, and the extension's options page and popup.
+ * Colours meet WCAG AA contrast in both schemes; focus is always visible; motion is subtle and
+ * disabled for users who prefer reduced motion. Page-specific layout stays with each page.
+ */
+
+:root {
+  color-scheme: light dark;
+  --fg: #1c1f24;
+  --fg-muted: #4a5260;
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --surface-2: #f2f4f8;
+  --border: #dde1e8;
+  --accent: #1f4e9c;
+  --accent-strong: #163b78;
+  --accent-soft: #e8eefa;
+  --on-accent: #ffffff;
+  --danger: #a3261b;
+  --focus: #b4530a;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 16px rgb(16 24 40 / 6%);
+  --radius: 14px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e9ecf1;
+    --fg-muted: #aab2bf;
+    --bg: #12151b;
+    --surface: #1a1e26;
+    --surface-2: #222733;
+    --border: #2f3542;
+    --accent: #8db4ff;
+    --accent-strong: #b3ccff;
+    --accent-soft: #1e2a42;
+    --on-accent: #0d1626;
+    --danger: #ff9b8f;
+    --focus: #ffb067;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--accent-strong);
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Components below set `display`, which would otherwise override the `hidden` attribute. */
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Buttons */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  min-height: 44px; /* comfortable touch target */
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--accent-soft);
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.button-primary:hover {
+  background: var(--accent-strong);
+  color: var(--on-accent);
+}
+
+.button-quiet {
+  border-color: transparent;
+}
+
+.button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* A raised box for grouping content */
+
+.panel {
+  padding: 1.25rem 1.3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { formatFactor } from '@tsa/ui-widget';
+import { formatFactor, parsePosition, POSITION_LABELS } from '@tsa/ui-widget';
 import { isSiteKey, readSettings, SETTINGS_KEY, siteLabel, type ControlSettings } from '../settings.js';
 
 /**
@@ -13,13 +13,22 @@ async function writeSettings(patch: Partial<ControlSettings>): Promise<void> {
   await browser.storage.local.set({ [SETTINGS_KEY]: next });
 }
 
-function bindRadioGroup(name: 'position' | 'show', current: string): void {
+function bindRadioGroup(name: 'position' | 'show', current: string, onChange?: (value: string) => void): void {
   for (const input of document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)) {
     input.checked = input.value === current;
     input.addEventListener('change', () => {
-      if (input.checked) void writeSettings({ [name]: input.value } as Partial<ControlSettings>);
+      if (!input.checked) return;
+      onChange?.(input.value);
+      void writeSettings({ [name]: input.value } as Partial<ControlSettings>);
     });
   }
+}
+
+/** The corner picker's caption, e.g. "Bottom right". */
+function showChosenPosition(value: string): void {
+  const position = parsePosition(value);
+  const label = position ? POSITION_LABELS[position] : '';
+  document.getElementById('chosen-position')!.textContent = label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 async function renderSites(): Promise<void> {
@@ -45,6 +54,7 @@ async function renderSites(): Promise<void> {
     size.textContent = formatFactor(factor);
     const remove = document.createElement('button');
     remove.type = 'button';
+    remove.className = 'button button-quiet';
     remove.textContent = 'Remove';
     remove.setAttribute('aria-label', `Remove ${origin} (back to normal size)`);
     // Removing the key resets any open tab on that site too (bindStore treats a removed key as
@@ -56,8 +66,15 @@ async function renderSites(): Promise<void> {
 }
 
 async function init(): Promise<void> {
+  // Version and homepage come from the manifest, which the build fills from package.json and
+  // product.json.
+  const manifest = browser.runtime.getManifest();
+  document.getElementById('version')!.textContent = `Version ${manifest.version}`;
+  if (manifest.homepage_url) (document.getElementById('homepage') as HTMLAnchorElement).href = manifest.homepage_url;
+
   const settings = await readSettings();
-  bindRadioGroup('position', settings.position);
+  showChosenPosition(settings.position);
+  bindRadioGroup('position', settings.position, showChosenPosition);
   bindRadioGroup('show', settings.show);
   const autoRemember = document.getElementById('autoRemember') as HTMLInputElement;
   autoRemember.checked = settings.autoRemember;

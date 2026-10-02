@@ -19,6 +19,8 @@ text-size-adjuster/
     stores/        # createMemoryStore, createLocalExtensionStore,
                    #   createGMValueStore, createGatedStore
     ui-widget/     # shadow-DOM floating +/- widget and its settings parsing
+    theme/         # shared CSS (colours, buttons, panels) for the docs site and
+                   #   the extension's options page and popup
     userscript/    # userscript + script-tag embed build (vite-plugin-monkey)
     extension/     # Firefox/Chrome WebExtension build, signing scripts
   fixtures/        # test pages served locally: fixtures.json lists the

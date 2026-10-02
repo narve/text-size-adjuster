@@ -2,57 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} — Options</title>
+  <link rel="stylesheet" href="theme.css" />
   <style>
-    :root { color-scheme: light dark; }
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; max-width: 560px; line-height: 1.5; }
-    h1 { font-size: 20px; margin: 0 0 16px; }
-    h2 { font-size: 15px; margin: 24px 0 8px; }
-    fieldset { border: none; padding: 0; margin: 0; }
-    .corners { display: grid; grid-template-columns: repeat(2, minmax(0, 160px)); gap: 6px; }
-    label { display: flex; align-items: center; gap: 6px; font-size: 15px; padding: 2px 0; }
-    .hint { font-size: 13px; opacity: 0.75; margin: 4px 0 0; }
-    #sites {
-      list-style: none; margin: 0; padding: 0;
-      max-height: 280px; overflow-y: auto;
-      border: 1px solid #8884; border-radius: 6px;
+    body { padding: 24px 16px 40px; }
+    main { max-width: 640px; margin: 0 auto; display: grid; gap: 20px; }
+
+    .page-header { display: flex; align-items: center; gap: 14px; }
+    .page-header img { width: 48px; height: 48px; border-radius: 12px; box-shadow: var(--shadow); }
+    h1 { font-size: 1.5rem; line-height: 1.2; margin: 0; }
+    .version { margin: 2px 0 0; color: var(--fg-muted); font-size: 0.9rem; }
+
+    h2 { font-size: 1.15rem; margin: 0 0 4px; }
+    .hint { margin: 4px 0 0; color: var(--fg-muted); font-size: 0.9rem; }
+    fieldset { border: none; padding: 0; margin: 18px 0 0; min-width: 0; }
+    legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
+
+    /* Corner picker: a phone with a tap target in each corner; the chosen one shows the control. */
+    .corner-picker-body { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .phone {
+      position: relative; width: 150px; aspect-ratio: 9 / 16; flex: none;
+      border: 6px solid var(--fg); border-radius: 22px; background: var(--bg);
     }
-    #sites li { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #8882; }
-    #sites li:last-child { border-bottom: none; }
-    #sites .origin { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #sites .size { font-variant-numeric: tabular-nums; opacity: 0.8; }
-    #sites button { font: inherit; font-size: 13px; }
-    #empty { font-size: 14px; opacity: 0.75; }
+    .phone::before { /* lines of "text" */
+      content: ''; position: absolute; inset: 26% 16%;
+      background: repeating-linear-gradient(var(--border) 0 6px, transparent 6px 14px);
+      border-radius: 3px;
+    }
+    .corner { position: absolute; display: grid; place-items: center; width: 64px; height: 44px; cursor: pointer; }
+    .corner[data-corner^='top'] { top: 4px; }
+    .corner[data-corner^='bottom'] { bottom: 4px; }
+    .corner[data-corner$='left'] { left: 4px; }
+    .corner[data-corner$='right'] { right: 4px; }
+    .spot {
+      width: 22px; height: 22px; border-radius: 999px;
+      border: 2px dashed var(--fg-muted); transition: all 120ms ease;
+    }
+    .corner:hover .spot { border-color: var(--accent); }
+    .corner input:checked + .spot {
+      width: 52px; height: 24px; border: none; background: var(--accent);
+      box-shadow: var(--shadow);
+    }
+    .corner input:checked + .spot::before {
+      content: '−  +'; display: block; white-space: pre; text-align: center;
+      color: var(--on-accent); font-weight: 700; font-size: 14px; line-height: 24px;
+    }
+    .corner input:focus-visible + .spot { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .chosen { font-weight: 600; margin: 0; }
+
+    /* Segmented control */
+    .segments {
+      display: inline-flex; padding: 4px; gap: 4px; flex-wrap: wrap;
+      border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .segments label {
+      position: relative; padding: 8px 16px; min-height: 40px; display: flex; align-items: center;
+      border-radius: 999px; cursor: pointer; font-weight: 550; color: var(--fg-muted);
+    }
+    .segments label:has(input:checked) { background: var(--accent); color: var(--on-accent); }
+    .segments label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+    /* Switch */
+    .switch-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; cursor: pointer; }
+    .switch-row strong { font-weight: 600; }
+    .switch-row .hint { display: block; }
+    input[role='switch'] {
+      appearance: none; flex: none; margin: 2px 0 0; width: 48px; height: 28px; border-radius: 999px;
+      background: var(--border); position: relative; cursor: pointer; transition: background 120ms ease;
+    }
+    input[role='switch']::before {
+      content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+      border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); transition: transform 120ms ease;
+    }
+    input[role='switch']:checked { background: var(--accent); }
+    input[role='switch']:checked::before { transform: translateX(20px); }
+
+    /* Saved sites */
+    h3 { font-size: 1rem; margin: 22px 0 8px; }
+    #sites {
+      list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    #sites li { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; }
+    #sites li + li { border-top: 1px solid var(--border); }
+    #sites .origin { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #sites .size {
+      font-variant-numeric: tabular-nums; font-size: 0.9rem; font-weight: 600;
+      padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+    }
+    #sites .button { min-height: 36px; padding: 0.3rem 0.8rem; font-size: 0.9rem; color: var(--danger); }
+    #empty { margin: 0; padding: 14px; border: 1px dashed var(--border); border-radius: 10px; color: var(--fg-muted); }
+
+    footer { color: var(--fg-muted); font-size: 0.9rem; text-align: center; }
   </style>
 </head>
 <body>
-  <h1>{{name}}</h1>
+  <main>
+    <header class="page-header">
+      <img src="icons/icon-96.png" alt="" />
+      <div>
+        <h1>{{name}}</h1>
+        <p class="version" id="version"></p>
+      </div>
+    </header>
 
-  <h2>Where the on-page control sits</h2>
-  <fieldset class="corners" id="position">
-    <label><input type="radio" name="position" value="top-left" /> Top left</label>
-    <label><input type="radio" name="position" value="top-right" /> Top right</label>
-    <label><input type="radio" name="position" value="bottom-left" /> Bottom left</label>
-    <label><input type="radio" name="position" value="bottom-right" /> Bottom right</label>
-  </fieldset>
+    <section class="panel" aria-labelledby="control-heading">
+      <h2 id="control-heading">On-page control</h2>
+      <p class="hint">The small −/+ control that appears on web pages. You can always adjust the
+      size from the {{name}} button in the toolbar, too.</p>
 
-  <h2>When to show it</h2>
-  <fieldset id="show">
-    <label><input type="radio" name="show" value="on-zoom" /> Only after I zoom in on a page</label>
-    <label><input type="radio" name="show" value="always" /> Always</label>
-  </fieldset>
-  <p class="hint">You can always adjust the size from the {{name}} button in the toolbar,
-  too.</p>
+      <fieldset>
+        <legend>Where it sits</legend>
+        <div class="corner-picker-body">
+          <div class="phone">
+            <label class="corner" data-corner="top-left"><input class="visually-hidden" type="radio" name="position" value="top-left" /><span class="spot"></span><span class="visually-hidden">Top left</span></label>
+            <label class="corner" data-corner="top-right"><input class="visually-hidden" type="radio" name="position" value="top-right" /><span class="spot"></span><span class="visually-hidden">Top right</span></label>
+            <label class="corner" data-corner="bottom-left"><input class="visually-hidden" type="radio" name="position" value="bottom-left" /><span class="spot"></span><span class="visually-hidden">Bottom left</span></label>
+            <label class="corner" data-corner="bottom-right"><input class="visually-hidden" type="radio" name="position" value="bottom-right" /><span class="spot"></span><span class="visually-hidden">Bottom right</span></label>
+          </div>
+          <div>
+            <p class="chosen" id="chosen-position" aria-hidden="true"></p>
+            <p class="hint">Tap a corner of the phone to move the control there.</p>
+          </div>
+        </div>
+      </fieldset>
 
-  <h2>Remembering sizes</h2>
-  <label><input type="checkbox" id="autoRemember" /> Remember the text size for each site automatically</label>
-  <p class="hint">When this is off, size changes last until you reload the page — use
-  <em>Remember this site</em> in the toolbar button to keep a site's size.</p>
+      <fieldset>
+        <legend>When to show it</legend>
+        <div class="segments">
+          <label><input class="visually-hidden" type="radio" name="show" value="on-zoom" />After I zoom in</label>
+          <label><input class="visually-hidden" type="radio" name="show" value="always" />Always</label>
+        </div>
+        <p class="hint">“After I zoom in” keeps pages clean until you pinch or zoom to read.</p>
+      </fieldset>
+    </section>
 
-  <h2>Sites with a saved size</h2>
-  <ul id="sites"></ul>
-  <p id="empty" hidden>No sites yet — make the text bigger or smaller on a site and it will appear here.</p>
+    <section class="panel" aria-labelledby="remember-heading">
+      <h2 id="remember-heading">Remembering sizes</h2>
+      <label class="switch-row">
+        <span>
+          <strong>Remember each site's size automatically</strong>
+          <span class="hint">When this is off, sizes reset when you reload —
+          use <em>Remember this site</em> in the toolbar button to keep one.</span>
+        </span>
+        <input type="checkbox" role="switch" id="autoRemember" />
+      </label>
 
+      <h3>Sites with a saved size</h3>
+      <ul id="sites"></ul>
+      <p id="empty" hidden>No sites yet. Make the text bigger or smaller on a site and it will
+      appear here.</p>
+    </section>
+
+    <footer><a id="homepage" href="#">Help and documentation</a></footer>
+  </main>
   <script src="options.js"></script>
 </body>
 </html>

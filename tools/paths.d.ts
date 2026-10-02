@@ -28,6 +28,7 @@ export const EXTENSION_DIST: string;
 export const EXTENSION_ARTIFACTS: string;
 export const UNSIGNED_XPI_FILENAME: string;
 export const SIGNED_XPI: string;
+export const THEME_CSS: string;
 export const FIXTURES_DIR: string;
 export const SITES_FILE: string;
 export const SCREENSHOT_DIR: string;
