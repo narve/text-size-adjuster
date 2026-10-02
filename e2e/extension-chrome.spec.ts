@@ -56,10 +56,11 @@ test('the popup drives the page in the active tab', async ({ context, extensionI
   await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
   const before = await largeRefSize(page);
 
+  // The popup acts on the active tab, which it looks up as it opens: make that the page, not
+  // the popup's own tab, before loading it.
   const popup = await context.newPage();
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
-  // The popup acts on the active tab; make that the page, not the popup's own tab.
   await page.bringToFront();
+  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   await popup.locator('#increase').click();
 
   await expect(popup.locator('#display')).toHaveText('110%');
