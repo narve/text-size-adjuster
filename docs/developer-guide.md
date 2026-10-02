@@ -54,9 +54,10 @@ npm run download -w fixtures
    AMO. You still get a Mozilla-signed `.xpi` (required for Firefox to install
    it at all outside of temporary `about:debugging` loading), but it isn't
    published to the public catalog.
-4. Signing is scripted: `npm run release:extension` builds the extension and
-   signs it as an unlisted add-on (`packages/extension/sign.mjs`, wrapping
-   `web-ext sign --channel unlisted`). The signed file ends up at
+4. Signing is scripted: `npm run release:extension` bumps the extension's minor
+   version (in both manifests and `packages/extension/package.json`), builds the
+   extension and signs it as an unlisted add-on (`packages/extension/sign.mjs`,
+   wrapping `web-ext sign --channel unlisted`). The signed file ends up at
    `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`, and the
    next docs build publishes it as `downloads/text-size-adjuster.xpi`.
 
@@ -70,8 +71,8 @@ npm run download -w fixtures
 
    Both come from https://addons.mozilla.org/developers/addon/api/key/. They're
    passed to `web-ext` as environment variables, never on the command line.
-   Mozilla signs each version number only once, so bump `version` in both
-   manifests before signing again.
+   Mozilla signs each version number only once, which is why the release step
+   always bumps the version first. Commit the bumped version files afterwards.
 
 The three ways to install _without_ an AMO listing (temporary load,
 signed-unlisted `.xpi`, unsigned on Developer Edition/Nightly/ESR), with exact

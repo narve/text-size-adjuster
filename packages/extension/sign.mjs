@@ -52,7 +52,7 @@ if (!fs.existsSync(path.join(DIST, 'manifest.json'))) {
 
 const { version } = JSON.parse(fs.readFileSync(path.join(DIST, 'manifest.json'), 'utf8'));
 console.log(`Signing version ${version} as an unlisted add-on (usually takes a few minutes)...`);
-console.log('Note: Mozilla only signs each version number once — bump "version" in both manifests to re-sign.');
+
 
 execFileSync(
   'npx',
