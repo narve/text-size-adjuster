@@ -3,11 +3,11 @@
 This tool works on the vast majority of web pages, but a few things are out of
 its reach:
 
-- **Ads, embedded videos, and some comment sections might not resize.** These
-  are often a small "page within the page," loaded from a different website —
-  browsers don't let any tool, this one included, reach inside that for safety
-  reasons. The Firefox extension handles more of these cases than the userscript
-  version does, by design; the userscript is more limited here.
+- **With the userscript, ads, embedded videos, and some comment sections might
+  not resize.** These are often a small "page within the page," loaded from a
+  different website, and browsers don't let a userscript reach inside that, for
+  safety reasons. The Firefox add-on can: it resizes most of them along with the
+  rest of the page.
 - **A few sites hide extra content inside sealed, locked-down components nothing
   outside can touch.** This is rare in practice.
 - **Text inside a small, fixed-size box — like a single-line title — might get
