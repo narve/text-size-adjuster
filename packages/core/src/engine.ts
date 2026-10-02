@@ -1,12 +1,14 @@
 import type { EngineOptions, EngineChangeEvent, EngineListener, TextSizeEngine } from './types.js';
 import { clampFactor } from './clamp.js';
 import { captureElements } from './capture.js';
+import { DEFAULT_IGNORE_ATTR, DEFAULT_SCALED_ATTR } from './constants.js';
 
 const DEFAULTS = {
   min: 0.5,
   max: 3,
   step: 0.1,
-  scaledAttr: 'data-tsa-scaled',
+  scaledAttr: DEFAULT_SCALED_ATTR,
+  ignoreAttr: DEFAULT_IGNORE_ATTR,
 };
 
 const FACTOR_VAR = '--tsa-k';
@@ -134,8 +136,13 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     return applyFactor(1, 'reset');
   }
 
+  /** True for an element inside (or equal to) an `ignoreAttr`-marked subtree (see EngineOptions). */
+  function isIgnored(el: Element): boolean {
+    return el.closest(`[${opts.ignoreAttr}]`) !== null;
+  }
+
   function rescan(): void {
-    const elements = Array.from(root.querySelectorAll('*'));
+    const elements = Array.from(root.querySelectorAll('*')).filter((el) => !isIgnored(el));
     captureNew(elements);
     discoverChildrenIn(elements);
   }
@@ -152,8 +159,10 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
         });
       }
       if (added.length === 0) return;
-      captureNew(added);
-      discoverChildrenIn(added);
+      const relevant = added.filter((el) => !isIgnored(el));
+      if (relevant.length === 0) return;
+      captureNew(relevant);
+      discoverChildrenIn(relevant);
     });
     observer.observe(root, { childList: true, subtree: true });
   }

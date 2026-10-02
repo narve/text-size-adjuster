@@ -8,6 +8,14 @@ export interface EngineOptions {
   /** Attribute marking an element whose font-size has been captured and is now scaled. */
   scaledAttr?: string;
   /**
+   * Attribute that excludes an element and its whole subtree from scaling and from child-engine
+   * discovery (shadow roots/iframes inside it are left alone too). Generic, not tied to any
+   * specific UI — this is how a UI's own on-page chrome (e.g. a floating control widget) keeps
+   * itself from being scaled along with the page, without the engine needing to know that UI
+   * exists (FR4). Any consumer can use it the same way. Default `data-tsa-ignore`.
+   */
+  ignoreAttr?: string;
+  /**
    * The document/shadow-root this engine scales. Defaults to `document`. A child engine is
    * created automatically (with the same options otherwise) for every open shadow root and
    * same-origin iframe document discovered within this root.

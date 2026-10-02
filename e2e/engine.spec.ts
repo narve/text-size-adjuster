@@ -234,3 +234,34 @@ test.describe('large-dom-performance', () => {
     expect(timings.factorChangeMs).toBeLessThan(Math.max(5, timings.initialCaptureMs / 3));
   });
 });
+
+test.describe('ignoreAttr exclusion', () => {
+  test('an element marked data-tsa-ignore, and its subtree, are left untouched', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/ignore-attr/');
+    await page.evaluate(() => {
+      const w = window as unknown as { TSA_CORE: { createEngine: () => { attach: () => void; setFactor: (k: number) => number } }; __tsa?: unknown };
+      w.__tsa = w.TSA_CORE.createEngine();
+      (w.__tsa as { attach: () => void }).attach();
+    });
+
+    const before = await page.evaluate(() => ({
+      normal: getComputedStyle(document.querySelector('#normal')!).fontSize,
+      ignored: getComputedStyle(document.querySelector('#ignored')!).fontSize,
+    }));
+
+    await page.evaluate(() => {
+      (window as unknown as { __tsa: { setFactor: (k: number) => number } }).__tsa.setFactor(2);
+    });
+
+    const after = await page.evaluate(() => ({
+      normal: getComputedStyle(document.querySelector('#normal')!).fontSize,
+      ignored: getComputedStyle(document.querySelector('#ignored')!).fontSize,
+      ignoredScanned: document.querySelector('#ignored')!.hasAttribute('data-tsa-scaled'),
+    }));
+
+    expect(after.normal).not.toBe(before.normal); // the rest of the page still scales normally
+    expect(after.ignored).toBe(before.ignored); // the ignored subtree is completely untouched
+    expect(after.ignoredScanned).toBe(false);
+  });
+});
