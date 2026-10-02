@@ -165,3 +165,32 @@ test('the frame still follows after the background has been unloaded while idle'
   await expect.poll(() => readCrossOriginSize(page)).toBe(18);
   expect(errors).toEqual([]);
 });
+
+/** The engine's wait for late custom-element definitions also works from a content script (M3). */
+test('a custom element defined after the content script ran has its shadow content scaled', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/shadow-dom-open/');
+  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await clickWidget(page, 'reset');
+  await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<late-card></late-card>'));
+  await page.evaluate(() => {
+    customElements.define(
+      'late-card',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' }).innerHTML = '<p id="late" style="font-size: 20px">Late</p>';
+        }
+      },
+    );
+  });
+  await clickWidget(page, 'increase', 5);
+  await expect(widgetDisplay(page)).toHaveText('150%');
+  await expect
+    .poll(() =>
+      page.evaluate(() => getComputedStyle(document.querySelector('late-card')!.shadowRoot!.querySelector('#late')!).fontSize),
+    )
+    .toBe('30px');
+  await clickWidget(page, 'reset');
+  expect(errors).toEqual([]);
+});

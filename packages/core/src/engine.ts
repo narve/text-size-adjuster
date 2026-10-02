@@ -66,6 +66,8 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   /** The child engine for each iframe's current document (absent: none, or not reachable). */
   const iframeChildren = new Map<HTMLIFrameElement, Child>();
   const scannedShadowHosts = new WeakSet<Element>();
+  /** Custom element names this engine is waiting to see defined (see watchForDefinition). */
+  const awaitedTags = new Set<string>();
   /** Iframes that have a `load` listener — not "done": a frame is re-examined on every load. */
   const watchedIframes = new WeakSet<Element>();
 
@@ -132,9 +134,39 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     }
   }
 
+  /**
+   * A custom element that's in the page before its definition has loaded (code-split components,
+   * lazy widgets) gets its shadow root only when it's upgraded, which no MutationObserver on the
+   * document sees. So for each not-yet-defined custom element name, wait for the definition and
+   * then look at that name's elements again. (Shadow roots attached at some other later moment are
+   * still missed — a documented limitation.)
+   */
+  function watchForDefinition(el: Element): void {
+    const name = el.localName;
+    if (!name.includes('-') || awaitedTags.has(name)) return;
+    let registry: CustomElementRegistry | null | undefined;
+    try {
+      registry = doc!.defaultView?.customElements;
+      if (!registry || registry.get(name)) return;
+    } catch {
+      return; // not available here (e.g. some extension content-script contexts)
+    }
+    awaitedTags.add(name);
+    registry
+      .whenDefined(name)
+      .then(() => {
+        awaitedTags.delete(name);
+        if (!attached) return;
+        const hosts = Array.from(root.querySelectorAll(name)).filter((host) => !isIgnored(host));
+        discoverChildrenIn(hosts);
+      })
+      .catch(() => {});
+  }
+
   /** Scans the given elements (not their ancestors) for open shadow roots and same-origin iframes. */
   function discoverChildrenIn(elements: Iterable<Element>): void {
     for (const el of elements) {
+      watchForDefinition(el);
       const shadow = (el as Element & { shadowRoot?: ShadowRoot | null }).shadowRoot;
       if (shadow && !scannedShadowHosts.has(el)) {
         scannedShadowHosts.add(el);

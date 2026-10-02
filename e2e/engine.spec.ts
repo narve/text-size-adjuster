@@ -286,6 +286,34 @@ test.describe('rem-based layout', () => {
   });
 });
 
+test.describe('late shadow roots', () => {
+  test('a custom element defined after the engine attached has its shadow content scaled', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/shadow-dom-open/');
+    // In the page, but not defined yet: no shadow root when the engine scans it (code review M3).
+    await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<late-card></late-card>'));
+    await attachEngine(page);
+    await page.evaluate(() => {
+      customElements.define(
+        'late-card',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            this.attachShadow({ mode: 'open' }).innerHTML = '<p id="late" style="font-size: 20px">Late</p>';
+          }
+        },
+      );
+    });
+    // whenDefined resolves asynchronously.
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    await setFactor(page, 2);
+    const size = await page.evaluate(
+      () => getComputedStyle(document.querySelector('late-card')!.shadowRoot!.querySelector('#late')!).fontSize,
+    );
+    expect(size).toBe('40px');
+  });
+});
+
 test.describe('spa-mutation', () => {
   test('content injected after load is captured automatically, without a manual rescan', async ({
     page,
