@@ -14,6 +14,9 @@ import { readSites, realWorldSnapshot } from '../../tools/paths.js';
 //   second time on top of it duplicates script-inserted content, re-triggers consent/login
 //   overlays, and throws errors once the scripts can't reach their own backends.
 // - CSP <meta> tags are removed, so they can't block the tool's own script in the live demos.
+// - the snapshot is saved as UTF-8 and says so first thing in <head>. Some sites (Hacker News)
+//   declare their charset only in the HTTP header, which a static server may not send, and the
+//   browser would then guess Windows-1252 and garble every non-ASCII character.
 // - common consent-overlay containers are removed, so they don't cover the page in screenshots,
 //   along with the scroll lock they put on the page.
 // - CSS that the site inserted at runtime via the CSSOM is written into the snapshot (see
@@ -71,7 +74,8 @@ function makeStatic(html, url) {
   return html
     .replace(/<script\b[\s\S]*?<\/script>/gi, '')
     .replace(/<meta[^>]+http-equiv=["']?content-security-policy["']?[^>]*>/gi, '')
-    .replace(/<head(\s[^>]*)?>/i, (match) => `${match}<base href="${url}">`);
+    .replace(/<meta[^>]+charset=[^>]*>/gi, '')
+    .replace(/<head(\s[^>]*)?>/i, (match) => `${match}<meta charset="utf-8"><base href="${url}">`);
 }
 
 async function downloadSite({ id, url }, browser) {
