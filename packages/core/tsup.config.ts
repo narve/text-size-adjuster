@@ -12,6 +12,7 @@ export default defineConfig({
   format: ['iife'],
   globalName: 'TSA_CORE',
   outDir: 'dist',
+  clean: true,
   footer: {
     js: 'if (typeof window !== "undefined") { window.TSA_CORE = TSA_CORE; }',
   },

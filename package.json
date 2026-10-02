@@ -19,6 +19,7 @@
     "test:e2e": "npm run build --workspace packages/core && npm run build --workspace packages/userscript && npm run test --workspace e2e",
     "test:e2e:extension": "npm run test:extension --workspace e2e",
     "test:real-world": "npm run build --workspace packages/core && npm run test:real-world --workspace e2e",
+    "screenshots": "npm run build --workspace packages/core && npm run screenshots --workspace e2e && npm run screenshots:real-world --workspace e2e",
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",

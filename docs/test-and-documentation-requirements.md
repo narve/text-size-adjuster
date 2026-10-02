@@ -189,7 +189,9 @@ served via `npm run docs:serve`.
 
 - **TR7.1**: A GitHub Actions workflow builds the complete documentation — both
   the end-user site (TR5) and the developer/contributor docs (TR6) — and
-  publishes it to GitHub Pages on push to the default branch.
+  publishes it to GitHub Pages on push to the default branch. To keep that
+  quick, a push run only takes the gallery screenshots; the full test suites run
+  when the workflow is started by hand with the `run_tests` option.
 - **TR7.2**: The published site keeps the same separation as TR5.0/TR6: the
   site's default landing experience is the end-user guide; the
   developer/contributor docs (rendered from `docs/*.md`) live in a clearly

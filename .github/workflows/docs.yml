@@ -6,7 +6,12 @@ name: Publish documentation
 on:
   push:
     branches: [master]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: Also run the full Playwright test suites (Firefox and Chromium)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,7 +35,20 @@ jobs:
 
       - run: npm ci
 
-      - name: Install Playwright browsers
+      # Browsers are cached between runs. By default only Chromium is installed, without
+      # --with-deps: the runner image already has the libraries it needs, and installing them via
+      # apt from the Ubuntu mirror can take over ten minutes.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium (for screenshots and the docs build)
+        if: ${{ !inputs.run_tests }}
+        run: npx playwright install chromium
+
+      - name: Install Chromium and Firefox with system dependencies (for the tests)
+        if: ${{ inputs.run_tests }}
         run: npx playwright install --with-deps chromium firefox
 
       # Real-site snapshots aren't committed (TR1a), so fetch them here for the gallery and demos.
@@ -39,12 +57,30 @@ jobs:
         run: npm run download -w fixtures
         continue-on-error: true
 
-      - name: Real-world screenshots (informative)
+      - name: Build packages
+        run: npm run build -w packages --if-present
+
+      # By default only the tests that take the gallery screenshots run (Chromium).
+      - name: Gallery screenshots
+        if: ${{ !inputs.run_tests }}
+        run: npm run screenshots -w e2e
+
+      - name: Real-world gallery screenshots (informative)
+        if: ${{ !inputs.run_tests }}
+        run: npm run screenshots:real-world -w e2e
+        continue-on-error: true
+
+      - name: Layer 1 test suite (Firefox and Chromium)
+        if: ${{ inputs.run_tests }}
+        run: npm run test:e2e
+
+      - name: Real-world checks and screenshots (informative)
+        if: ${{ inputs.run_tests }}
         run: npm run test:real-world
         continue-on-error: true
 
-      - name: Build everything (packages, Layer 1 suite, docs site)
-        run: npm run build
+      - name: Build the docs site
+        run: npm run docs:build
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -47,6 +47,7 @@ npm run test:unit            # unit tests (vitest) of every package in packages/
 npm run test:e2e             # Layer 1 Playwright suite (the hard requirement)
 npm run test:e2e:extension   # Layer 2, best-effort — allowed to fail/skip
 npm run test:real-world      # real-world snapshots (TR1a), informative only
+npm run screenshots          # only the gallery screenshots (Chromium)
 npm run lint                 # ESLint
 npm run typecheck            # tsc in every package
 npm run format               # Prettier on everything (Markdown style: AGENTS.md)
@@ -248,9 +249,14 @@ or package it with `npx web-ext build --source-dir dist` from
 
 `.github/workflows/docs.yml` builds and publishes the complete documentation
 site — both the end-user guide and this developer section — to GitHub Pages on
-every push to `master`. One-time setup required on GitHub (not something a
-workflow run can do for you): repo **Settings → Pages → Build and deployment →
-Source**, set to **GitHub Actions**.
+every push to `master`. By default it only takes the gallery screenshots
+(`npm run screenshots`, Chromium only) instead of running the test suites, and
+installs Chromium without `--with-deps`: installing system packages from the
+Ubuntu mirror can take over ten minutes. To also run the full Layer 1 and
+real-world suites in Firefox and Chromium, start it by hand (**Actions → Publish
+documentation → Run workflow**) with **run_tests** checked. One-time setup
+required on GitHub (not something a workflow run can do for you): repo
+**Settings → Pages → Build and deployment → Source**, set to **GitHub Actions**.
 
 ## Release checklist
 
