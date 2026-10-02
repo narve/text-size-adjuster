@@ -82,6 +82,34 @@ npm run download -w fixtures
 - Optionally publish to [Greasy Fork](https://greasyfork.org/) for discoverability; follow their
   submission guidelines (metadata block requirements, update URL).
 
+## Known problems (technical detail; see FR6 for the plain statement)
+
+- **Cross-origin iframes** (ads, embeds, third-party comment widgets): the same-origin policy
+  means `iframe.contentDocument` throws/returns `null` across origins — there is no workaround
+  available to injected JS, not even via `postMessage` (you can't inject a stylesheet into a
+  document you can't touch). *Impact*: that iframe's content stays at its original size while the
+  rest of the page scales. *Considered and rejected*: a browser extension could, in principle,
+  get broader reach via `"all_frames": true` content-script matching at the manifest level —
+  but that would only fix it for the extension, not the userscript, diverging from FR3.3's
+  "both mechanisms behave the same." Deferred rather than accepted as a capability mismatch
+  between delivery mechanisms.
+- **Closed shadow DOM**: deliberately inaccessible to *any* outside script by platform design —
+  not a bug, not something an extension's elevated permissions can bypass either. *Impact*: rare
+  in practice; closed roots are mostly used for strict third-party widget isolation (e.g. some
+  payment widgets), and most shadow-DOM usage in the wild uses open roots.
+- **Fixed-height/`overflow:hidden` containers**: enlarging text can make it taller than its
+  container, causing visual clipping. A generic tool can't "fix" this without guessing page
+  intent (grow the container? scroll it? cap the font?) — any guess risks breaking the page's
+  actual design. *Impact*: occasional clipping in specific components (a fixed-height card, a
+  single-line title truncated with `text-overflow: ellipsis`). Native browser zoom has the same
+  failure mode, for the same reason.
+- **Inline `style="...!important"`**: CSS gives an element's own inline style the highest
+  possible cascade priority — higher than any stylesheet `!important`, including ours. The only
+  way around it is surgically rewriting the element's `style` attribute (parsing out just the
+  conflicting declaration without disturbing the rest of that attribute's content), which is
+  real complexity for a case that's rare in practice. Flagged as a possible future enhancement,
+  not attempted in v1.
+
 ## Release checklist
 
 1. `npm run build` passes (includes the hard-requirement Layer 1 suite).

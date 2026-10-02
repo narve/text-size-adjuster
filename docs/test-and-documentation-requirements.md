@@ -117,6 +117,16 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
   (FR5), and reflows text within the existing layout instead of zooming it. A couple of sentences
   is enough — this isn't a FAQ, just enough context for a reader to understand why this exists
   alongside those settings rather than instead of them.
+- **TR5.2b**: The site includes a short, **non-technical** "what this can't fix" section
+  translating FR6's limitations into plain language — no "same-origin policy", "shadow DOM", or
+  "specificity." E.g.: ads/embeds/some comment sections may not resize (they're loaded from
+  another website embedded in the page, which browsers don't let any tool reach into); a few
+  sites hide content in sealed components nothing outside can touch (rare); text in a small
+  fixed-size box may get cut off if enlarged a lot (the same thing can happen with a phone's own
+  zoom); and occasionally one specific piece of text on a site may resist resizing. The
+  *technical* explanation of the same limitations (root cause, impact, why no workaround was
+  taken) belongs in the developer guide instead (TR6.3) — a user doesn't need the "why", just
+  honest expectations.
 - **TR5.3**: It includes a screenshot gallery generated from Layer 1's artifacts: one page per
   fixture, before/after image pairs per factor — including the TR1a real-world site snapshots,
   as the most relatable demonstration of the tool for a reader deciding whether to install it.
@@ -157,3 +167,8 @@ screenshots. Live demo links (TR5.5) work when the site is served via `npm run d
   - Userscript: direct `.user.js` distribution vs. optionally publishing to Greasy Fork.
 - **TR6.2**: `README.md` at the repo root documents the reading order across all of `docs/` plus
   the generated docs site, so a newcomer (user or contributor) knows where to start.
+- **TR6.3**: The developer guide includes a "known problems" section covering each FR6
+  limitation (plus any other non-obvious issue hit during implementation) from a *technical*
+  angle: root cause, actual impact/frequency, and what workaround — if any — was considered and
+  why it was or wasn't taken. This is the mirror of TR5.2b's plain-language version for the
+  implementation audience.
