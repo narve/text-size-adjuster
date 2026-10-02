@@ -42,8 +42,18 @@ wire('increase', { type: 'tsa:increase' });
 wire('decrease', { type: 'tsa:decrease' });
 wire('reset', { type: 'tsa:reset' });
 
-void send({ type: 'tsa:getFactor' }).then((result) => {
+/** No content script answers here: Firefox's own pages, or a site the add-on may not access. */
+function showUnavailable(): void {
+  for (const id of ['decrease', 'increase', 'reset']) {
+    (document.getElementById(id) as HTMLButtonElement).disabled = true;
+  }
+  document.getElementById('unavailable')!.hidden = false;
+}
+
+const initial = send({ type: 'tsa:getFactor' }).then((result) => {
   if (result) render(result.factor);
+  else showUnavailable();
+  return result;
 });
 
 document.getElementById('options')!.addEventListener('click', (event) => {
@@ -58,6 +68,7 @@ document.getElementById('options')!.addEventListener('click', (event) => {
  * it on later changes (see createGatedStore).
  */
 async function setUpRememberButton(): Promise<void> {
+  if (!(await initial)) return;
   const tab = await getActiveTab();
   if (!tab?.url) return;
   const origin = new URL(tab.url).origin;

@@ -8,6 +8,7 @@
     "build": "vite build --mode content && vite build --mode background && vite build --mode options && vite build --mode popup",
     "build:chrome": "node build-chrome-variant.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
     "lint:webext": "web-ext lint --source-dir dist",
     "run:desktop": "web-ext run -t firefox-desktop --source-dir dist",
     "run:android": "web-ext run -t firefox-android --source-dir dist",
@@ -29,6 +30,8 @@
     "web-ext": "^10.7.0",
     "@types/firefox-webext-browser": "^143.0.1",
     "@types/webextension-polyfill": "^0.12.3",
-    "playwright": "^1.63.0"
+    "playwright": "^1.63.0",
+    "vitest": "^3.2.7",
+    "jsdom": "^26.1.0"
   }
 }
