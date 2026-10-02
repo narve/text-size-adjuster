@@ -13,6 +13,15 @@ const DEFAULTS = {
 
 const FACTOR_VAR = '--tsa-k';
 
+/**
+ * Elements that never render text of their own: everything that lives in <head>, line-break
+ * opportunities, and inert containers. Capturing them only adds attribute churn.
+ */
+const NON_TEXT_TAGS = new Set([
+  'HEAD', 'META', 'TITLE', 'STYLE', 'SCRIPT', 'LINK', 'BASE', 'NOSCRIPT', 'TEMPLATE', 'BR', 'WBR',
+]);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 /** A child engine for an open shadow root or a same-origin iframe's document. */
 interface Child {
   engine: TextSizeEngine;
@@ -73,10 +82,26 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     for (const listener of listeners) listener(event);
   }
 
+  /**
+   * Whether an element's text size is captured. Not the document's root element: each element
+   * gets its own size, so text never needs the root scaled, and the root's font size is what
+   * `rem` resolves against — pages size layout in rem too (widths, grid tracks, gaps), which would
+   * otherwise grow with the text and spill sideways (FR1.3). Not SVG either: an SVG is a picture
+   * (a logo, a chart), and pictures keep their size.
+   */
+  function isScalable(el: Element): boolean {
+    return (
+      !el.hasAttribute(opts.scaledAttr) &&
+      el !== doc!.documentElement &&
+      !NON_TEXT_TAGS.has(el.tagName) &&
+      el.namespaceURI !== SVG_NS
+    );
+  }
+
   function captureNew(elements: Element[]): void {
     const target = styleTarget();
     if (!target) return;
-    const unscaled = elements.filter((el) => !el.hasAttribute(opts.scaledAttr));
+    const unscaled = elements.filter(isScalable);
     if (unscaled.length === 0) return;
     captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr });
     // A root element that replaced the one the factor was written to (document.open) starts

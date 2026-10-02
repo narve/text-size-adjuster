@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { CORE_BUNDLE, PHONE_SCALE, PHONE_VIEWPORT, SCREENSHOT_DIR, fixtureScreenshot, requireBuilt } from '../tools/paths.js';
 import { STANDARD_FIXTURES, FACTORS } from './fixtures.js';
-import { gotoAndAttach, setFactor, type TsaWindow } from './helpers.js';
+import { attachEngine, gotoAndAttach, setFactor, type TsaWindow } from './helpers.js';
 
 test.beforeAll(() => {
   requireBuilt(CORE_BUNDLE, 'packages/core');
@@ -230,6 +230,60 @@ test.describe('iframe-cross-origin', () => {
       expect(afterOuter.large / beforeOuter.large).toBeCloseTo(factor, 1);
     });
   }
+});
+
+/**
+ * Only text is scaled, never the page's root font size: `rem` lengths are also used for layout
+ * (widths, grid tracks, gaps), and scaling <html> made those grow with the text and spill
+ * sideways on a phone (code review M1).
+ */
+test.describe('rem-based layout', () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+
+  test('rem widths and grid tracks keep their size while rem text scales', async ({ page }) => {
+    await gotoAndAttach(page, '/rem-em/');
+    const measure = () =>
+      page.evaluate(() => {
+        const box = document.querySelector('[data-tsa-ref="rem-box"]')!;
+        const grid = document.querySelector('[data-tsa-ref="rem-grid"]')!;
+        return {
+          boxWidth: box.getBoundingClientRect().width,
+          columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+          heading: parseFloat(getComputedStyle(document.querySelector('[data-tsa-ref="large"]')!).fontSize),
+        };
+      });
+    const before = await measure();
+    await setFactor(page, 2);
+    const after = await measure();
+
+    expect(after.heading / before.heading).toBeCloseTo(2, 1);
+    expect(after.boxWidth).toBe(before.boxWidth);
+    expect(after.columns).toBe(before.columns);
+    expect(await hasHorizontalOverflow(page)).toBe(false);
+  });
+
+  test('the root element, <head> contents, line breaks and SVG are left alone', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/rem-em/');
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<p>a<br>b<wbr>c</p><svg width="200" height="40"><text id="svg-label" x="0" y="30" font-size="20">Logo</text></svg>',
+      );
+    });
+    await attachEngine(page);
+    await setFactor(page, 2);
+    const result = await page.evaluate(() => ({
+      scaled: ['html', 'head', 'title', 'style', 'meta', 'br', 'wbr', 'svg', '#svg-label'].filter((sel) =>
+        document.querySelector(sel)!.hasAttribute('data-tsa-scaled'),
+      ),
+      svgText: getComputedStyle(document.querySelector('#svg-label')!).fontSize,
+      body: document.body.hasAttribute('data-tsa-scaled'),
+    }));
+    expect(result.scaled).toEqual([]);
+    expect(result.svgText).toBe('20px');
+    expect(result.body).toBe(true);
+  });
 });
 
 test.describe('spa-mutation', () => {

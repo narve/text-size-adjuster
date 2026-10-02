@@ -7,6 +7,10 @@
   h1 { font-size: 2rem; }
   p { font-size: 1rem; }
   small { font-size: 0.75em; color: #666; display: block; }
+  /* Layout sized in rem too: it must keep its size while the text grows (FR1.3). */
+  .box { width: 20rem; padding: 0.75rem; box-sizing: border-box; background: #eef; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .cards div { background: #efe; padding: 0.5rem; }
 </style>
 </head>
 <body>
@@ -14,5 +18,9 @@
   <p><img data-tsa-ref="image" src="../assets/sample-image.svg" width="240" height="120" alt="Sample image: images keep their size while text scales"></p>
   <p>Body copy sized in rem, relative to the root font-size.</p>
   <small data-tsa-ref="small">Fine print sized in em, relative to its parent paragraph.</small>
+  <div class="box" data-tsa-ref="rem-box">A box 20rem wide: its text grows, its width doesn't.</div>
+  <div class="cards" data-tsa-ref="rem-grid">
+    <div>Card one</div><div>Card two</div><div>Card three</div><div>Card four</div>
+  </div>
 </body>
 </html>
