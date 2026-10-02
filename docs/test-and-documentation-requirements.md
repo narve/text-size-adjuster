@@ -24,7 +24,7 @@ functional requirements:
 | `nested-em` | deeply nested relative inheritance | FR2.1, FR2.4 |
 | `shadow-dom-open` | open shadow root content | FR4, FR6.2 boundary |
 | `iframe-same-origin` | same-origin embedded frame | engine reach boundary |
-| `iframe-cross-origin` | genuinely different origin (second host:port) | FR6.1 (must not break, just not scale) |
+| `iframe-cross-origin` | genuinely different origin (second host:port) | FR6.1 — Layer 1 confirms the bare engine (userscript-equivalent) leaves it alone without erroring; Layer 2 (best-effort) additionally confirms the packaged extension *does* scale it via `all_frames` injection |
 | `overflow-clipping` | fixed-height/overflow containers | FR6.3 (documented, not "fixed") |
 | `important-high-specificity` | page CSS with `!important` + ID/class selectors | FR2.5 |
 | `spa-mutation` | content injected after load via JS | FR2.4 |

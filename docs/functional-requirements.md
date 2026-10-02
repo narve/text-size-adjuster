@@ -49,7 +49,9 @@ horizontal scrollbar.
 - **FR3.2**: A Firefox WebExtension (Manifest V3) installable on both Firefox Desktop and
   Firefox for Android.
 - **FR3.3**: Both mechanisms must use the same scaling engine code — no duplicated/forked
-  scaling logic between them.
+  scaling logic between them. The one deliberate exception is reach: the extension may use its
+  elevated permissions to scale content the userscript structurally cannot reach (see FR6.1) —
+  that's a desirable capability difference to lean into, not a divergence to avoid.
 
 ## FR4. UI is decoupled from the engine
 
@@ -77,7 +79,16 @@ horizontal scrollbar.
 ## FR6. Known, accepted limitations (explicitly out of scope for v1)
 
 - **FR6.1**: Cross-origin iframe content (ads, embeds, third-party comment widgets) cannot be
-  scaled — same-origin policy prevents it.
+  reached from page-injected JS — same-origin policy prevents it. This is a hard limitation for
+  the **userscript**, which only runs as page-injected JS. The **extension** is expected to do
+  better here: a browser extension can declare a content script with `"all_frames": true` plus
+  host permissions covering those frames, which gets its own copy of the engine injected directly
+  into each cross-origin iframe's own realm — not reaching across the boundary (still
+  impossible), but running independently *inside* it, the same way the top-level page's content
+  script runs inside the top document. The extension's background script keeps all frames' factors
+  in sync via runtime messaging. This capability gap between the two delivery mechanisms is
+  intentional (see FR3.3) — the extension doing more here is the point, not a bug to fix in the
+  userscript.
 - **FR6.2**: Closed shadow DOM content cannot be scaled; open shadow roots are supported.
 - **FR6.3**: Elements in fixed-height/`overflow:hidden` containers may visually clip when
   enlarged — this is a layout limitation of the host page, not fixed by this tool.

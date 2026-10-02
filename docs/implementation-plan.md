@@ -105,8 +105,11 @@ page's own *inline* `!important` on that element (FR6.4, accepted).
    test. Commit.
 5. Userscript package via `vite-plugin-monkey`; manual Tampermonkey smoke check; extend Layer 1
    to also sanity-check the built `.user.js`. Commit.
-6. Extension package, desktop first: manifest, content script, background, popup; manual
-   `web-ext run` check. Commit.
+6. Extension package, desktop first: manifest (content script declared with `"all_frames": true`
+   and host permissions covering embedded content, so it also injects into cross-origin iframes —
+   FR6.1/FR3.3's intentional extra capability over the userscript), content script, background
+   (relays factor changes to every frame via `browser.tabs.sendMessage(tabId, msg, { frameId })`
+   so they move together), popup; manual `web-ext run` check. Commit.
 7. Firefox-for-Android compatibility: `browser_specific_settings.gecko_android`,
    `background.scripts` (not `service_worker`) for Android, `web-ext lint` clean. Commit.
 7a. (Best-effort, FR8) Chrome manifest variant + `webextension-polyfill`; manual unpacked-load

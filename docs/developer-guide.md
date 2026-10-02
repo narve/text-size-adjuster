@@ -85,14 +85,22 @@ npm run download -w fixtures
 ## Known problems (technical detail; see FR6 for the plain statement)
 
 - **Cross-origin iframes** (ads, embeds, third-party comment widgets): the same-origin policy
-  means `iframe.contentDocument` throws/returns `null` across origins — there is no workaround
-  available to injected JS, not even via `postMessage` (you can't inject a stylesheet into a
-  document you can't touch). *Impact*: that iframe's content stays at its original size while the
-  rest of the page scales. *Considered and rejected*: a browser extension could, in principle,
-  get broader reach via `"all_frames": true` content-script matching at the manifest level —
-  but that would only fix it for the extension, not the userscript, diverging from FR3.3's
-  "both mechanisms behave the same." Deferred rather than accepted as a capability mismatch
-  between delivery mechanisms.
+  means `iframe.contentDocument` throws/returns `null` across origins from page-injected JS —
+  there is no workaround available there, not even via `postMessage` (you can't inject a
+  stylesheet into a document you can't touch). *Impact on the userscript*: permanent limitation —
+  it only ever runs as page-injected JS, so that iframe's content stays at its original size.
+  *Impact on the extension*: **solved, by design, not deferred** (per FR3.3/FR6.1 — the user
+  explicitly signed off on the two delivery mechanisms differing in capability here). The
+  extension's content script is declared with `"all_frames": true` plus host permissions broad
+  enough to cover embedded content (e.g. `<all_urls>`), which gets the engine injected directly
+  into *every* frame's own realm, cross-origin or not — each frame runs its own independent
+  engine instance over its own document (still never reaching *across* a frame boundary, which
+  stays impossible regardless of permissions; the trick is running inside each frame instead of
+  reaching into it from outside). The background script relays factor changes to every frame in
+  the tab via `browser.tabs.sendMessage(tabId, msg, { frameId })` so they move together. This is
+  why `iframe-cross-origin` is a useful Layer 2 (best-effort) fixture too, not just a Layer 1 one:
+  Layer 1 confirms the userscript-equivalent (bare core engine) correctly leaves it alone; Layer 2
+  would confirm the packaged extension actually scales it.
 - **Closed shadow DOM**: deliberately inaccessible to *any* outside script by platform design —
   not a bug, not something an extension's elevated permissions can bypass either. *Impact*: rare
   in practice; closed roots are mostly used for strict third-party widget isolation (e.g. some
