@@ -36,6 +36,7 @@ export default defineConfig({
           name: product.name,
           version,
           description: product.summary,
+          homepage_url: product.homepage,
           ...manifest,
         };
         writeFileSync(path.resolve(__dirname, 'dist/manifest.json'), `${JSON.stringify(full, null, 2)}\n`);

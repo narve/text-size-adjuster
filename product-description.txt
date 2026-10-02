@@ -3,6 +3,10 @@
 # Format: plain text. Lines starting with "#" are comments and are stripped by
 # the build; everything else is used verbatim. Separate paragraphs with a blank
 # line. The short name and one-line summary live in product.json.
+# {{homepage}} is replaced with the homepage URL from product.json.
+#
+# Maximum length: 5000 characters (excluding these comment lines) — set by
+# limits.description in product.json, and checked by the build.
 #
 Text too small on a website, and zooming in makes you scroll sideways to read each line?
 Text Size Adjuster makes just the text bigger or smaller.
@@ -18,3 +22,5 @@ The page still fits your screen, and pictures and layout keep their size.
 No tracking and no data collection: your settings stay in your browser.
 
 NOTE: It is not perfect. On some pages, some text may not resize, or may be cut off inside small fixed-size boxes.
+
+Screenshots, live demos and help: {{homepage}}

@@ -19,6 +19,7 @@ export default defineConfig({
         name: product.name,
         namespace: 'https://github.com/narve/text-size-adjuster',
         description: product.summary,
+        homepageURL: product.homepage,
         license: 'MIT',
         icon,
         match: ['*://*/*'],

@@ -18,24 +18,18 @@ export function stripComments(text) {
  * (product-description.txt) — the single source for all descriptive text.
  */
 export function readProduct() {
-  const { name, summary } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'product.json'), 'utf8'));
-  const description = stripComments(fs.readFileSync(path.join(REPO_ROOT, 'product-description.txt'), 'utf8'));
-  validateProduct({ name, summary, description });
-  return { name, summary, description };
+  const { name, summary, homepage, limits } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'product.json'), 'utf8'));
+  const description = stripComments(
+    fs.readFileSync(path.join(REPO_ROOT, 'product-description.txt'), 'utf8'),
+  ).replaceAll('{{homepage}}', homepage);
+  validateProduct({ name, summary, description }, limits);
+  return { name, summary, homepage, description };
 }
 
-/**
- * Length limits, so a build fails early instead of a store rejecting the upload:
- * - name: 50 characters, addons.mozilla.org's add-on name limit (Chrome allows 75).
- * - summary: 132 characters — it's also the manifest `description`, and Chrome's limit for that
- *   is 132 (stricter than AMO's 250 for both the manifest field and the listing summary).
- * - description: no practical store limit; 5000 is this project's own readability guideline.
- */
-export const LIMITS = { name: 50, summary: 132, description: 5000 };
-
-export function validateProduct(product) {
+/** Checks each text against `limits` from product.json (see its `_about` for where they come from). */
+export function validateProduct(product, limits) {
   const problems = [];
-  for (const [field, max] of Object.entries(LIMITS)) {
+  for (const [field, max] of Object.entries(limits)) {
     const value = product[field];
     if (typeof value !== 'string' || value.trim() === '') {
       problems.push(`${field} is empty`);
