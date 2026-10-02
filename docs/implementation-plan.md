@@ -76,9 +76,15 @@ type Message =
   | { type: 'tsa:factorChanged'; factor: number; origin: string };
 ```
 
-Specificity defense for the injected override rule (FR2.5): repeat the scaled-element attribute
-selector ~10x in one rule to stack specificity without changing what it matches — beats realistic
-ID+class+`!important` page rules; does not beat literal inline `!important` (FR6.4, accepted).
+Override mechanism (FR2.5): each captured element gets its scaled font-size/line-height set as an
+**inline** `calc(original * var(--tsa-k, 1)) !important` style, not a shared stylesheet rule
+matched by selector. CSS gives an element's own inline `!important` the highest priority of any
+stylesheet declaration regardless of specificity — this beats ID-selector `!important` page rules
+without needing any specificity trick. (An earlier design tried to win via a high-specificity
+injected selector, repeating an attribute selector; that failed against ID-based page rules
+because CSS specificity is tiered, not additive — confirmed broken by the
+`important-high-specificity` fixture before switching to this.) The one case still unbeaten is the
+page's own *inline* `!important` on that element (FR6.4, accepted).
 
 ## Phased build order (one commit per phase)
 

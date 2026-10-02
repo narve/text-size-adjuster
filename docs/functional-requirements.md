@@ -28,9 +28,12 @@ horizontal scrollbar.
   values.
 - **FR2.2**: Reading computed styles and writing new styles must be batched (all reads, then all
   writes) to avoid layout-thrashing on large pages.
-- **FR2.3**: `line-height` values that are unitless or `normal` must be left alone (they scale
-  automatically with font-size per the CSS spec); only `px`-based line-heights need explicit
-  rescaling.
+- **FR2.3**: A `line-height: normal` computed value must be left alone (its rendered height
+  already tracks font-size on its own). Any other line-height — including, somewhat
+  counter-intuitively, a *unitless* multiplier like `1.5`, which resolves to a used pixel value
+  via `getComputedStyle` just like an explicit length does — must be captured and rescaled
+  explicitly like font-size, which reproduces the same end result the browser would already
+  produce on its own.
 - **FR2.4**: Content added to the page after initial load (SPA navigation, infinite scroll, lazy
   loading) must be detected and scaled automatically, without manually re-triggering anything,
   and without double-scaling elements that merely inherit font-size from an already-scaled

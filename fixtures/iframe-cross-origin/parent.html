@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>iframe-cross-origin</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  h1 { font-size: 30px; }
+  small { font-size: 11px; color: #666; display: block; }
+  iframe { width: 100%; height: 160px; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+  <h1 data-tsa-ref="large">Outer page heading (must still scale)</h1>
+  <small data-tsa-ref="small">Outer page fine print (must still scale)</small>
+  <p>The iframe below is loaded from a different origin (a different port) on purpose — its
+  content must be left completely untouched.</p>
+  <iframe src="http://127.0.0.1:4311/iframe-cross-origin/child.html" title="cross-origin child"></iframe>
+</body>
+</html>

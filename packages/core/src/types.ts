@@ -7,8 +7,6 @@ export interface EngineOptions {
   step?: number;
   /** Attribute marking an element whose font-size has been captured and is now scaled. */
   scaledAttr?: string;
-  /** Attribute marking an element whose px-based line-height is also scaled. */
-  lineHeightAttr?: string;
   /**
    * The document/shadow-root this engine scales. Defaults to `document`. A child engine is
    * created automatically (with the same options otherwise) for every open shadow root and

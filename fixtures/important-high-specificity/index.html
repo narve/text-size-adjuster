@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>important-high-specificity</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  #main h1.headline { font-size: 24px !important; }
+  #main p.body-text.locked { font-size: 13px !important; }
+</style>
+</head>
+<body>
+  <div id="main">
+    <h1 class="headline" data-tsa-ref="large">Stubborn heading forced with ID + class + !important</h1>
+    <p class="body-text locked" data-tsa-ref="small">Stubborn fine print, also ID + class + !important.</p>
+  </div>
+</body>
+</html>

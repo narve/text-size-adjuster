@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>spa-mutation</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  #dynamic h2 { font-size: 26px; }
+  #dynamic small { font-size: 11px; color: #666; display: block; }
+</style>
+</head>
+<body>
+  <p>Nothing on this page needs scaling until the button below is clicked, which injects new
+  content the same way an SPA route change or infinite-scroll "load more" would.</p>
+  <button id="load-more" type="button">Load more</button>
+  <div id="dynamic"></div>
+  <script>
+    document.getElementById('load-more').addEventListener('click', () => {
+      setTimeout(() => {
+        const container = document.getElementById('dynamic');
+        container.innerHTML = `
+          <h2 data-tsa-ref="large">Dynamically added heading</h2>
+          <small data-tsa-ref="small">Dynamically added fine print</small>
+        `;
+      }, 50);
+    });
+  </script>
+</body>
+</html>

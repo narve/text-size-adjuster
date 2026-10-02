@@ -11,7 +11,10 @@ describe('isPxLineHeight', () => {
     expect(isPxLineHeight('normal')).toBe(false);
   });
 
-  it('is false for a unitless computed value', () => {
+  it('is false for a bare-number string', () => {
+    // In practice getComputedStyle resolves a unitless declaration (e.g. `1.5`) to a used px
+    // value, not to this literal form (see engine.ts's capture docs) — this just documents the
+    // function's behavior for the input shape, not a claim about what the browser returns.
     expect(isPxLineHeight('1.5')).toBe(false);
     expect(isPxLineHeight('2')).toBe(false);
   });

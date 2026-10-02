@@ -28,7 +28,7 @@ functional requirements:
 | `overflow-clipping` | fixed-height/overflow containers | FR6.3 (documented, not "fixed") |
 | `important-high-specificity` | page CSS with `!important` + ID/class selectors | FR2.5 |
 | `spa-mutation` | content injected after load via JS | FR2.4 |
-| `line-height-mixed` | unitless, `normal`, and px line-heights side by side | FR2.3 |
+| `line-height-mixed` | `normal`, unitless, and explicit px line-heights side by side | FR2.3 |
 | `large-dom-performance` | a few thousand text nodes (simulated feed/article) | FR7.1, FR7.2 |
 
 ## TR1a. Real-world site snapshots

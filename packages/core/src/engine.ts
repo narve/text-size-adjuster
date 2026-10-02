@@ -1,7 +1,5 @@
 import type { EngineOptions, EngineChangeEvent, EngineListener, TextSizeEngine } from './types.js';
 import { clampFactor } from './clamp.js';
-import { buildOverrideCss } from './specificity.js';
-import { ensureStyleSheet } from './style-injector.js';
 import { captureElements } from './capture.js';
 
 const DEFAULTS = {
@@ -9,13 +7,9 @@ const DEFAULTS = {
   max: 3,
   step: 0.1,
   scaledAttr: 'data-tsa-scaled',
-  lineHeightAttr: 'data-tsa-lh',
 };
 
 const FACTOR_VAR = '--tsa-k';
-const BASE_SIZE_VAR = '--tsa-fz0';
-const BASE_LH_VAR = '--tsa-lh0';
-const STYLE_ID = 'tsa-style';
 
 /**
  * Creates a text-scaling engine for `options.root` (defaults to `document`). A child engine is
@@ -26,18 +20,15 @@ const STYLE_ID = 'tsa-style';
 export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   const opts = { ...DEFAULTS, ...options };
   const root: Document | ShadowRoot = options.root ?? document;
-  const doc = root instanceof Document ? root : root.ownerDocument;
+  // `root instanceof Document` would silently be false for a same-origin iframe's document: it's
+  // an instance of *that frame's own* Document constructor, not this realm's, since each frame
+  // has its own global scope. nodeType is a plain number, unaffected by which realm's
+  // constructors are in scope, so it's the realm-safe way to tell Document from ShadowRoot here.
+  const isDocument = root.nodeType === 9; // Node.DOCUMENT_NODE
+  const doc = isDocument ? (root as Document) : root.ownerDocument;
   if (!doc) throw new Error('createEngine: root has no owner document');
 
-  const styleTarget = (root instanceof Document ? root.documentElement : root.host) as HTMLElement;
-
-  const overrideCss = buildOverrideCss({
-    scaledAttr: opts.scaledAttr,
-    lineHeightAttr: opts.lineHeightAttr,
-    factorVar: FACTOR_VAR,
-    baseSizeVar: BASE_SIZE_VAR,
-    baseLineHeightVar: BASE_LH_VAR,
-  });
+  const styleTarget = (isDocument ? (root as Document).documentElement : (root as ShadowRoot).host) as HTMLElement;
 
   let factor = 1;
   let attached = false;
@@ -63,13 +54,7 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   function captureNew(elements: Element[]): void {
     const unscaled = elements.filter((el) => !el.hasAttribute(opts.scaledAttr));
     if (unscaled.length === 0) return;
-    ensureStyleSheet(root, STYLE_ID, overrideCss);
-    captureElements(unscaled, styleTarget, FACTOR_VAR, {
-      scaledAttr: opts.scaledAttr,
-      lineHeightAttr: opts.lineHeightAttr,
-      baseSizeVar: BASE_SIZE_VAR,
-      baseLineHeightVar: BASE_LH_VAR,
-    });
+    captureElements(unscaled, styleTarget, FACTOR_VAR, { scaledAttr: opts.scaledAttr });
   }
 
   function attachChildFor(childRoot: Document | ShadowRoot): void {
@@ -94,27 +79,34 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     }
   }
 
-  function attachIframe(iframe: HTMLIFrameElement): void {
+  /**
+   * Only the `contentDocument` read is wrapped in a try/catch — that's the one part that can
+   * legitimately fail for a cross-origin iframe (FR6.1), and should fail silently. Anything that
+   * goes wrong inside `attachChildFor` afterwards is a real bug and should surface normally
+   * rather than being swallowed along with the expected cross-origin case.
+   */
+  function readSameOriginContentDocument(iframe: HTMLIFrameElement): Document | null {
     try {
-      const childDoc = iframe.contentDocument;
-      if (!childDoc) return; // cross-origin: inaccessible by design (FR6.1), skip silently
-      if (childDoc.readyState === 'loading') {
-        iframe.addEventListener(
-          'load',
-          () => {
-            try {
-              if (iframe.contentDocument) attachChildFor(iframe.contentDocument);
-            } catch {
-              /* became cross-origin after a redirect; ignore */
-            }
-          },
-          { once: true },
-        );
-      } else {
-        attachChildFor(childDoc);
-      }
+      return iframe.contentDocument;
     } catch {
-      // cross-origin iframe: `contentDocument` access throws, skip silently (FR6.1)
+      return null; // cross-origin: inaccessible by design, skip silently (FR6.1)
+    }
+  }
+
+  function attachIframe(iframe: HTMLIFrameElement): void {
+    const childDoc = readSameOriginContentDocument(iframe);
+    if (!childDoc) return;
+    if (childDoc.readyState === 'loading') {
+      iframe.addEventListener(
+        'load',
+        () => {
+          const doc = readSameOriginContentDocument(iframe);
+          if (doc) attachChildFor(doc);
+        },
+        { once: true },
+      );
+    } else {
+      attachChildFor(childDoc);
     }
   }
 

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>overflow-clipping</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  .box { height: 80px; overflow: hidden; border: 1px solid #ccc; padding: 8px; }
+  h2 { font-size: 26px; margin: 0 0 8px; }
+  small { font-size: 11px; color: #666; }
+</style>
+</head>
+<body>
+  <p>This fixture has a fixed-height, overflow:hidden container. Enlarged text may visually
+  clip — that's an accepted, documented limitation (FR6.3), not something this tool fixes.</p>
+  <div class="box">
+    <h2 data-tsa-ref="large">Clipped container heading</h2>
+    <small data-tsa-ref="small">Clipped container fine print</small>
+  </div>
+</body>
+</html>

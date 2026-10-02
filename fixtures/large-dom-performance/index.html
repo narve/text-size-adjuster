@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>large-dom-performance</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; font-size: 15px; }
+  h1 { font-size: 30px; }
+  small { font-size: 11px; color: #666; display: block; }
+  #feed p { margin: 4px 0; }
+</style>
+</head>
+<body>
+  <h1 data-tsa-ref="large">Large feed heading</h1>
+  <small data-tsa-ref="small">Fine print for the ratio check.</small>
+  <div id="feed"></div>
+  <script>
+    const feed = document.getElementById('feed');
+    const html = [];
+    // Kept well under ~600 elements: large enough to be a meaningful capture/apply performance
+    // stress test, small enough that a full-page screenshot at factor 3 stays under browsers'
+    // ~32767px screenshot height limit.
+    for (let i = 0; i < 600; i++) {
+      html.push('<p>Feed item number ' + i + ' — simulated article/social feed text content for a performance check.</p>');
+    }
+    feed.innerHTML = html.join('');
+  </script>
+</body>
+</html>
