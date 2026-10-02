@@ -3,18 +3,30 @@
 {{name}} is a Firefox add-on. It works on your computer and on your Android
 phone.
 
-> **Not available yet.** {{name}} isn't on Firefox Add-ons yet. Once it is, the
-> steps below are all you'll need. Until then, technically confident users can
-> use one of the [advanced installation options](../index.html#advanced).
+{{name}} is waiting for Mozilla's review before it appears on Firefox Add-ons.
+Until then, you can install it straight from this site. It's the same add-on,
+signed by Mozilla.
 
 ## On your computer
 
-1. In Firefox, open the {{name}} page on
-   [Firefox Add-ons](https://addons.mozilla.org/) (link added once it's
-   available).
-2. Click **Add to Firefox**, then **Add** when Firefox asks.
+1. Open this page in **Firefox** and click
+   [**Download {{name}}**]({{signedXpi}}).
+2. Firefox says it prevented this site from installing software. Click
+   **Continue to Installation**.
+3. Click **Add** when Firefox asks.
+
+If the file downloads instead of installing (for example in another browser),
+drag it onto a Firefox window.
+
+Installed this way, {{name}} doesn't update itself. To get a newer version,
+download and install it again the same way.
 
 ## On your Android phone
+
+Firefox for Android only installs add-ons that aren't on Firefox Add-ons after
+you turn on a hidden option once. The steps are in
+[installing on Android](install-extension-manually-android.html). Once {{name}}
+is on Firefox Add-ons, you can install it from there instead:
 
 1. Open Firefox, tap the **⋮** menu, then **Extensions** (or **Add-ons**).
 2. Find **{{name}}** in the list or search, and tap **+**.

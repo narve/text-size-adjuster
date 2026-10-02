@@ -351,12 +351,10 @@ writePage(path.join(DIST, 'index.html'), {
     <a href="demos/script-tag/index.html">try the demo page</a> that does exactly that.</p>
 
     <h2 id="advanced">Advanced installation</h2>
-    <p>For technical users who want to try it before it's on Firefox Add-ons, run their own build,
-    or use it outside Firefox:</p>
+    <p>For technical users who want to try unsigned builds, or use it outside Firefox:</p>
     <ul>
       <li><a href="guides/install-userscript.html">As a userscript</a> (Tampermonkey/Violentmonkey; also works in Chrome) — no signing needed, but doesn't remember sizes per site</li>
-      <li><a href="guides/install-extension-manually.html">The extension, installed manually</a> — for trying a build before it's on Firefox Add-ons</li>
-      <li><a href="guides/install-extension-manually-android.html">The extension, installed manually on Android</a></li>
+      <li><a href="guides/install-extension-manually.html">The extension, installed manually</a> — temporary load, or unsigned builds on Firefox Developer Edition, Nightly or ESR</li>
     </ul>
   `,
 });

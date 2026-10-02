@@ -1,23 +1,26 @@
-# Advanced: install the extension manually on Android
+# Install on Android
 
-Firefox for Android can install extensions that aren't on addons.mozilla.org,
-but it takes one extra one-time step to turn on the option.
+Until {{name}} is on Firefox Add-ons, Firefox for Android needs a hidden option
+turned on once before it can install it. It takes a minute.
 
-1. In Firefox for Android, go to **Settings → About Firefox** and tap the
-   Firefox logo several times until a "Custom Add-on collection" / debugging
-   option appears.
-2. Get the [signed `.xpi`]({{signedXpi}}) onto your phone (downloaded directly,
-   or transferred another way) and install it through that new debug option.
-   It's the same file as method 2, "Signed but unlisted", in the
-   [manual install guide](install-extension-manually.html). Regular Firefox for
-   Android won't install the
-   [unsigned download](../downloads/text-size-adjuster-unsigned.xpi); only
-   Firefox Nightly for Android can, after setting
-   `xpinstall.signatures.required` to `false` in `about:config`.
-3. Confirm the install when prompted.
-4. Visit any page — the on-page control appears, and the extension remembers
-   your chosen size per site automatically, the same as on desktop.
+1. Download [{{name}}]({{signedXpi}}) on your phone. The file is signed by
+   Mozilla.
+2. In Firefox, open **Settings → About Firefox** and tap the Firefox logo five
+   times, until it says the debug menu is enabled.
+3. Go back to **Settings**. Near the bottom, under **Advanced**, tap **Install
+   add-on from file** and choose the file you downloaded.
+4. Tap **Add** when Firefox asks.
 
-If a listed, one-tap install becomes available on addons.mozilla.org, that's
-simpler and is the recommended route once it exists — this manual path is the
-fallback.
+Then visit any page: zoom in and the control appears. Your chosen size is
+remembered for each site, the same as on a computer. See
+[how to use it](install.html).
+
+Installed this way, {{name}} doesn't update itself. To get a newer version,
+download and install it again.
+
+## For testers
+
+Regular Firefox for Android only installs signed add-ons. Firefox Nightly for
+Android can also install the
+[unsigned build](../downloads/text-size-adjuster-unsigned.xpi), after setting
+`xpinstall.signatures.required` to `false` in `about:config`.
