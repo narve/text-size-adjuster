@@ -40,22 +40,23 @@ This is the one command reference; other docs link here. All commands run from
 the repo root.
 
 ```bash
-npm install                  # installs all workspaces
-npm run build                # builds packages/*, runs Layer 1, builds the docs site
-npm test                     # test:unit + Layer 1
-npm run test:unit            # unit tests (vitest) of every package in packages/
-npm run test:e2e             # Layer 1 Playwright suite (the hard requirement)
-npm run test:e2e:extension   # Layer 2, best-effort — allowed to fail/skip
-npm run test:real-world      # real-world snapshots (TR1a), informative only
-npm run screenshots          # only the gallery screenshots (Chromium)
-npm run lint                 # ESLint
-npm run typecheck            # tsc in every package
-npm run format               # Prettier on everything (Markdown style: AGENTS.md)
-npm run docs:build           # build docs-site/dist/ from existing screenshots
-npm run docs:serve           # serve docs-site/dist/ on port 8080
-npm run release:extension    # bump version, build and sign the extension
-npm run release:github       # publish the signed .xpi as a GitHub release
-npm run submit:amo           # submit for the public listing on AMO (reviewed)
+npm install                        # installs all workspaces
+npm run build                      # builds packages/*, runs Layer 1, builds the docs site
+npm test                           # test:unit + Layer 1
+npm run test:unit                  # unit tests (vitest) of every package in packages/
+npm run test:e2e                   # Layer 1 Playwright suite (the hard requirement)
+npm run test:e2e:extension         # Layer 2, best-effort — allowed to fail/skip
+npm run test:e2e:extension:chrome  # Layer 2 for the Chrome build
+npm run test:real-world            # real-world snapshots (TR1a), informative only
+npm run screenshots                # only the gallery screenshots (Chromium)
+npm run lint                       # ESLint
+npm run typecheck                  # tsc in every package
+npm run format                     # Prettier on everything (Markdown style: AGENTS.md)
+npm run docs:build                 # build docs-site/dist/ from existing screenshots
+npm run docs:serve                 # serve docs-site/dist/ on port 8080
+npm run release:extension          # bump version, build and sign the extension
+npm run release:github             # publish the signed .xpi as a GitHub release
+npm run submit:amo                 # submit for the public listing on AMO (reviewed)
 ```
 
 Per workspace (`-w <workspace>`):
@@ -187,11 +188,17 @@ or package it with `npx web-ext build --source-dir dist` from
   the already-built JS bundles as-is — cross-browser already via
   `webextension-polyfill`'s `browser` global — and writes `dist-chrome/` with
   the derived Chrome manifest (service-worker background only, no
-  `browser_specific_settings`) already named `manifest.json`.
-- Zip `dist-chrome/` and upload via the
+  `browser_specific_settings`) already named `manifest.json`, and zips it as
+  `web-ext-artifacts/text-size-adjuster-chrome-<version>.zip`.
+- `npm run test:e2e:extension:chrome` builds that and runs the Chrome Layer 2
+  suite (`e2e/extension-chrome.spec.ts`): page scaling and per-site persistence,
+  the popup and the options page, in Chromium.
+- The zip is what the
   [Chrome Web Store Developer Dashboard](https://chromewebstore.google.com/devconsole)
-  — requires a one-time developer registration fee and goes through Google's
-  review.
+  takes (a one-time developer registration fee, then Google's review), and also
+  [Microsoft Edge Add-ons](https://partner.microsoft.com/dashboard/microsoftedge/)
+  (free). Regular Chrome on Windows and macOS only installs extensions from the
+  Chrome Web Store; outside it, only "Load unpacked" in developer mode works.
 - This is not a primary target (Firefox Desktop + Android are); treat Chrome
   publishing as optional/best-effort, matching FR8's priority.
 

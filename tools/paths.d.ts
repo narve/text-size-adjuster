@@ -26,6 +26,8 @@ export const USERSCRIPT_BUNDLE: string;
 export const EXTENSION_DIR: string;
 export const EXTENSION_DIST: string;
 export const EXTENSION_ARTIFACTS: string;
+export const EXTENSION_CHROME_DIST: string;
+export function chromeZipFilename(version: string): string;
 export const UNSIGNED_XPI_FILENAME: string;
 export const SIGNED_XPI: string;
 export const SIGNED_XPI_FILENAME: string;

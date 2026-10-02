@@ -7,6 +7,7 @@
   "scripts": {
     "test": "playwright test",
     "test:extension": "playwright test --config playwright.extension.config.ts",
+    "test:extension:chrome": "playwright test --config playwright.extension-chrome.config.ts",
     "test:real-world": "playwright test --config playwright.real-world.config.ts",
     "screenshots": "playwright test --project chromium --grep \"phone gallery\"",
     "screenshots:real-world": "playwright test --config playwright.real-world.config.ts --project chromium"

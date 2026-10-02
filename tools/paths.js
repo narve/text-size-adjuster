@@ -18,6 +18,9 @@ export const USERSCRIPT_BUNDLE = path.join(USERSCRIPT_DIST, USERSCRIPT_FILENAME)
 export const EXTENSION_DIR = path.join(REPO_ROOT, 'packages', 'extension');
 export const EXTENSION_DIST = path.join(EXTENSION_DIR, 'dist');
 export const EXTENSION_ARTIFACTS = path.join(EXTENSION_DIR, 'web-ext-artifacts');
+/** The Chrome variant (build-chrome-variant.js) and its zip, for the Chrome Web Store or Edge Add-ons. */
+export const EXTENSION_CHROME_DIST = path.join(EXTENSION_DIR, 'dist-chrome');
+export const chromeZipFilename = (version) => `text-size-adjuster-chrome-${version}.zip`;
 export const UNSIGNED_XPI_FILENAME = 'text-size-adjuster-unsigned.xpi';
 export const SIGNED_XPI = path.join(EXTENSION_ARTIFACTS, 'text-size-adjuster-signed.xpi');
 /** File name of the signed .xpi attached to each GitHub release (see release-github.js). */
