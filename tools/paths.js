@@ -20,6 +20,8 @@ export const EXTENSION_DIST = path.join(EXTENSION_DIR, 'dist');
 export const EXTENSION_ARTIFACTS = path.join(EXTENSION_DIR, 'web-ext-artifacts');
 export const UNSIGNED_XPI_FILENAME = 'text-size-adjuster-unsigned.xpi';
 export const SIGNED_XPI = path.join(EXTENSION_ARTIFACTS, 'text-size-adjuster-signed.xpi');
+/** File name of the signed .xpi attached to each GitHub release (see release-github.js). */
+export const SIGNED_XPI_FILENAME = 'text-size-adjuster.xpi';
 
 /** Shared CSS for the docs site and the extension's pages. */
 export const THEME_CSS = path.join(REPO_ROOT, 'packages', 'theme', 'theme.css');

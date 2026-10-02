@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SIGNED_XPI_FILENAME } from './paths.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -27,7 +28,9 @@ export function readProduct() {
     fs.readFileSync(path.join(REPO_ROOT, 'product-description.txt'), 'utf8'),
   ).replaceAll('{{homepage}}', homepage);
   validateProduct({ name, summary, description }, limits);
-  return { name, summary, homepage, repository, license, version, description };
+  // The newest signed build, attached to the latest GitHub release by `npm run release:github`.
+  const signedXpiUrl = `${repository}/releases/latest/download/${SIGNED_XPI_FILENAME}`;
+  return { name, summary, homepage, repository, license, version, description, signedXpiUrl };
 }
 
 /** Checks each text against `limits` from product.json (see its `_about` for where they come from). */

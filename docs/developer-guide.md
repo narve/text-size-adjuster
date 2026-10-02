@@ -53,6 +53,7 @@ npm run format               # Prettier on everything (Markdown style: AGENTS.md
 npm run docs:build           # build docs-site/dist/ from existing screenshots
 npm run docs:serve           # serve docs-site/dist/ on port 8080
 npm run release:extension    # bump version, build and sign the extension
+npm run release:github       # publish the signed .xpi as a GitHub release
 ```
 
 Per workspace (`-w <workspace>`):
@@ -111,8 +112,12 @@ contributor section). Edit the sources, not generated files.
    version (in `packages/extension/package.json`), builds the extension and
    signs it as an unlisted add-on (`packages/extension/sign.js`, wrapping
    `web-ext sign --channel unlisted`). The signed file ends up at
-   `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`, and the
-   next docs build publishes it as `downloads/text-size-adjuster.xpi`.
+   `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`. Commit
+   and push the version bump, then `npm run release:github` attaches that file
+   to a GitHub release tagged `v<version>`
+   (`packages/extension/release-github.js`, using the `gh` CLI). The install
+   guides link to the latest release's `text-size-adjuster.xpi`, so that's what
+   makes a new version downloadable.
 
    Credentials come from the gitignored `private.env` in the repo root (or the
    `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` environment variables, e.g. in CI):
@@ -235,4 +240,5 @@ Source**, set to **GitHub Actions**.
    release done.
 4. Publish per the section above for whichever target(s) changed. For the
    extension, `npm run release:extension` bumps the version (it lives only in
-   `packages/extension/package.json`); commit that change.
+   `packages/extension/package.json`); commit and push that change, then run
+   `npm run release:github`.

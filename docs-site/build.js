@@ -10,7 +10,6 @@ import {
   EXTENSION_DIR,
   EXTENSION_DIST,
   FIXTURES_DIR,
-  SIGNED_XPI,
   THEME_CSS,
   UNSIGNED_XPI_FILENAME,
   USERSCRIPT_BUNDLE,
@@ -100,11 +99,12 @@ const guidesDir = path.join(SRC, 'guides');
 const guideFiles = fs.readdirSync(guidesDir).filter((f) => f.endsWith('.md'));
 const guideLinks = [];
 for (const file of guideFiles) {
-  // Guides may use {{name}} and {{homepage}} for the product name and the site's own address.
+  // Guides may use {{name}}, {{homepage}} and {{signedXpi}} (the latest signed release's .xpi).
   const raw = fs
     .readFileSync(path.join(guidesDir, file), 'utf8')
     .replaceAll('{{name}}', product.name)
-    .replaceAll('{{homepage}}', product.homepage);
+    .replaceAll('{{homepage}}', product.homepage)
+    .replaceAll('{{signedXpi}}', product.signedXpiUrl);
   const slug = file.replace(/\.md$/, '');
   const titleMatch = raw.match(/^#\s+(.+)$/m);
   const title = titleMatch ? titleMatch[1] : slugTitle(file);
@@ -305,11 +305,8 @@ if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
 } else {
   console.warn('[downloads] extension not built — skipping the .xpi. Run "npm run build -w packages/extension" first.');
 }
-// A Mozilla-signed build, if one has been produced (`npm run release:extension`, needs the
-// maintainer's AMO credentials in private.env) — the one regular Firefox and Android accept.
-if (fs.existsSync(SIGNED_XPI)) {
-  fs.copyFileSync(SIGNED_XPI, path.join(DIST, 'downloads', 'text-size-adjuster.xpi'));
-}
+// The Mozilla-signed build isn't copied here: it's attached to each GitHub release, and the guides
+// link there ({{signedXpi}}).
 
 // --- Website embed (FR3.4/TR5.6): the same self-starting bundle, published as a plain script a
 // site owner can include with one <script src> tag, plus a demo that loads it exactly that way. ---

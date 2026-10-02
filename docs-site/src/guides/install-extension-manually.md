@@ -5,11 +5,11 @@ listed on [addons.mozilla.org](https://addons.mozilla.org/) — useful before it
 listed. (Most people should use the [normal install](install.html) instead.)
 There are three ways.
 
-| Method              | Permanent? | Regular Firefox?      | File                                                               |
-| ------------------- | ---------- | --------------------- | ------------------------------------------------------------------ |
-| 1. Temporary load   | No         | Yes                   | [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi)    |
-| 2. Signed, unlisted | Yes        | Yes, incl. Android    | [signed `.xpi`](../downloads/text-size-adjuster.xpi), if published |
-| 3. Unsigned         | Yes        | No: Dev, Nightly, ESR | [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi)    |
+| Method              | Permanent? | Regular Firefox?      | File                                                            |
+| ------------------- | ---------- | --------------------- | --------------------------------------------------------------- |
+| 1. Temporary load   | No         | Yes                   | [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi) |
+| 2. Signed, unlisted | Yes        | Yes, incl. Android    | [signed `.xpi`]({{signedXpi}})                                  |
+| 3. Unsigned         | Yes        | No: Dev, Nightly, ESR | [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi) |
 
 The unsigned file is the current build, packaged but _not signed by Mozilla_.
 Building it yourself is described in
@@ -28,9 +28,7 @@ session.
 Regular Firefox only keeps extensions that Mozilla has signed. "Unlisted" means
 Mozilla has signed it, but it is not shown in the add-ons store.
 
-1. Download the [signed `.xpi`](../downloads/text-size-adjuster.xpi). It's only
-   there once a signed release has been published; until then, use one of the
-   other two methods.
+1. Download the [signed `.xpi`]({{signedXpi}}), the newest release.
 2. In Firefox, open `about:addons`, click the gear icon, choose **Install Add-on
    From File…**, and pick the `.xpi`. (Dragging the file onto a Firefox window
    also works.)
