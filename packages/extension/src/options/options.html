@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Text Size Adjuster — Options</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; max-width: 560px; line-height: 1.5; }
+    h1 { font-size: 20px; margin: 0 0 16px; }
+    h2 { font-size: 15px; margin: 24px 0 8px; }
+    fieldset { border: none; padding: 0; margin: 0; }
+    .corners { display: grid; grid-template-columns: repeat(2, minmax(0, 160px)); gap: 6px; }
+    label { display: flex; align-items: center; gap: 6px; font-size: 15px; padding: 2px 0; }
+    .hint { font-size: 13px; opacity: 0.75; margin: 4px 0 0; }
+    #sites {
+      list-style: none; margin: 0; padding: 0;
+      max-height: 280px; overflow-y: auto;
+      border: 1px solid #8884; border-radius: 6px;
+    }
+    #sites li { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #8882; }
+    #sites li:last-child { border-bottom: none; }
+    #sites .origin { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #sites .size { font-variant-numeric: tabular-nums; opacity: 0.8; }
+    #sites button { font: inherit; font-size: 13px; }
+    #empty { font-size: 14px; opacity: 0.75; }
+  </style>
+</head>
+<body>
+  <h1>Text Size Adjuster</h1>
+
+  <h2>Where the on-page control sits</h2>
+  <fieldset class="corners" id="position">
+    <label><input type="radio" name="position" value="top-left" /> Top left</label>
+    <label><input type="radio" name="position" value="top-right" /> Top right</label>
+    <label><input type="radio" name="position" value="bottom-left" /> Bottom left</label>
+    <label><input type="radio" name="position" value="bottom-right" /> Bottom right</label>
+  </fieldset>
+
+  <h2>When to show it</h2>
+  <fieldset id="show">
+    <label><input type="radio" name="show" value="on-zoom" /> Only after I zoom in on a page</label>
+    <label><input type="radio" name="show" value="always" /> Always</label>
+  </fieldset>
+  <p class="hint">You can always adjust the size from the Text Size Adjuster button in the toolbar,
+  too.</p>
+
+  <h2>Sites with a saved size</h2>
+  <ul id="sites"></ul>
+  <p id="empty" hidden>No sites yet — make the text bigger or smaller on a site and it will appear here.</p>
+
+  <script src="options.js"></script>
+</body>
+</html>

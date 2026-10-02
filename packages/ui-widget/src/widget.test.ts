@@ -123,3 +123,74 @@ describe('createFloatingWidget', () => {
     expect(document.body.querySelectorAll(`[${DEFAULT_IGNORE_ATTR}]`)).toHaveLength(1);
   });
 });
+
+describe('placement', () => {
+  function panelPosition(): string | undefined {
+    return getHost()?.shadowRoot?.querySelector<HTMLElement>('.tsa-widget')?.dataset.position;
+  }
+
+  it('defaults to bottom-right', () => {
+    createFloatingWidget().mount(createFakeEngine());
+    expect(panelPosition()).toBe('bottom-right');
+  });
+
+  it('uses the requested corner', () => {
+    createFloatingWidget({ position: 'top-left' }).mount(createFakeEngine());
+    expect(panelPosition()).toBe('top-left');
+  });
+});
+
+describe('visibility', () => {
+  function panel(): HTMLElement | null | undefined {
+    return getHost()?.shadowRoot?.querySelector<HTMLElement>('.tsa-widget');
+  }
+
+  /** jsdom has no visualViewport; a minimal fake is enough to drive a pinch-zoom. */
+  function fakeVisualViewport(): EventTarget & { scale: number; width: number; height: number; offsetLeft: number; offsetTop: number } {
+    const target = new EventTarget() as EventTarget & {
+      scale: number; width: number; height: number; offsetLeft: number; offsetTop: number;
+    };
+    Object.assign(target, { scale: 1, width: 400, height: 800, offsetLeft: 0, offsetTop: 0 });
+    Object.defineProperty(window, 'visualViewport', { value: target, configurable: true });
+    return target;
+  }
+
+  afterEach(() => {
+    Object.defineProperty(window, 'visualViewport', { value: undefined, configurable: true });
+  });
+
+  it('is visible straight away by default', () => {
+    createFloatingWidget().mount(createFakeEngine());
+    expect(panel()?.hidden).toBe(false);
+  });
+
+  it('with show: on-zoom, stays hidden until the user pinch-zooms, then stays visible', () => {
+    const viewport = fakeVisualViewport();
+    createFloatingWidget({ show: 'on-zoom' }).mount(createFakeEngine());
+    expect(panel()?.hidden).toBe(true);
+
+    viewport.scale = 1.02; // below the threshold — not a real zoom
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.hidden).toBe(true);
+
+    viewport.scale = 2;
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.hidden).toBe(false);
+
+    viewport.scale = 1; // zooming back out doesn't hide it again
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.hidden).toBe(false);
+  });
+
+  it('while pinch-zoomed, counter-scales the control so it keeps its normal size', () => {
+    const viewport = fakeVisualViewport();
+    createFloatingWidget().mount(createFakeEngine());
+    viewport.scale = 2;
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.style.transform).toContain('scale(0.5)');
+
+    viewport.scale = 1;
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.style.transform).toBe('');
+  });
+});

@@ -5,6 +5,11 @@ import type { TextSizeEngine, Store } from './types.js';
  * the persisted factor (if any) on call, saves on every change, and optionally reacts to changes
  * made elsewhere (e.g. a popup in a different JS context writing to the same key) via
  * `store.subscribe`. Returns a function that tears down all subscriptions.
+ *
+ * The default factor (1) is never stored — going back to normal size removes the key instead
+ * (when the store supports removal), so "keys in the store" means exactly "sites with a non-default
+ * size" (FR9.2). Conversely, a key removed elsewhere (e.g. from the options page) resets the
+ * engine to normal size.
  */
 export function bindStore(engine: TextSizeEngine, store: Store, key: string): () => void {
   let applyingExternal = false;
@@ -18,13 +23,13 @@ export function bindStore(engine: TextSizeEngine, store: Store, key: string): ()
 
   const unsubscribeChange = engine.onChange((event) => {
     if (applyingExternal) return;
-    void store.set(key, event.factor);
+    if (event.factor === 1 && store.remove) void store.remove(key);
+    else void store.set(key, event.factor);
   });
 
   const unsubscribeStore = store.subscribe?.(key, (value) => {
-    if (value === undefined) return;
     applyingExternal = true;
-    engine.setFactor(value);
+    engine.setFactor(value ?? 1);
     applyingExternal = false;
   });
 

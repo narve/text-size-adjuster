@@ -1,0 +1,71 @@
+import type { WidgetPosition } from './settings.js';
+
+const MARGIN = 16;
+// Ignore tiny scale wobbles (sub-pixel rounding, momentary pinch noise) — only a real zoom counts.
+const ZOOM_THRESHOLD = 1.05;
+
+/**
+ * Calls `onZoom` once the user zooms in: pinch-zoom (visualViewport.scale) or browser page zoom
+ * (devicePixelRatio rising above what it was when this started). Returns a stop function.
+ * Page zoom is measured relative to the starting value, so a page that was *already* zoomed when
+ * it loaded doesn't count — only zooming during this visit does.
+ */
+export function watchForZoom(win: Window, onZoom: () => void): () => void {
+  const viewport = win.visualViewport;
+  const startRatio = win.devicePixelRatio;
+  const check = () => {
+    const pinched = !!viewport && viewport.scale > ZOOM_THRESHOLD;
+    const pageZoomed = win.devicePixelRatio > startRatio * ZOOM_THRESHOLD;
+    if (pinched || pageZoomed) onZoom();
+  };
+  viewport?.addEventListener('resize', check);
+  win.addEventListener('resize', check);
+  check();
+  return () => {
+    viewport?.removeEventListener('resize', check);
+    win.removeEventListener('resize', check);
+  };
+}
+
+/**
+ * A `position: fixed` element is pinned to the layout viewport, which doesn't move or shrink
+ * when the user pinch-zooms — so a corner-anchored control would drift off-screen and be
+ * magnified with everything else. While pinch-zoomed, this places the panel at the chosen corner
+ * of the *visible* area instead and counter-scales it by 1/scale so it keeps its normal size;
+ * back at scale 1 it hands positioning back to the plain corner CSS. Returns a stop function.
+ */
+export function followVisualViewport(win: Window, panel: HTMLElement, position: WidgetPosition): () => void {
+  const viewport = win.visualViewport;
+  if (!viewport) return () => {};
+
+  const update = () => {
+    const scale = viewport.scale;
+    if (Math.abs(scale - 1) < 0.01) {
+      for (const prop of ['top', 'left', 'right', 'bottom', 'transform', 'transform-origin']) {
+        panel.style.removeProperty(prop);
+      }
+      return;
+    }
+    const width = panel.offsetWidth;
+    const height = panel.offsetHeight;
+    const x = position.endsWith('left') ? MARGIN / scale : viewport.width - (width + MARGIN) / scale;
+    const y = position.startsWith('top') ? MARGIN / scale : viewport.height - (height + MARGIN) / scale;
+    panel.style.setProperty('top', '0px');
+    panel.style.setProperty('left', '0px');
+    panel.style.setProperty('right', 'auto');
+    panel.style.setProperty('bottom', 'auto');
+    panel.style.setProperty('transform-origin', '0 0');
+    panel.style.setProperty(
+      'transform',
+      `translate(${viewport.offsetLeft + x}px, ${viewport.offsetTop + y}px) scale(${1 / scale})`,
+    );
+  };
+
+  viewport.addEventListener('resize', update);
+  viewport.addEventListener('scroll', update);
+  update();
+  return () => {
+    viewport.removeEventListener('resize', update);
+    viewport.removeEventListener('scroll', update);
+  };
+}

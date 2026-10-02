@@ -32,6 +32,10 @@ export default defineConfig({
           path.resolve(__dirname, 'src/popup/popup.html'),
           path.resolve(__dirname, 'dist/popup.html'),
         );
+        copyFileSync(
+          path.resolve(__dirname, 'src/options/options.html'),
+          path.resolve(__dirname, 'dist/options.html'),
+        );
       },
     },
   ],

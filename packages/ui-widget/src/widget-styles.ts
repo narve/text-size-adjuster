@@ -10,8 +10,6 @@ export const WIDGET_CSS = `
   }
   .tsa-widget {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
     z-index: 2147483647;
     display: flex;
     align-items: center;
@@ -25,6 +23,11 @@ export const WIDGET_CSS = `
     line-height: 1;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   }
+  .tsa-widget[hidden] { display: none; }
+  .tsa-widget[data-position='bottom-right'] { bottom: 16px; right: 16px; }
+  .tsa-widget[data-position='bottom-left'] { bottom: 16px; left: 16px; }
+  .tsa-widget[data-position='top-right'] { top: 16px; right: 16px; }
+  .tsa-widget[data-position='top-left'] { top: 16px; left: 16px; }
   .tsa-widget button {
     all: unset;
     box-sizing: border-box;

@@ -43,3 +43,9 @@ wire('reset', { type: 'tsa:reset' });
 void send({ type: 'tsa:getFactor' }).then((result) => {
   if (result) render(result.factor);
 });
+
+document.getElementById('options')!.addEventListener('click', (event) => {
+  event.preventDefault();
+  void browser.runtime.openOptionsPage();
+  window.close();
+});

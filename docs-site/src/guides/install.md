@@ -20,14 +20,24 @@ Text Size Adjuster is a Firefox add-on. It works on your computer and on your An
 
 ## How to use it
 
-- On any page, a small round control appears in the bottom-right corner. Tap **+** to make the
-  text bigger and **−** to make it smaller. **↺** goes back to normal, and **×** hides the control
-  on that page.
+- **Zoom in on a page** (pinch with two fingers, or Ctrl/Cmd + **+** on a computer) and a small
+  round control appears in a corner. Tap **+** to make the text bigger and **−** to make it
+  smaller. **↺** goes back to normal, and **×** hides the control on that page.
+- You can also adjust the size any time from the Text Size Adjuster button in Firefox's toolbar
+  (or the extensions menu on Android) — no zooming needed.
 - The text gets bigger *within* the page: it wraps to fit your screen, so you don't have to scroll
   sideways. Pictures and the page layout keep their size.
 - Your chosen size is remembered for each website. Next time you visit, it's already applied.
-- You can also adjust the size from the Text Size Adjuster button in Firefox's toolbar (or the
-  extensions menu on Android).
+
+## Settings
+
+Open the add-on's **Options** (from the Text Size Adjuster button → *Options…*, or from Firefox's
+Add-ons page). There you can:
+
+- choose which **corner** the control sits in;
+- choose to show the control **always**, instead of only after you zoom in;
+- see the **list of sites** where you've changed the text size, and remove any of them to put
+  that site back to normal.
 
 Curious how this is different from your phone's own text-size setting? See
 [how it differs](how-it-differs.html). Some things it can't change are listed under

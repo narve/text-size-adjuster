@@ -155,6 +155,10 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
 - **TR5.6**: The site publishes the embeddable script (FR3.4) at `embed/text-size-adjuster.js`,
   explains how a site owner adds it, and includes a demo page that loads it via an actual
   `<script src>` tag (not inlined like the other demos).
+- **TR5.7**: The site documents the on-page control settings (FR10) for each audience: for site
+  owners, the `data-position`/`data-show` attributes and URL parameters, with examples; for
+  extension users, the options page (placement, visibility, list of sites with a saved size); for
+  userscript users, the manager-menu commands.
 
 **Acceptance**: `npm run build` produces a browsable `docs-site/dist/` with working internal
 links and all gallery images present in framed form; no manual copying or framing of

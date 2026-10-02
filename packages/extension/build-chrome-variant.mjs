@@ -18,7 +18,7 @@ if (!fs.existsSync(SRC_DIST)) {
 fs.rmSync(CHROME_DIST, { recursive: true, force: true });
 fs.mkdirSync(CHROME_DIST, { recursive: true });
 
-for (const file of ['content.js', 'background.js', 'popup.js', 'popup.html']) {
+for (const file of ['content.js', 'background.js', 'popup.js', 'popup.html', 'options.js', 'options.html']) {
   fs.copyFileSync(path.join(SRC_DIST, file), path.join(CHROME_DIST, file));
 }
 fs.copyFileSync(path.join(__dirname, 'manifest.chrome.json'), path.join(CHROME_DIST, 'manifest.json'));

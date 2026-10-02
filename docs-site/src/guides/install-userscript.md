@@ -23,3 +23,9 @@ no toolbar button — just the on-page control.
    confirm the installation.
 
 After installing, the round **−/+** control appears in the bottom-right corner of every page.
+
+## Settings
+
+Open your userscript manager's menu (its toolbar icon) while on any page: Text Size Adjuster adds
+commands there to place the control in a different corner, or to show it only after you zoom in.
+Your choice is remembered.

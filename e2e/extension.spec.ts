@@ -39,10 +39,16 @@ test('content script auto-attaches, the widget scales the page, and the factor p
   const widgetHost = page.locator('[data-tsa-ignore]');
   await expect(widgetHost).toBeAttached();
 
+  // FR10.4: in the extension the on-page control stays hidden until the user zooms (the toolbar
+  // button is always there). Pinch-zoom can't be simulated in Firefox here, so drive the hidden
+  // control's buttons directly — they still dispatch to the content script's listeners.
+  expect(await widgetHost.locator('.tsa-widget').evaluate((el) => (el as HTMLElement).hidden)).toBe(true);
+
   const before = await readLargeRefSize(page);
-  const increaseButton = widgetHost.locator('[data-action="increase"]');
   for (let i = 0; i < 5; i += 1) {
-    await increaseButton.click();
+    await widgetHost
+      .locator('[data-action="increase"]')
+      .evaluate((button) => (button as HTMLButtonElement).click());
   }
   const afterClicks = await readLargeRefSize(page);
   expect(afterClicks).toBeGreaterThan(before);

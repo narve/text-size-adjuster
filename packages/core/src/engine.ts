@@ -113,7 +113,9 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   }
 
   function applyFactor(k: number, eventType: 'change' | 'reset'): number {
-    factor = clampFactor(k, opts.min, opts.max);
+    // Rounded so repeated ±step arithmetic (1 + 0.1 - 0.1 = 1.0000000000000002) lands back on
+    // exact values — "back to 100%" must compare equal to 1.
+    factor = Math.round(clampFactor(k, opts.min, opts.max) * 1000) / 1000;
     styleTarget.style.setProperty(FACTOR_VAR, String(factor));
     for (const child of children) child.setFactor(factor);
     notify(eventType);

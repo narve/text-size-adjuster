@@ -122,3 +122,39 @@ horizontal scrollbar.
 - **FR7.2**: Changing the factor after the initial pass (e.g. clicking + again) must be
   near-instant, since it should only update one CSS custom property rather than re-walking the
   DOM.
+
+## FR9. Extension options page
+
+- **FR9.1**: The extension has an options page, reachable the standard way (Firefox's add-on
+  manager → the extension → Options/Preferences).
+- **FR9.2**: The options page shows a scrollable list of the sites the extension is currently
+  active for — every site with a saved, non-default size (FR5.1) — with each site's size, and a
+  way to remove a site individually, which puts it back to normal size (including in tabs that
+  are already open).
+- **FR9.3**: The options page holds the on-page control settings (FR10) for the extension. Changes
+  apply to all sites, and to already-open pages without reloading them.
+
+## FR10. On-page control settings
+
+Settings for the floating control. As a general rule, every setting here is available in all
+delivery mechanisms, not just the extension.
+
+- **FR10.1 Placement**: the control can sit in any of the four corners of the viewport:
+  top-left, top-right, bottom-left, bottom-right.
+- **FR10.2 Visibility**: the control is either shown *always*, or hidden *until the user zooms*
+  (pinch-zoom, or browser page zoom above 100%). Zooming in is the moment someone is struggling
+  to read, so that's when the control appears; once shown it stays visible on that page. While
+  the page is pinch-zoomed, the control stays inside the visible area at its normal size.
+- **FR10.3 Where each mechanism gets its settings**:
+  - *Extension*: the options page (FR9.3). The toolbar/menu button keeps working regardless of
+    visibility, so the extension always has a way to adjust the size.
+  - *Script tag* (FR3.4): attributes on the script tag (`data-position="top-left"`,
+    `data-show="on-zoom"`) or parameters on its URL
+    (`text-size-adjuster.js?position=top-left&show=on-zoom`). Short placement forms `tl`, `tr`,
+    `bl`, `br` are accepted. If both are given, the attribute wins; unknown values fall back to the
+    default.
+  - *Userscript* (FR3.2): commands in the userscript manager's menu (Tampermonkey/Violentmonkey),
+    remembered in the manager's own storage.
+- **FR10.4 Defaults**: placement bottom-right everywhere. Visibility: *until the user zooms* for
+  the extension (it always has its toolbar/menu button as well); *always* for the script tag and
+  the userscript, where the on-page control is the only way in.

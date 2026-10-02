@@ -38,6 +38,9 @@ function createFakeStore(initial?: number): Store & { data: Map<string, number> 
     set: vi.fn(async (key: string, value: number) => {
       data.set(key, value);
     }),
+    remove: vi.fn(async (key: string) => {
+      data.delete(key);
+    }),
   };
 }
 
@@ -98,5 +101,28 @@ describe('bindStore', () => {
     unbind();
     engine.setFactor(2);
     expect(store.set).not.toHaveBeenCalled();
+  });
+
+  it('removes the key instead of storing the default factor', async () => {
+    const engine = createFakeEngine();
+    const store = createFakeStore(1.5);
+    bindStore(engine, store, 'https://example.com');
+    engine.setFactor(1);
+    expect(store.remove).toHaveBeenCalledWith('https://example.com');
+    expect(store.set).not.toHaveBeenCalledWith('https://example.com', 1);
+  });
+
+  it('resets the engine to normal size when the key is removed elsewhere', () => {
+    const engine = createFakeEngine(1.8);
+    const store = createFakeStore();
+    let externalUpdate: ((value: number | undefined) => void) | undefined;
+    store.subscribe = vi.fn((_key: string, cb) => {
+      externalUpdate = cb;
+      return () => {};
+    });
+    bindStore(engine, store, 'https://example.com');
+    externalUpdate?.(undefined);
+    expect(engine.getFactor()).toBe(1);
+    expect(store.remove).not.toHaveBeenCalled();
   });
 });

@@ -1,10 +1,16 @@
 import type { TextSizeEngine, UIAdapter } from '@tsa/core';
 import { DEFAULT_IGNORE_ATTR } from '@tsa/core';
 import { WIDGET_CSS } from './widget-styles.js';
+import { DEFAULT_POSITION, type WidgetPosition, type WidgetVisibility } from './settings.js';
+import { followVisualViewport, watchForZoom } from './viewport.js';
 
 export interface FloatingWidgetOptions {
   /** Where the widget's host element is appended. Defaults to `document`. */
   root?: Document | ShadowRoot;
+  /** Which corner of the viewport the control sits in (FR10.1). Default bottom-right. */
+  position?: WidgetPosition;
+  /** `always`, or hidden until the user zooms in (FR10.2). Default `always`. */
+  show?: WidgetVisibility;
 }
 
 /**
@@ -20,6 +26,7 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
   let hostEl: HTMLElement | null = null;
   let shadow: ShadowRoot | null = null;
   let unsubscribe: (() => void) | null = null;
+  const cleanups: Array<() => void> = [];
 
   function render(engine: TextSizeEngine): void {
     const display = shadow?.querySelector('[data-tsa-display]');
@@ -45,6 +52,7 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
 
     const panel = doc.createElement('div');
     panel.className = 'tsa-widget';
+    panel.dataset.position = options.position ?? DEFAULT_POSITION;
     panel.setAttribute('role', 'group');
     panel.setAttribute('aria-label', 'Text size controls');
 
@@ -72,6 +80,23 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
     );
 
     shadow.append(style, panel);
+
+    const win = doc.defaultView;
+    const position = options.position ?? DEFAULT_POSITION;
+    if (win) {
+      // Registered before followVisualViewport on purpose: both react to the same visualViewport
+      // `resize`, and the panel has to be revealed first or the positioning measures it at zero
+      // size.
+      if (options.show === 'on-zoom') {
+        panel.hidden = true;
+        const stopWatching = watchForZoom(win, () => {
+          panel.hidden = false;
+          stopWatching();
+        });
+        cleanups.push(stopWatching);
+      }
+      cleanups.push(followVisualViewport(win, panel, position));
+    }
 
     shadow.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
@@ -102,6 +127,7 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
   function unmount(): void {
     unsubscribe?.();
     unsubscribe = null;
+    for (const cleanup of cleanups.splice(0)) cleanup();
     hostEl?.remove();
     hostEl = null;
     shadow = null;

@@ -3,6 +3,8 @@ import { bindStore, createEngine } from '@tsa/core';
 import { createFloatingWidget } from '@tsa/ui-widget';
 import { createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
 import type { FactorResponse, Message } from './protocol.js';
+import { normalizeSettings, SETTINGS_KEY } from './settings.js';
+import type { UIAdapter } from '@tsa/core';
 
 const engine = createEngine();
 
@@ -18,7 +20,17 @@ engine.attach();
 // cross-origin) still gets its own engine instance scaled in sync, but not its own floating
 // controls, which would make no visual sense inside e.g. an ad slot.
 if (window === window.top) {
-  createFloatingWidget().mount(engine);
+  let widget: UIAdapter | null = null;
+  const mountWidget = (rawSettings: unknown) => {
+    widget?.unmount();
+    widget = createFloatingWidget(normalizeSettings(rawSettings));
+    widget.mount(engine);
+  };
+  void browser.storage.local.get(SETTINGS_KEY).then((stored) => mountWidget(stored[SETTINGS_KEY]));
+  // FR9.3: a change on the options page applies to already-open pages straight away.
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && SETTINGS_KEY in changes) mountWidget(changes[SETTINGS_KEY]?.newValue);
+  });
 }
 
 // Guards against re-broadcasting a factor change that just arrived *from* the background relay —

@@ -131,6 +131,25 @@ page's own *inline* `!important` on that element (FR6.4, accepted).
     `.github/workflows/docs.yml` (checkout, Node setup, `npx playwright install --with-deps`,
     `npm run build`, then `actions/upload-pages-artifact` + `actions/deploy-pages`) triggered on
     push to the default branch. Commit.
+11. Options page and control settings (FR9, FR10): `ui-widget` gains `position` (four corners)
+    and `show` (`always` | `on-zoom`) options. `on-zoom` keeps the panel hidden until
+    `visualViewport.scale` or `devicePixelRatio` rises above its starting value, then reveals it
+    for good; while pinch-zoomed the panel is positioned from `visualViewport` offsets and
+    counter-scaled by `1/scale` so it stays visible at normal size. Settings parsing
+    (`parsePosition`/`parseShow`, long and short forms) lives in `ui-widget`. Per mechanism: the
+    embed reads `document.currentScript` synchronously at load (`data-*` attribute, else URL
+    parameter); the userscript registers manager-menu commands (`GM_registerMenuCommand`) and
+    stores settings with `GM.getValue`/`GM.setValue` (granted in the metadata block; the same
+    bundle checks these exist, since as an embed it runs without them); the extension stores
+    settings under one key in `browser.storage.local` (site sizes stay keyed by origin), and
+    content scripts re-mount the widget when it changes. `bindStore` removes the stored value
+    instead of saving the default factor, so "sites with a saved size" means sites not at 100%,
+    and resets the engine when a value is removed elsewhere (options page "remove"). A fourth
+    single-entry build (`vite.options.config.ts`) produces `options.js` for `options.html`,
+    declared via `options_ui`. Tests: unit tests for widget placement/visibility and parsing, and
+    for the `bindStore` changes; Layer 1 tests loading the built bundle through real
+    `<script src>` tags with each placement form; the options page checked best-effort by loading
+    the Chrome build in Chromium. Commit.
 
 ## Risks
 

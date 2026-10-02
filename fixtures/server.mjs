@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const BUNDLES = path.resolve(ROOT, '..', 'packages', 'userscript', 'dist');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -23,6 +24,25 @@ const SECONDARY_PORT = Number(process.env.TSA_FIXTURES_SECONDARY_PORT ?? 4311);
 function createServer() {
   return http.createServer((req, res) => {
     const urlPath = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
+    // Built bundles (e.g. the userscript/embed) for tests that load them via a real <script src>.
+    if (urlPath.startsWith('/__bundles/')) {
+      const bundlePath = path.join(BUNDLES, urlPath.slice('/__bundles/'.length));
+      if (!bundlePath.startsWith(BUNDLES)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
+      fs.readFile(bundlePath, (err, data) => {
+        if (err) {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': MIME['.js'] });
+        res.end(data);
+      });
+      return;
+    }
     let filePath = path.join(ROOT, urlPath);
     if (urlPath.endsWith('/')) filePath = path.join(filePath, 'index.html');
     if (!filePath.startsWith(ROOT)) {

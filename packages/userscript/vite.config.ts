@@ -14,7 +14,7 @@ export default defineConfig({
         description:
           'Ad-hoc, per-page text scaling that preserves size ratios instead of zooming the whole layout.',
         match: ['*://*/*'],
-        grant: 'none',
+        grant: ['GM.getValue', 'GM.setValue', 'GM_registerMenuCommand'],
         'run-at': 'document-idle',
       },
     }),
