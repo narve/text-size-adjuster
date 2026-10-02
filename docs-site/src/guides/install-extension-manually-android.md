@@ -15,8 +15,8 @@ Then visit any page: zoom in and the control appears. Your chosen size is
 remembered for each site, the same as on a computer. See
 [how to use it](install.html).
 
-Installed this way, {{name}} doesn't update itself. To get a newer version,
-download and install it again.
+Firefox keeps it up to date: it checks for new versions and installs them
+itself.
 
 ## For testers
 

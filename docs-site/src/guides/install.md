@@ -18,8 +18,8 @@ signed by Mozilla.
 If the file downloads instead of installing (for example in another browser),
 drag it onto a Firefox window.
 
-Installed this way, {{name}} doesn't update itself. To get a newer version,
-download and install it again the same way.
+Firefox keeps it up to date: it checks for new versions and installs them
+itself.
 
 ## On your Android phone
 

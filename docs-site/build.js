@@ -19,6 +19,9 @@ import {
   readSites,
   realWorldScreenshot,
   realWorldSnapshot,
+  SIGNED_XPI_FILENAME,
+  readJson,
+  writeJson,
 } from '../tools/paths.js';
 import { imageDataUri, screenshotHtml } from '../tools/render-image.js';
 
@@ -85,6 +88,35 @@ function slugTitle(filename) {
     .split('-')
     .map((w) => w[0].toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+/**
+ * Writes updates.json in Firefox's update manifest format
+ * (https://extensionworkshop.com/documentation/manage/updating-your-extension/), listing every
+ * published GitHub release that has a signed .xpi. Uses GITHUB_TOKEN if set (as in CI) to avoid
+ * the anonymous rate limit. If the releases can't be fetched, no file is written and Firefox just
+ * finds no update this time.
+ */
+async function writeUpdatesJson() {
+  const api = product.repository.replace('https://github.com/', 'https://api.github.com/repos/');
+  const headers = process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {};
+  let releases;
+  try {
+    const response = await fetch(`${api}/releases?per_page=100`, { headers });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    releases = await response.json();
+  } catch (err) {
+    console.warn(`[updates] couldn't list GitHub releases (${err.message}) — skipping updates.json.`);
+    return;
+  }
+  const updates = releases
+    .filter((r) => !r.draft && !r.prerelease)
+    .flatMap((r) => {
+      const asset = r.assets.find((a) => a.name === SIGNED_XPI_FILENAME);
+      return asset ? [{ version: r.tag_name.replace(/^v/, ''), update_link: asset.browser_download_url }] : [];
+    });
+  const { gecko } = readJson(path.join(EXTENSION_DIR, 'manifest.json')).browser_specific_settings;
+  writeJson(path.join(DIST, 'updates.json'), { addons: { [gecko.id]: { updates } } });
 }
 
 // --- 1. Clean + shared assets ---
@@ -307,6 +339,11 @@ if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
 }
 // The Mozilla-signed build isn't copied here: it's attached to each GitHub release, and the guides
 // link there ({{signedXpi}}).
+
+// --- Self-hosted updates: Firefox checks updates.json (the update_url of builds signed for GitHub
+// releases, see packages/extension/sign.js) and installs newer versions itself. Generated from the
+// GitHub releases that carry a signed .xpi, so the releases stay the single source. ---
+await writeUpdatesJson();
 
 // --- Website embed (FR3.4/TR5.6): the same self-starting bundle, published as a plain script a
 // site owner can include with one <script src> tag, plus a demo that loads it exactly that way. ---

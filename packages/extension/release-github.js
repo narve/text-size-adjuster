@@ -10,6 +10,8 @@ import { EXTENSION_DIST, REPO_ROOT, SIGNED_XPI, SIGNED_XPI_FILENAME, readJson, r
 // (product.signedXpiUrl), so this is what makes a new version downloadable.
 //
 // The tag has to point at the commit with the bumped version, so commit and push that first.
+// Afterwards it starts the docs workflow on master, which regenerates the site's updates.json from
+// the releases, so Firefox installs from earlier releases update to this one.
 
 const git = (...args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
 
@@ -40,10 +42,13 @@ fs.copyFileSync(SIGNED_XPI, asset);
 const product = readProduct();
 const notes =
   `Signed by Mozilla (unlisted). Open the .xpi in Firefox to install it, on desktop or Android.\n\n` +
-  `Install guide: ${product.homepage}guides/install-extension-manually.html`;
+  `Install guide: ${product.homepage}guides/install.html`;
 execFileSync(
   'gh',
   ['release', 'create', `v${version}`, asset, '--target', head, '--title', `${product.name} ${version}`, '--notes', notes],
   { cwd: REPO_ROOT, stdio: 'inherit' },
 );
 fs.rmSync(dir, { recursive: true, force: true });
+
+execFileSync('gh', ['workflow', 'run', 'docs.yml', '--ref', 'master'], { cwd: REPO_ROOT, stdio: 'inherit' });
+console.log('Started the docs workflow, which publishes the new updates.json.');

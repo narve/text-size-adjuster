@@ -79,8 +79,12 @@ jobs:
         run: npm run test:real-world
         continue-on-error: true
 
+      # GITHUB_TOKEN lets the build list the GitHub releases for updates.json without hitting the
+      # anonymous API rate limit.
       - name: Build the docs site
         run: npm run docs:build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

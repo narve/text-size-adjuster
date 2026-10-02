@@ -8,7 +8,8 @@ import { imageDataUri, screenshotHtml } from '../../tools/render-image.js';
 // Screenshots for the addons.mozilla.org listing (1280×800, AMO's recommended size), written to
 // web-ext-artifacts/amo-screenshots/ for uploading in the developer hub; web-ext can't upload them.
 // Built from the docs site's gallery images (run `npm run docs:build` first) and the built
-// options page (`npm run build -w packages/extension`).
+// options page (`npm run build -w packages/extension`). Their captions go to captions.json, for
+// amo-upload-screenshots.js.
 
 const GALLERY = path.join(REPO_ROOT, 'docs-site', 'dist', 'gallery');
 const OUT = path.join(EXTENSION_ARTIFACTS, 'amo-screenshots');
@@ -19,6 +20,8 @@ const PAIRS = [
 ];
 
 const theme = fs.readFileSync(THEME_CSS, 'utf8');
+const OPTIONS_CAPTION = 'Choose where the control sits and when it shows. Sizes are remembered per site.';
+const captions = {};
 
 function slide(caption, body) {
   return `<!doctype html><html><head><style>${theme}
@@ -69,7 +72,9 @@ for (const [index, { id, caption }] of PAIRS.entries()) {
   const figure = (file, label) =>
     `<figure><img src="${imageDataUri(path.join(GALLERY, id, file))}" height="600"><figcaption>${label}</figcaption></figure>`;
   const html = slide(caption, `<div class="row">${figure('before.png', 'Before')}${figure('after.png', 'With ' + product.name)}</div>`);
-  await screenshotHtml(page, html, path.join(OUT, `${index + 1}-${id}.png`));
+  const file = `${index + 1}-${id}.png`;
+  await screenshotHtml(page, html, path.join(OUT, file));
+  captions[file] = caption;
 }
 
 // The options page's two panels side by side, rendered at phone width.
@@ -86,13 +91,15 @@ for (const [index, panel] of (await options.locator('section.panel').all()).entr
 await screenshotHtml(
   page,
   slide(
-    'Choose where the control sits and when it shows. Sizes are remembered per site.',
+    OPTIONS_CAPTION,
     `<div class="row" style="align-items: flex-start">${panels
       .map((file) => `<img src="${imageDataUri(file)}" style="max-height: 620px; max-width: 480px; border-radius: 14px; box-shadow: var(--shadow)">`)
       .join('')}</div>`,
   ),
   path.join(OUT, `${PAIRS.length + 1}-options.png`),
 );
+captions[`${PAIRS.length + 1}-options.png`] = OPTIONS_CAPTION;
+fs.writeFileSync(path.join(OUT, 'captions.json'), JSON.stringify(captions, null, 2) + '\n');
 for (const file of panels) fs.rmSync(file);
 
 await browser.close();

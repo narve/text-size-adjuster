@@ -35,6 +35,8 @@ export default tseslint.config(
         clearTimeout: 'readonly',
         URL: 'readonly',
         fetch: 'readonly',
+        FormData: 'readonly',
+        Blob: 'readonly',
         Buffer: 'readonly',
         document: 'readonly',
         window: 'readonly',

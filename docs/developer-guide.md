@@ -141,6 +141,12 @@ contributor section). Edit the sources, not generated files.
    guides link to the latest release's `text-size-adjuster.xpi`, so that's what
    makes a new version downloadable.
 
+   Updates: unlisted builds get an `update_url` in their manifest (added by
+   `sign.js`; AMO doesn't allow it in listed builds), pointing at the docs
+   site's `updates.json`. The docs build generates that file from the GitHub
+   releases that have a signed `.xpi`, and `release:github` starts the docs
+   workflow afterwards, so installed copies update to the new release.
+
    Credentials come from the gitignored `private.env` in the repo root (or the
    `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` environment variables, e.g. in CI):
 
