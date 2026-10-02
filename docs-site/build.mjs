@@ -258,7 +258,9 @@ function galleryEntryHtml(entry) {
 const galleryHtml =
   '<h2>Real sites</h2><p>Saved copies of real websites, shown on a phone.</p>' +
   galleryEntries.filter((e) => e.isRealWorld).map(galleryEntryHtml).join('') +
-  '<h2>Function demos</h2><p>Small test pages, each showing one way websites size their text.</p>' +
+  '<h2>Function demos</h2><p>Small pages that each use one technique websites rely on to size ' +
+  'their text. They double as the test fixtures: the automated test suite checks every one of them ' +
+  'in Firefox and Chromium.</p>' +
   galleryEntries.filter((e) => !e.isRealWorld).map(galleryEntryHtml).join('');
 writePage(path.join(DIST, 'gallery', 'index.html'), {
   title: 'Screenshot gallery',

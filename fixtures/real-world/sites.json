@@ -2,8 +2,8 @@
   {
     "id": "ap-no",
     "name": "Aftenposten",
-    "url": "https://www.ap.no/",
-    "description": "Norwegian news site — the original motivating example"
+    "url": "https://www.aftenposten.no/norge/i/2pQaLv/regjeringen-vil-utvide-samspill-prosjekt-for-aa-redusere-sykefravaer",
+    "description": "Norwegian news article — the original motivating example"
   },
   {
     "id": "hacker-news",
@@ -20,7 +20,7 @@
   {
     "id": "bbc-news",
     "name": "BBC News",
-    "url": "https://www.bbc.com/news",
-    "description": "International news with a dense, component-heavy layout"
+    "url": "https://www.bbc.com/news/articles/c3kgqw7zvz47o",
+    "description": "International news article"
   }
 ]
