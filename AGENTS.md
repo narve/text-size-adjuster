@@ -1,5 +1,9 @@
 # Agent instructions
 
+## Git
+
+- Commit when appropriate, but don't push unless told to.
+
 ## Markdown style
 
 - Wrap prose at **80 characters per line**. Exceptions: tables, and lines that
