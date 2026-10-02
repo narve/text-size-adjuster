@@ -96,8 +96,13 @@ Own document: `android-manual-qa-checklist.md`. Step-by-step walkthrough (sidelo
 or install the userscript via a mobile userscript manager) against a representative fixture
 subset, with explicit pass/fail criteria, to be checked by hand per release.
 
-## TR5. Documentation site
+## TR5. Documentation site (end-user-facing only)
 
+- **TR5.0**: The generated documentation site is aimed at *users* of the userscript/extension —
+  people deciding whether to install it and how. It must not contain build instructions,
+  repository/package layout, or publishing/release process — that content belongs in TR6's
+  separate developer guide instead, so a user isn't wading through contributor material to find
+  "how do I install this."
 - **TR5.1**: Building the documentation site is part of the standard build pipeline
   (`npm run build`), not a separate, easily-forgotten manual step. `npm run build` must leave
   behind a complete, up-to-date `docs-site/dist/`.
@@ -118,3 +123,21 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
 **Acceptance**: `npm run build` produces a browsable `docs-site/dist/` with working internal
 links and all gallery images present in framed form; no manual copying or framing of
 screenshots.
+
+## TR6. Developer guide (separate from the docs site)
+
+- **TR6.1**: A hand-maintained document, `docs/developer-guide.md`, lives in the repo (not in
+  `docs-site/`, and not generated) and covers what the end-user site deliberately excludes
+  (TR5.0): repo/workspace layout, how to build and run the test suite locally, and — explicitly
+  requested — **how to publish each delivery mechanism**:
+  - Firefox Desktop extension: AMO listed vs. unlisted submission via `web-ext sign` /
+    addons.mozilla.org.
+  - Firefox Android extension: the `gecko_android` manifest requirement and the unlisted
+    self-distribution signing path used for the manual QA checklist, plus what store listing
+    would additionally require.
+  - Chrome extension (FR8, best-effort): packaging the `manifest.chrome.json` variant and the
+    Chrome Web Store developer dashboard submission flow, kept brief since it's not a primary
+    target.
+  - Userscript: direct `.user.js` distribution vs. optionally publishing to Greasy Fork.
+- **TR6.2**: `README.md` at the repo root documents the reading order across all of `docs/` plus
+  the generated docs site, so a newcomer (user or contributor) knows where to start.

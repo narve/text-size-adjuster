@@ -8,7 +8,7 @@
     "test:extension": "playwright test --config playwright.extension.config.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
-    "playwright-webextext": "^0.2.0"
+    "@playwright/test": "^1.63.0",
+    "playwright-webextext": "^0.0.5"
   }
 }

@@ -13,7 +13,7 @@
     "@tsa/core": "*"
   },
   "devDependencies": {
-    "vitest": "^2.1.9",
-    "jsdom": "^25.0.1"
+    "vitest": "^3.2.7",
+    "jsdom": "^26.1.0"
   }
 }

@@ -20,7 +20,8 @@ text-size-adjuster/
                      # + real-world/download.mjs + real-world/sites.json (TR1a, snapshots gitignored)
   e2e/               # playwright.config.ts, engine.spec.ts (Layer 1), extension-smoke.spec.ts (Layer 2)
   docs-site/         # build.mjs (custom static generator) + guides + templates
-  docs/              # the three requirement/plan docs + android-manual-qa-checklist.md
+  docs/              # the three requirement/plan docs + android-manual-qa-checklist.md + developer-guide.md
+  README.md          # project overview + documentation reading order (TR6.2)
 ```
 
 ## Tooling choices

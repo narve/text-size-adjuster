@@ -7,7 +7,8 @@
     "build": "node build.mjs"
   },
   "devDependencies": {
-    "markdown-it": "^14.1.0",
-    "playwright": "^1.49.1"
+    "markdown-it": "^15.0.2",
+    "@types/markdown-it": "^14.1.2",
+    "playwright": "^1.63.0"
   }
 }
