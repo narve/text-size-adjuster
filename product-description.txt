@@ -9,6 +9,7 @@
 # limits.description in product.json, and checked by the build.
 #
 Text too small on a website, and zooming in makes you scroll sideways to read each line?
+Don't want to use your reading glasses right now?
 Text Size Adjuster makes just the text bigger or smaller.
 The page still fits your screen, and pictures and layout keep their size.
 
