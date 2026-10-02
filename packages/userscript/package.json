@@ -1,0 +1,20 @@
+{
+  "name": "@tsa/userscript",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tsa/core": "*",
+    "@tsa/stores": "*",
+    "@tsa/ui-widget": "*"
+  },
+  "devDependencies": {
+    "vite": "^6.0.11",
+    "vite-plugin-monkey": "^5.0.4"
+  }
+}

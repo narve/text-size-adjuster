@@ -1,0 +1,14 @@
+{
+  "name": "@tsa/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:extension": "playwright test --config playwright.extension.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "playwright-webextext": "^0.2.0"
+  }
+}
