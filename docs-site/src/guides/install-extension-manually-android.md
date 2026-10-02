@@ -6,11 +6,12 @@ but it takes one extra one-time step to turn on the option.
 1. In Firefox for Android, go to **Settings → About Firefox** and tap the
    Firefox logo several times until a "Custom Add-on collection" / debugging
    option appears.
-2. Get the extension's signed `.xpi` file onto your phone (downloaded directly,
-   or transferred another way) and install it through that new debug option. To
-   produce the signed file, follow method 2, "Signed but unlisted", in the
-   [manual install guide](install-extension-manually.html) — the same file works
-   on both. Regular Firefox for Android won't install the
+2. Get the [signed `.xpi`](../downloads/text-size-adjuster.xpi) onto your phone
+   (downloaded directly, or transferred another way) and install it through that
+   new debug option. It's the same file as method 2, "Signed but unlisted", in
+   the [manual install guide](install-extension-manually.html), and it's only
+   there once a signed release has been published. Regular Firefox for Android
+   won't install the
    [unsigned download](../downloads/text-size-adjuster-unsigned.xpi); only
    Firefox Nightly for Android can, after setting
    `xpinstall.signatures.required` to `false` in `about:config`.

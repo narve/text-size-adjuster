@@ -5,7 +5,7 @@ control without them installing anything. Add one line to your pages, anywhere
 in `<head>` or before `</body>`:
 
 ```html
-<script src="https://narve.github.io/text-size-adjuster/embed/text-size-adjuster.js"></script>
+<script src="{{homepage}}embed/text-size-adjuster.js"></script>
 ```
 
 That's all. The control appears in the bottom-right corner, scales your page's
@@ -18,7 +18,7 @@ Set them as attributes on the script tag:
 
 ```html
 <script
-  src="https://narve.github.io/text-size-adjuster/embed/text-size-adjuster.js"
+  src="{{homepage}}embed/text-size-adjuster.js"
   data-position="top-left"
   data-show="on-zoom"
 ></script>
@@ -28,7 +28,7 @@ Set them as attributes on the script tag:
 setup:
 
 ```html
-<script src="https://narve.github.io/text-size-adjuster/embed/text-size-adjuster.js?position=tl&show=on-zoom"></script>
+<script src="{{homepage}}embed/text-size-adjuster.js?position=tl&show=on-zoom"></script>
 ```
 
 | Option     | Values                 | Default        |

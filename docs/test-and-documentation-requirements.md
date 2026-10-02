@@ -17,21 +17,15 @@ manual checklist instead.
 ## TR1. Fixture sites
 
 Served locally for Playwright. Each fixture isolates one real-world CSS
-technique and traces to functional requirements:
+technique and traces to functional requirements. The list, with what each
+fixture exercises and which FR it traces to, is `fixtures/fixtures.json`; the
+Layer 1 specs and the docs site both read it. Notes on two of them:
 
-| Fixture                      | Exercises                                                     | Traces to                                                                                                                                                                                                        |
-| ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plain-px`                   | hardcoded px sizes everywhere                                 | FR1.2, FR2.1                                                                                                                                                                                                     |
-| `rem-em`                     | root-relative sizing                                          | FR1.2, FR2.1                                                                                                                                                                                                     |
-| `nested-em`                  | deeply nested relative inheritance                            | FR2.1, FR2.4                                                                                                                                                                                                     |
-| `shadow-dom-open`            | open shadow root content                                      | FR4, FR6.2 boundary                                                                                                                                                                                              |
-| `iframe-same-origin`         | same-origin embedded frame                                    | engine reach boundary                                                                                                                                                                                            |
-| `iframe-cross-origin`        | genuinely different origin (second host:port)                 | FR6.1 — Layer 1 confirms the bare engine (userscript-equivalent) leaves it alone without erroring; Layer 2 (best-effort) additionally confirms the packaged extension _does_ scale it via `all_frames` injection |
-| `overflow-clipping`          | fixed-height/overflow containers                              | FR6.3 (documented, not "fixed")                                                                                                                                                                                  |
-| `important-high-specificity` | page CSS with `!important` + ID/class selectors               | FR2.5                                                                                                                                                                                                            |
-| `spa-mutation`               | content injected after load via JS                            | FR2.4                                                                                                                                                                                                            |
-| `line-height-mixed`          | `normal`, unitless, and explicit px line-heights side by side | FR2.3                                                                                                                                                                                                            |
-| `large-dom-performance`      | a few thousand text nodes (simulated feed/article)            | FR7.1, FR7.2                                                                                                                                                                                                     |
+- `overflow-clipping` documents FR6.3 rather than "fixing" it.
+- `iframe-cross-origin` is served from a second port (a genuinely different
+  origin). Layer 1 confirms the bare engine (userscript-equivalent) leaves it
+  alone without erroring; Layer 2 confirms the packaged extension _does_ scale
+  it via `all_frames` injection.
 
 ## TR1a. Real-world site snapshots
 
@@ -39,31 +33,18 @@ In addition to the synthetic TR1 fixtures (which each isolate one technique), a
 second fixture set is built from actual popular websites, to catch real-world
 combinations the synthetic fixtures miss:
 
-- A script (`fixtures/real-world/download.mjs`) takes a configurable list of
-  `{ id, url }` entries — starting with `ap.no` and `news.ycombinator.com`, plus
-  a handful of other popular, internationally-known sites with varied styling
-  approaches (final list finalized during implementation; aim for a mix of news,
-  reference/wiki-style, and app-like/SPA sites) — loads each with Playwright on
-  an emulated phone (the motivating use case; sites serve their mobile layout),
-  waits for network idle, and saves the rendered DOM as a **static** page: the
-  site's scripts are stripped (re-running them on an already-rendered copy
-  duplicated content, brought back consent overlays, and made the live demos
-  hang), runtime CSS-in-JS rules are written into their `<style>` tags so
-  styling survives without scripts, common consent overlays are removed, and a
-  `<base href>` keeps the live site's real CSS/images loading without mirroring
-  every asset. Screenshots and demos for these sites use a phone viewport and
-  phone frame.
-- Snapshots are written to `fixtures/real-world/snapshots/<id>/index.html` and
-  are **not** committed to git (gitignored) — they go stale and redistributing
-  copies of third-party site markup in the repo is avoided; they're regenerated
-  on demand via `npm run download -w fixtures` before a test run that needs
-  them.
-- The download script is polite: a small delay between requests, one request per
-  site, and it only ever fetches a single top-level page per site (no crawling).
-- These snapshots feed into both Layer 1 (TR2 — ratio-preservation and
-  performance checks apply here too, alongside the synthetic fixtures) and the
-  documentation site gallery (TR5 — framed screenshots of the tool working on
-  recognizable, real sites).
+- `fixtures/real-world/download.mjs` loads each site listed in
+  `fixtures/real-world/sites.json` on an emulated phone and saves it as a
+  **static** snapshot. How (and why scripts are stripped) is described in that
+  script's header comment.
+- Snapshots are **not** committed to git (gitignored) — they go stale, and
+  redistributing copies of third-party site markup in the repo is avoided.
+  They're regenerated on demand via `npm run download -w fixtures`.
+- The download script is polite: a small delay between requests, and only a
+  single top-level page per site (no crawling).
+- These snapshots have their own Playwright suite (`npm run test:real-world`),
+  separate from Layer 1, and feed the documentation site gallery (TR5 — framed
+  screenshots of the tool working on recognizable, real sites).
 - Because external sites change over time and the download step requires network
   access, these checks are informative, not required to be pixel-stable
   release-to-release the way the synthetic TR1 fixtures are; a snapshot that
@@ -84,8 +65,8 @@ combinations the synthetic fixtures miss:
 - `large-dom-performance`: record wall-clock time for (a) initial capture+apply
   and (b) a subsequent factor change; assert (b) is at least an order of
   magnitude faster than (a), and both stay under documented thresholds.
-- Capture a full-page screenshot per fixture per factor (before/after) into a
-  predictable artifact path for the docs site.
+- Capture a phone-viewport screenshot of each standard fixture at 1× and 2×
+  (Chromium) into a predictable artifact path for the docs site.
 
 ## TR3. Layer 2 — extension integration (best-effort, non-blocking)
 
@@ -121,47 +102,39 @@ criteria, to be checked by hand per release.
   guide instead, so a user isn't wading through contributor material to find
   "how do I install this."
 - **TR5.1**: Building the documentation site is part of the standard build
-  pipeline (`npm run build`), not a separate, easily-forgotten manual step.
-  `npm run build` must leave behind a complete, up-to-date `docs-site/dist/`.
+  pipeline (`npm run build`, see the developer guide's command list), not a
+  separate, easily-forgotten manual step. It must leave behind a complete,
+  up-to-date `docs-site/dist/`.
 - **TR5.2**: The site explains the functionality (what it does, the
   ratio-preserving scaling approach, the known limitations from FR6) and
   installation. The front page's install section is for end users only: one
   path, the extension (FR3.1) on Firefox desktop and Android, plus how to use
-  it. The userscript (FR3.2) and manual extension installs (temporary load,
-  self-signed, unsigned, Android sideloading) are for technical users and sit
-  under a separate "Advanced installation" heading.
+  it. The userscript (FR3.2) and manual extension installs are for technical
+  users and sit under a separate "Advanced installation" heading.
 - **TR5.2a**: The site briefly explains how this differs from permanently
-  changing the browser's or OS's font-size/zoom accessibility settings (FR1.4):
-  those apply everywhere, all the time, and often just zoom the whole layout
-  (causing sideways scrolling) rather than reflowing text; this tool is
-  per-page, resets on reload unless persistence is explicitly enabled for that
-  site (FR5), and reflows text within the existing layout instead of zooming it.
-  A couple of sentences is enough — this isn't a FAQ, just enough context for a
-  reader to understand why this exists alongside those settings rather than
-  instead of them.
+  changing the browser's or OS's font-size/zoom accessibility settings: those
+  apply everywhere, all the time, and often just zoom the whole layout (causing
+  sideways scrolling) rather than reflowing text; this tool applies only to the
+  sites you adjust (the extension remembers each site's size, FR5.1; the
+  userscript and script tag reset on reload, FR1.4), and reflows text within the
+  existing layout instead of zooming it. A couple of sentences is enough — this
+  isn't a FAQ, just enough context for a reader to understand why this exists
+  alongside those settings rather than instead of them.
 - **TR5.2b**: The site includes a short, **non-technical** "what this can't fix"
-  section translating FR6's limitations into plain language — no "same-origin
-  policy", "shadow DOM", or "specificity." E.g.: ads/embeds/some comment
-  sections may not resize (they're loaded from another website embedded in the
-  page, which browsers don't let any tool reach into); a few sites hide content
-  in sealed components nothing outside can touch (rare); text in a small
-  fixed-size box may get cut off if enlarged a lot (the same thing can happen
-  with a phone's own zoom); and occasionally one specific piece of text on a
-  site may resist resizing. The _technical_ explanation of the same limitations
-  (root cause, impact, why no workaround was taken) belongs in the developer
-  guide instead (TR6.3) — a user doesn't need the "why", just honest
-  expectations.
-- **TR5.3**: It includes a screenshot gallery generated from Layer 1's
-  artifacts: one page per fixture, before/after image pairs per factor —
-  including the TR1a real-world site snapshots, as the most relatable
-  demonstration of the tool for a reader deciding whether to install it.
-- **TR5.4**: Gallery screenshots presented to a human reader must be composited
-  with browser "chrome" — a desktop browser frame (title bar, address bar
-  showing the fixture's URL, traffic-light buttons) or a mobile phone frame
-  (bezel), as appropriate — rather than bare, edge-to-edge page captures. This
-  is distinct from Layer 1's plain/unframed screenshots, which stay bare because
-  they're also used for internal pixel/ratio measurement (TR2); the docs site
-  only ever shows the framed versions.
+  section translating each FR6 limitation into plain language — no "same-origin
+  policy", "shadow DOM", or "specificity"
+  (`docs-site/src/guides/limitations.md`). The _technical_ explanation of the
+  same limitations belongs in the developer guide instead (TR6.3) — a user
+  doesn't need the "why", just honest expectations.
+- **TR5.3**: It includes a screenshot gallery generated from the test artifacts,
+  on one page: first the TR1a real-world sites, as the most relatable
+  demonstration for a reader deciding whether to install it, then the synthetic
+  fixtures ("function demos"). Each entry shows the page at normal size and at
+  2×.
+- **TR5.4**: Gallery screenshots presented to a human reader are composited into
+  a phone frame (bezel) rather than shown as bare, edge-to-edge captures. The
+  raw screenshots stay bare, since tests also use them; the docs site only shows
+  the framed versions.
 
 - **TR5.5** (if feasible): each fixture's gallery page links to a **live,
   interactive demo** — not just static before/after screenshots. The docs-site
@@ -177,11 +150,8 @@ criteria, to be checked by hand per release.
   `embed/text-size-adjuster.js`, explains how a site owner adds it, and includes
   a demo page that loads it via an actual `<script src>` tag (not inlined like
   the other demos).
-- **TR5.7**: The site documents the on-page control settings (FR10) for each
-  audience: for site owners, the `data-position`/`data-show` attributes and URL
-  parameters, with examples; for extension users, the options page (placement,
-  visibility, list of sites with a saved size); for userscript users, the
-  manager-menu commands.
+- **TR5.7**: The site documents the on-page control settings (FR9, FR10) for
+  each audience (site owners, extension users, userscript users).
 
 **Acceptance**: `npm run build` produces a browsable `docs-site/dist/` with
 working internal links and all gallery images present in framed form; no manual
@@ -200,9 +170,9 @@ served via `npm run docs:serve`.
   - Firefox Android extension: the `gecko_android` manifest requirement and the
     unlisted self-distribution signing path used for the manual QA checklist,
     plus what store listing would additionally require.
-  - Chrome extension (FR8, best-effort): packaging the the derived Chrome
-    manifest variant and the Chrome Web Store developer dashboard submission
-    flow, kept brief since it's not a primary target.
+  - Chrome extension (FR8, best-effort): packaging the derived Chrome manifest
+    variant and the Chrome Web Store developer dashboard submission flow, kept
+    brief since it's not a primary target.
   - Userscript: direct `.user.js` distribution vs. optionally publishing to
     Greasy Fork.
 - **TR6.2**: `README.md` at the repo root documents the reading order across all
@@ -222,14 +192,10 @@ served via `npm run docs:serve`.
   publishes it to GitHub Pages on push to the default branch.
 - **TR7.2**: The published site keeps the same separation as TR5.0/TR6: the
   site's default landing experience is the end-user guide; the
-  developer/contributor docs (rendered from `docs/developer-guide.md`,
-  `docs/implementation-plan.md`, `docs/functional-requirements.md`,
-  `docs/test-and-documentation-requirements.md`) live in a clearly labeled,
-  separate section (a `/dev/` subpath) reached via an explicit "For
+  developer/contributor docs (rendered from `docs/*.md`) live in a clearly
+  labeled, separate section (a `/dev/` subpath) reached via an explicit "For
   contributors" link, never the default page a first-time visitor lands on.
   Publishing both together is for convenience of having one URL, not a reason to
   blur who each part is for.
-- **TR7.3**: This workflow depends on TR5's docs-site build being extended to
-  also render the TR6.1 developer docs into the `/dev/` section; until that
-  build work lands, the workflow is expected to fail, not a regression to chase
-  before then.
+- **TR7.3**: The docs-site build renders the TR6.1 developer docs, plus the
+  store listing text, into the `/dev/` section.

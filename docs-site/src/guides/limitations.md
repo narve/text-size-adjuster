@@ -15,8 +15,8 @@ its reach:
   zoom too; it's a limitation of the page's own design, not something specific
   to this tool.
 - **Occasionally, one specific piece of text on a page may resist resizing.**
-  Some sites write their styles in a way that's deliberately very hard for
-  anything else to override. This is uncommon.
+  Some sites keep re-applying their own text size while you use the page. This
+  is uncommon.
 
 None of these affect the rest of the page — everything else still resizes
 normally.

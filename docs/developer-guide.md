@@ -9,38 +9,67 @@ the split exists.
 
 ```
 text-size-adjuster/
+  product.json             # name, summary, homepage, text-length limits
+  product-description.txt  # long store description
+  tools/                   # shared Node helpers: product.mjs (reads the two
+                           #   files above), paths.mjs (artifact paths, ports,
+                           #   fixture lists), render-image.mjs
   packages/
     core/          # the scaling engine — framework/UI/storage-agnostic
-    stores/        # MemoryStore, LocalExtensionStore, GMValueStore
-    ui-widget/     # shadow-DOM floating +/- widget
-    userscript/    # Tampermonkey build (vite-plugin-monkey)
-    extension/     # Firefox/Chrome WebExtension build
-  fixtures/        # synthetic + real-world (TR1a) test pages, served locally
-  e2e/             # Playwright suites (Layer 1 required, Layer 2 best-effort)
-  docs-site/       # generator for the end-user documentation site
+    stores/        # createMemoryStore, createLocalExtensionStore,
+                   #   createGMValueStore, createGatedStore
+    ui-widget/     # shadow-DOM floating +/- widget and its settings parsing
+    userscript/    # userscript + script-tag embed build (vite-plugin-monkey)
+    extension/     # Firefox/Chrome WebExtension build, signing scripts
+  fixtures/        # test pages served locally: fixtures.json lists the
+                   #   synthetic ones, real-world/sites.json the real sites
+  e2e/             # Playwright suites (Layer 1 required, Layer 2 best-effort,
+                   #   real-world informative)
+  docs-site/       # generator for the documentation site
   docs/            # this file + the requirements/plan/checklist docs
 ```
 
-See `implementation-plan.md` for the full architecture, API contracts, and
-phased build order.
+See `implementation-plan.md` for the architecture, API contracts, and phased
+build order.
 
-## Building and testing locally
+## Commands
+
+This is the one command reference; other docs link here. All commands run from
+the repo root.
 
 ```bash
-npm install                 # installs all workspaces
+npm install                  # installs all workspaces
 npm run build                # builds every package, runs Layer 1, builds the docs site
-npm run test:unit            # core engine unit tests (vitest)
+npm test                     # unit tests of every package (vitest) + Layer 1
+npm run test:unit            # unit tests of packages/core only
 npm run test:e2e             # Layer 1 Playwright suite (the hard requirement)
 npm run test:e2e:extension   # Layer 2, best-effort — allowed to fail/skip
-npm run docs:serve           # serve docs-site/dist/ locally for review
+npm run test:real-world      # real-world snapshots (TR1a), informative only
+npm run lint                 # ESLint
+npm run typecheck            # tsc in every package
+npm run format               # Prettier on everything (Markdown style: AGENTS.md)
+npm run docs:build           # build docs-site/dist/ from existing screenshots
+npm run docs:serve           # serve docs-site/dist/ on port 8080
+npm run release:extension    # bump version, build and sign the extension
 ```
 
-Download fresh real-world fixture snapshots (TR1a) before a Layer 1 run that
-should include them:
+Per workspace (`-w <workspace>`):
 
 ```bash
-npm run download -w fixtures
+npm run build -w packages/core               # likewise userscript, extension
+npm run dev -w packages/extension            # rebuild on change
+npm run build:chrome -w packages/extension   # derive dist-chrome/ after build
+npm run lint:webext -w packages/extension    # web-ext lint, incl. Android APIs
+npm run run:desktop -w packages/extension    # try it in a fresh Firefox
+npm run run:android -w packages/extension    # same, on a connected Android device
+npm run icons -w packages/extension          # re-render PNG icons from icon.svg
+npm run start -w fixtures                    # fixture server on ports 4310/4311
+npm run download -w fixtures                 # refresh real-world snapshots (TR1a)
 ```
+
+Real-world snapshots are not part of Layer 1. Download them with
+`npm run download -w fixtures`, then run `npm run test:real-world`; the docs
+build shows them in the gallery when their screenshots exist.
 
 ## Single sources of truth
 
@@ -53,10 +82,16 @@ npm run download -w fixtures
   description or version — the build injects those. The Chrome manifest is
   derived from the built Firefox one (Firefox-only keys dropped).
 
-`tools/product.mjs` reads the name, summary and description for every consumer:
-the manifests, the userscript header, the docs site's front page and its "Store
-listing text" page in the contributor section. Edit the sources, not generated
-files.
+- **Synthetic test fixtures:** `fixtures/fixtures.json` (id, what each one
+  exercises, which requirement it traces to). Real sites:
+  `fixtures/real-world/sites.json`.
+- **Paths, file names and ports** shared by build scripts, tests and the docs
+  build: `tools/paths.mjs`.
+
+`tools/product.mjs` reads the name, summary and description for the manifests,
+the userscript header and the docs site (front page, guides via `{{name}}` and
+`{{homepage}}` placeholders, and the "Store listing text" page in the
+contributor section). Edit the sources, not generated files.
 
 ## Publishing
 
@@ -90,10 +125,12 @@ files.
    Mozilla signs each version number only once, which is why the release step
    always bumps the version first. Commit the bumped version files afterwards.
 
-The three ways to install _without_ an AMO listing (temporary load,
-signed-unlisted `.xpi`, unsigned on Developer Edition/Nightly/ESR), with exact
-commands, are documented for technical users in
-`docs-site/src/guides/install-extension-manually.md`.
+The ways to install _without_ an AMO listing are documented for technical users
+in `docs-site/src/guides/install-extension-manually.md`. To try a local build,
+load `packages/extension/dist/manifest.json` temporarily in `about:debugging`,
+or package it with `npx web-ext build --source-dir dist` from
+`packages/extension/`. The userscript builds to
+`packages/userscript/dist/text-size-adjuster.user.js`.
 
 ### Firefox Android extension
 
@@ -101,9 +138,9 @@ commands, are documented for technical users in
   (already part of the build, see `implementation-plan.md`) for AMO to consider
   the build Android-compatible.
 - The manual QA checklist (`android-manual-qa-checklist.md`) uses the same
-  **unlisted** AMO signing path as desktop — sideload the signed `.xpi` via
-  Firefox for Android's hidden debug menu (Settings → About Firefox → tap the
-  logo repeatedly).
+  **unlisted** signed `.xpi` as desktop (`npm run release:extension`),
+  sideloaded as described in
+  `docs-site/src/guides/install-extension-manually-android.md`.
 - A public Android listing goes through the same AMO review as desktop but is
   reviewed against Android-specific constraints (e.g. `web-ext lint` flags APIs
   unavailable on Android) — run `npm run lint:webext -w packages/extension`
@@ -167,11 +204,15 @@ commands, are documented for technical users in
   occasional clipping in specific components (a fixed-height card, a single-line
   title truncated with `text-overflow: ellipsis`). Native browser zoom has the
   same failure mode, for the same reason.
-- **Inline `style="...!important"`**: CSS gives an element's own inline style
-  the highest possible cascade priority — higher than any stylesheet
-  `!important`, including ours. The only way around it is surgically rewriting
-  the element's `style` attribute (parsing out just the conflicting declaration
-  without disturbing the rest of that attribute's content), which is real
+- **Page scripts rewriting inline styles**: the engine writes its scaled sizes
+  as inline `!important` styles on each element
+  (`packages/core/src/capture.ts`), which beats every stylesheet rule and
+  replaces a page's own static inline `!important` font-size on that element.
+  What it doesn't handle is a page script that later rewrites the element's
+  `style` attribute (e.g. a framework re-render): the engine's
+  `MutationObserver` watches added nodes, not attribute changes, so that element
+  drops back to the page's size. Watching `style` attributes would mean
+  re-capturing on every attribute write the engine itself also triggers — real
   complexity for a case that's rare in practice. Flagged as a possible future
   enhancement, not attempted in v1.
 
@@ -183,11 +224,6 @@ every push to `master`. One-time setup required on GitHub (not something a
 workflow run can do for you): repo **Settings → Pages → Build and deployment →
 Source**, set to **GitHub Actions**.
 
-This workflow depends on `docs-site/build.mjs` existing and rendering both
-sections (see `implementation-plan.md`'s phase 10) — until that build step is
-implemented, expect this workflow to fail at the `npm run build` step. That's
-expected, not a regression to chase down early.
-
 ## Release checklist
 
 1. `npm run build` passes (includes the hard-requirement Layer 1 suite).
@@ -195,5 +231,6 @@ expected, not a regression to chase down early.
    (best-effort, TR3).
 3. Walk `android-manual-qa-checklist.md` by hand before calling an Android
    release done.
-4. Bump versions in the relevant `packages/*/package.json` and manifest files.
-5. Publish per the section above for whichever target(s) changed.
+4. Publish per the section above for whichever target(s) changed. For the
+   extension, `npm run release:extension` bumps the version (it lives only in
+   `packages/extension/package.json`); commit that change.

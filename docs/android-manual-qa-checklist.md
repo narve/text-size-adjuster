@@ -14,18 +14,16 @@ done.
    Tampermonkey for Android, or Violentmonkey if/when it ships a Fenix build —
    confirm current availability on addons.mozilla.org at QA time, since Android
    add-on availability has shifted over time).
-2. Install the built `.user.js` from this repo's `packages/userscript/dist/` via
-   the manager's "import from file/URL" option.
+2. Install the built `.user.js` (`packages/userscript/dist/`) via the manager's
+   "import from file/URL" option.
 
 ### Extension variant
 
-1. Enable Firefox for Android's hidden debug menu: Settings → About Firefox →
-   tap the Firefox logo several times until "Custom Add-on collection" /
-   debugging options appear.
-2. Build the extension (`npm run build -w packages/extension`), get the
-   self-signed/unlisted `.xpi` onto the device (e.g. via `adb push` or a direct
-   download link), and install it through the debug menu's install-from-file
-   option.
+1. Produce the Mozilla-signed, unlisted `.xpi` with `npm run release:extension`
+   (see the developer guide), and get it onto the device (e.g. via `adb push` or
+   a direct download link).
+2. Install it as described in
+   `docs-site/src/guides/install-extension-manually-android.md`.
 3. Confirm the extension's toolbar/menu entry appears under Firefox's `⋮` →
    extensions menu.
 

@@ -12,8 +12,6 @@ control.
 2. Download
    [`text-size-adjuster.user.js`](../downloads/text-size-adjuster.user.js) —
    most userscript managers offer to install it as soon as you open that link.
-   (Or build it from source: `npm run build -w packages/userscript`, see
-   [the contributor section](../dev/index.html).)
 3. Drag the file into a browser tab, or use the manager's **Utilities → Import
    from file**, and confirm the installation.
 
@@ -31,6 +29,6 @@ of every page.
 
 ## Settings
 
-Open your userscript manager's menu (its toolbar icon) while on any page: Text
-Size Adjuster adds commands there to place the control in a different corner, or
-to show it only after you zoom in. Your choice is remembered.
+Open your userscript manager's menu (its toolbar icon) while on any page:
+{{name}} adds commands there to place the control in a different corner, or to
+show it only after you zoom in. Your choice is remembered.

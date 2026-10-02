@@ -1,8 +1,12 @@
 # Text Size Adjuster
 
-Scale a web page's text up or down, ad hoc, without the sideways-scrolling mess
-native pinch/page zoom causes — as a Tampermonkey-style userscript or a Firefox
-(and, best-effort, Chrome) extension, on both desktop and Android.
+Make a page's text bigger or smaller with one tap — without zooming the whole
+page or scrolling sideways.
+
+<!-- The sentence above is the summary in product.json; keep them identical. -->
+
+It's a Firefox extension (desktop and Android; Chrome best-effort), a
+userscript, and a script tag site owners can add to their own pages.
 
 ## Documentation
 
@@ -24,22 +28,19 @@ Read in this order:
 5. **[`docs/android-manual-qa-checklist.md`](docs/android-manual-qa-checklist.md)**
    — the manual walkthrough that substitutes for automated testing on Firefox
    for Android.
-6. **The generated documentation site** (`docs-site/`, built by `npm run build`,
-   served via `npm run docs:serve`) — this is the **end-user-facing** site:
-   install guides and a screenshot gallery. It deliberately excludes
-   build/publishing details (those live in the developer guide above instead).
+6. **The generated documentation site** (`docs-site/`, published at
+   <https://narve.github.io/text-size-adjuster/>) — this is the
+   **end-user-facing** site: install guides and a screenshot gallery. It
+   deliberately excludes build/publishing details (those live in the developer
+   guide above instead).
 
 Docs 1–5 are hand-maintained Markdown in this repo; doc 6 is generated output
 and isn't committed (see `.gitignore`).
 
-## Quick start (development)
+## Development
 
-```bash
-npm install
-npm run build   # builds every package, runs the required test suite, builds the docs site
-```
-
-See `docs/developer-guide.md` for the full command reference.
+See [`docs/developer-guide.md`](docs/developer-guide.md) for the commands (start
+with `npm install` and `npm run build`).
 
 ## License
 

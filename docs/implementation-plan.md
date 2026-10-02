@@ -6,24 +6,8 @@ docs) rather than restating them.
 
 ## Repo layout
 
-```
-text-size-adjuster/
-  package.json                      # npm workspaces root (no extra package manager install needed)
-  tsconfig.base.json
-  packages/
-    core/            # engine.ts, capture.ts, style-injector.ts, mutation-observer.ts, iframe.ts, shadow-dom.ts
-    stores/          # MemoryStore, LocalExtensionStore (browser.storage.local), GMValueStore
-    ui-widget/       # shadow-root floating +/- widget (framework-free)
-    userscript/      # vite-plugin-monkey build wiring core+widget+GMValueStore
-    extension/       # manifest.json, content-script.ts, background.ts, popup/
-  fixtures/          # the 11 TR1 fixture pages + server.mjs (two ports, for genuine cross-origin)
-                     # + real-world/download.mjs + real-world/sites.json (TR1a, snapshots gitignored)
-  e2e/               # playwright.config.ts, engine.spec.ts (Layer 1), extension-smoke.spec.ts (Layer 2)
-  docs-site/         # build.mjs (custom static generator) + guides + templates
-  docs/              # the three requirement/plan docs + android-manual-qa-checklist.md + developer-guide.md
-  README.md          # project overview + documentation reading order (TR6.2)
-  .github/workflows/docs.yml  # builds + publishes the docs site (user + dev sections) to GitHub Pages (TR7)
-```
+See the developer guide's "Repo layout" section (`developer-guide.md`), which is
+kept current; this plan doesn't repeat it.
 
 ## Tooling choices
 
@@ -35,13 +19,12 @@ text-size-adjuster/
   web-extension framework — keeps full control over Firefox-Android's
   background-script constraints. Not one multi-entry config: Rollup's IIFE
   format doesn't support multiple inputs in one build (`output.codeSplitting`
-  can't be disabled with >1 entry, and IIFE requires it disabled). Three
-  separate single-entry `build.lib` configs instead (`vite.content.config.ts`,
-  `vite.background.config.ts`, `vite.popup.config.ts`, run in sequence, only the
-  first clearing `dist/`), which also just makes sense: content script,
-  background, and popup run in genuinely independent contexts anyway. Static
-  files (`manifest.json`, `popup.html`) are copied by a plugin in the last
-  config.
+  can't be disabled with >1 entry, and IIFE requires it disabled). One
+  single-entry `build.lib` build per context instead (content script,
+  background, options page, popup), run in sequence, only the first clearing
+  `dist/`, which also just makes sense: they run in genuinely independent
+  contexts anyway. Static files (`manifest.json`, the HTML pages, icons) are
+  copied by a plugin in the last build.
 - **`webextension-polyfill`** in the extension package so `browser.*` calls work
   unmodified in Chrome too (FR8.3). The build emits two manifest variants from
   one template (`manifest.json` (Firefox)) differing only in the `background`
@@ -54,10 +37,9 @@ text-size-adjuster/
 - **Custom Node script** (`docs-site/build.mjs`, using `markdown-it`) for the
   docs site instead of a full SSG — content volume doesn't justify a framework.
 - **Screenshot framing** (TR5.4): `docs-site/build.mjs` uses `playwright`
-  (chromium) to render each raw Layer 1 screenshot inside a small local HTML
-  template (`docs-site/src/templates/frame-desktop.html`, `frame-mobile.html`)
-  that draws the chrome purely in CSS (title bar/address bar/traffic lights, or
-  a phone bezel) around an `<img>` of the raw screenshot, then screenshots
+  (chromium) to render each raw phone screenshot inside a small local HTML
+  template (`docs-site/src/templates/frame-mobile.html`) that draws a phone
+  bezel purely in CSS around an `<img>` of the raw screenshot, then screenshots
   _that_ page to produce the framed PNG used in the gallery. No new
   image-processing dependency needed — it reuses the same engine already
   required for Layer 1/2.
@@ -81,11 +63,12 @@ interface Store {
 }
 function bindStore(engine, store, key): () => void   // outside the engine, wires persistence
 
-// extension messaging (popup has zero engine logic — pure relay)
+// extension messaging (popup has zero engine logic — pure relay);
+// the source is packages/extension/src/protocol.ts
 type Message =
   | { type: 'tsa:getFactor' } | { type: 'tsa:setFactor'; factor: number }
   | { type: 'tsa:increase' } | { type: 'tsa:decrease' } | { type: 'tsa:reset' }
-  | { type: 'tsa:factorChanged'; factor: number; origin: string };
+  | { type: 'tsa:factorChanged'; factor: number } | { type: 'tsa:registerFrame' };
 ```
 
 Override mechanism (FR2.5): each captured element gets its scaled
@@ -97,9 +80,10 @@ beats ID-selector `!important` page rules without needing any specificity trick.
 (An earlier design tried to win via a high-specificity injected selector,
 repeating an attribute selector; that failed against ID-based page rules because
 CSS specificity is tiered, not additive — confirmed broken by the
-`important-high-specificity` fixture before switching to this.) The one case
-still unbeaten is the page's own _inline_ `!important` on that element (FR6.4,
-accepted).
+`important-high-specificity` fixture before switching to this.) Setting the
+property also replaces a page's own static inline `!important` font-size. The
+one case still unhandled is a page script rewriting the element's inline style
+afterwards (FR6.4, accepted).
 
 ## Phased build order (one commit per phase)
 
@@ -108,14 +92,14 @@ accepted).
    step)_
 1. Scaffold: root `package.json`/workspaces, `tsconfig.base.json`, lint/format
    config, package stubs. Commit.
-2. Core engine + **vitest** unit tests (specificity-rule generation, factor
-   clamping, px-vs-unitless line-height detection) — no browser yet. Commit.
-3. **Fixtures + Layer 1 Playwright harness**, all 11 synthetic fixtures green
+2. Core engine + **vitest** unit tests (factor clamping, px-vs-unitless
+   line-height detection) — no browser yet. Commit.
+3. **Fixtures + Layer 1 Playwright harness**, all synthetic fixtures green
    against Firefox and Chromium, screenshots captured. This is the load-bearing
    checkpoint — the hard requirement — get it solid before any UI work. Commit.
-   3a. Real-world fixtures (TR1a): `fixtures/real-world/download.mjs` + starter
-   `sites.json` (ap.no, news.ycombinator.com, + a few more); wire into Layer 1
-   as an informative (non-gating) extra check. Commit.
+   3a. Real-world fixtures (TR1a): `fixtures/real-world/download.mjs` +
+   `sites.json`; a separate, informative (non-gating) Playwright suite
+   (`npm run test:real-world`), not part of Layer 1. Commit.
 4. UI widget (shadow-DOM, standalone) + the three Store implementations with a
    shared contract test. Commit.
 5. Userscript package via `vite-plugin-monkey`; manual Tampermonkey smoke check;
@@ -133,8 +117,8 @@ accepted).
    `webextension-polyfill`; manual unpacked-load smoke check in Chrome. Commit.
 8. Layer 2 best-effort extension integration test via `playwright-webextext`,
    non-gating. Commit.
-9. Docs site: guides + generated gallery (screenshots composited with
-   browser/phone chrome per TR5.4) from Layer 1/8 artifacts, plus a live
+9. Docs site: guides + generated gallery (screenshots composited with a phone
+   frame per TR5.4) from Layer 1 and real-world artifacts, plus a live
    interactive demo per fixture (TR5.5, with the `iframe-cross-origin` caveat
    called out); wired into `npm run build` (TR5.1); `docs:serve` verified
    locally. Commit.
@@ -179,13 +163,8 @@ accepted).
 
 ## Verification
 
-- `npm test` runs unit tests + Layer 1 Playwright suite (must pass — the hard
-  requirement).
-- `npm run test:e2e:extension` runs Layer 2 (best-effort, allowed to be
-  skipped/red without blocking).
-- `npm run build` builds all packages, then (re)runs Layer 1 to refresh
-  screenshots, then builds the documentation site (TR5.1) — `docs-site/dist/`
-  with framed gallery images (TR5.4) is a build output, not a separate manual
-  step. `npm run docs:serve` serves it locally for review.
-- Manual: walk `docs/android-manual-qa-checklist.md` on a real or emulated
-  Firefox for Android before calling an Android release done.
+The commands are listed in the developer guide's "Commands" section. In short:
+`npm test` must pass (unit tests + Layer 1, the hard requirement); Layer 2 is
+best-effort; `npm run build` leaves a complete `docs-site/dist/` (TR5.1); and
+`docs/android-manual-qa-checklist.md` is walked by hand on a real or emulated
+Firefox for Android before calling an Android release done.

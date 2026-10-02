@@ -42,7 +42,8 @@ the unscaled page, and produces no new horizontal scrollbar.
   that merely inherit font-size from an already-scaled ancestor.
 - **FR2.5**: The applied scale must, in realistic cases, override the page's own
   font-size styling, including pages that use `!important` with ordinary
-  selectors. (See FR6.4 for the one case this does not cover.)
+  selectors, and inline `!important` styles. (See FR6.4 for the one case this
+  does not cover.)
 
 ## FR3. Multiple delivery mechanisms, one engine
 
@@ -106,10 +107,11 @@ the unscaled page, and produces no new horizontal scrollbar.
 - **FR6.3**: Elements in fixed-height/`overflow:hidden` containers may visually
   clip when enlarged — this is a layout limitation of the host page, not fixed
   by this tool.
-- **FR6.4**: A page's literal inline `style="font-size: ... !important"`
-  attribute cannot be overridden (CSS gives inline `!important` the highest
-  possible priority). High-specificity _stylesheet_ rules with `!important` are
-  handled (FR2.5); this narrower inline case is not.
+- **FR6.4**: If a page's own script rewrites an element's inline style after it
+  has been scaled (e.g. a framework re-rendering that element), the element
+  returns to the page's size. Static styling, including `!important` rules and
+  inline `!important` styles, is handled (FR2.5); this narrower dynamic case is
+  not.
 
 ## FR8. Cross-browser compatibility (best-effort)
 
@@ -122,8 +124,9 @@ the unscaled page, and produces no new horizontal scrollbar.
 - **FR8.3**: The extension (FR3.1) should avoid Firefox-only extension APIs
   where a cross-browser equivalent exists (e.g. via the `webextension-polyfill`
   library), so that a Chrome build is a thin manifest variation rather than a
-  rewrite. Publishing to the Chrome Web Store is out of scope; building and
-  manually loading an unpacked Chrome build is enough to call this satisfied.
+  rewrite. Building and manually loading an unpacked Chrome build is enough to
+  call this satisfied; publishing to the Chrome Web Store is optional (the
+  developer guide describes how).
 - **FR8.4**: The userscript (FR3.2) already runs under
   Tampermonkey/Violentmonkey on Chrome with no extra work, since those managers
   are cross-browser; no additional requirement beyond FR3.2.

@@ -2,31 +2,23 @@
 
 For technical users: ways to install the Firefox extension without it being
 listed on [addons.mozilla.org](https://addons.mozilla.org/) — useful before it's
-listed, or to run your own build. (Most people should use the
-[normal install](install.html) instead.) There are three ways.
+listed. (Most people should use the [normal install](install.html) instead.)
+There are three ways.
 
-**Ready-made file:**
-[`text-size-adjuster-unsigned.xpi`](../downloads/text-size-adjuster-unsigned.xpi)
-is the current build, packaged but _not signed by Mozilla_. It works for method
-1 and method 3 below. Method 2 produces your own signed copy. If you build from
-source instead, the extension folder is `packages/extension/dist/` (see
-[the contributor section](../dev/index.html)), and the commands below are run
-from `packages/extension/`.
+| Method              | Permanent? | Regular Firefox?      | File                                                               |
+| ------------------- | ---------- | --------------------- | ------------------------------------------------------------------ |
+| 1. Temporary load   | No         | Yes                   | [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi)    |
+| 2. Signed, unlisted | Yes        | Yes, incl. Android    | [signed `.xpi`](../downloads/text-size-adjuster.xpi), if published |
+| 3. Unsigned         | Yes        | No: Dev, Nightly, ESR | [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi)    |
 
-| Method              | Permanent? | Regular Firefox?      | Mozilla account? |
-| ------------------- | ---------- | --------------------- | ---------------- |
-| 1. Temporary load   | No         | Yes                   | No               |
-| 2. Signed, unlisted | Yes        | Yes, incl. Android    | Yes (free)       |
-| 3. Unsigned         | Yes        | No: Dev, Nightly, ESR | No               |
-
-A temporary load is removed when Firefox closes. Method 3 only works in Firefox
-Developer Edition, Nightly or ESR.
+The unsigned file is the current build, packaged but _not signed by Mozilla_.
+Building it yourself is described in
+[the contributor section](../dev/developer-guide.html).
 
 ## 1. Temporary load (quickest, for trying it out)
 
 1. Open `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on…** and pick the downloaded `.xpi` (or, from
-   source, `packages/extension/dist/manifest.json`).
+2. Click **Load Temporary Add-on…** and pick the downloaded unsigned `.xpi`.
 
 Everything works, but Firefox removes it when it closes, so you repeat this each
 session.
@@ -34,20 +26,12 @@ session.
 ## 2. Signed but unlisted (recommended to keep it)
 
 Regular Firefox only keeps extensions that Mozilla has signed. "Unlisted" means
-Mozilla signs it, but it is never shown in the add-ons store — it stays private
-to you.
+Mozilla has signed it, but it is not shown in the add-ons store.
 
-1. Create API credentials at
-   [addons.mozilla.org/developers/addon/api/key](https://addons.mozilla.org/developers/addon/api/key/)
-   (needs a free Firefox account).
-2. Sign it:
-   ```bash
-   npx web-ext sign --source-dir dist --channel unlisted \
-     --api-key <your JWT issuer> --api-secret <your JWT secret>
-   ```
-   Signing is automated and usually takes a few minutes. The signed `.xpi` file
-   lands in `web-ext-artifacts/`.
-3. In Firefox, open `about:addons`, click the gear icon, choose **Install Add-on
+1. Download the [signed `.xpi`](../downloads/text-size-adjuster.xpi). It's only
+   there once a signed release has been published; until then, use one of the
+   other two methods.
+2. In Firefox, open `about:addons`, click the gear icon, choose **Install Add-on
    From File…**, and pick the `.xpi`. (Dragging the file onto a Firefox window
    also works.)
 
@@ -60,11 +44,7 @@ These Firefox editions can be told to accept unsigned extensions; regular
 Firefox ignores this setting.
 
 1. Open `about:config` and set `xpinstall.signatures.required` to `false`.
-2. Use the downloaded `.xpi` — or, from source, package it yourself:
-   ```bash
-   npx web-ext build --source-dir dist
-   ```
-   which creates a `.zip` in `web-ext-artifacts/`.
+2. Download the [unsigned `.xpi`](../downloads/text-size-adjuster-unsigned.xpi).
 3. Install it the same way as in method 2: `about:addons` → gear icon →
    **Install Add-on From File…**.
 
