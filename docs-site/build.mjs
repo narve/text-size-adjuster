@@ -228,27 +228,38 @@ for (const site of readSitesConfigSafe()) {
   await frameScreenshot(beforePng, site.url, path.join(outDir, 'before.png'), 'frame-mobile.html');
   await frameScreenshot(afterPng, site.url, path.join(outDir, 'after.png'), 'frame-mobile.html');
   const hasSnapshot = fs.existsSync(path.join(FIXTURES_DIR, 'real-world', 'snapshots', site.id, 'index.html'));
-  galleryEntries.push({ id: site.id, label: `${site.description} (real site)`, hasDemo: hasSnapshot, isRealWorld: true });
+  galleryEntries.push({
+    id: site.id,
+    label: site.name,
+    subtitle: site.description,
+    hasDemo: hasSnapshot,
+    isRealWorld: true,
+  });
 }
 
-// Gallery: one page with every before/after pair inline (real sites first — the most
-// relatable), each linking to its live demo.
-const galleryHtml = [...galleryEntries.filter((e) => e.isRealWorld), ...galleryEntries.filter((e) => !e.isRealWorld)]
-  .map((entry) => {
-    const demo = entry.hasDemo
-      ? `<a class="button button-secondary" href="../demos/${entry.id}/index.html">Try it live<span class="visually-hidden"> — ${entry.label}</span></a>`
-      : '';
-    return `
-      <section class="gallery-entry" aria-labelledby="g-${entry.id}">
-        <h2 id="g-${entry.id}">${entry.label}</h2>
-        <div class="shot-pair">
-          <figure><img src="${entry.id}/before.png" alt="${entry.label}: page at normal text size" loading="lazy"><figcaption>Before</figcaption></figure>
-          <figure><img src="${entry.id}/after.png" alt="${entry.label}: the same page with text at 200%" loading="lazy"><figcaption>After (2×)</figcaption></figure>
-        </div>
-        ${demo}
-      </section>`;
-  })
-  .join('');
+// Gallery: one page with every before/after pair inline, in two sections — function demos
+// (synthetic pages, one technique each) and real sites — each linking to its live demo.
+function galleryEntryHtml(entry) {
+  const demo = entry.hasDemo
+    ? `<a class="button button-secondary" href="../demos/${entry.id}/index.html">Try it live<span class="visually-hidden"> — ${entry.label}</span></a>`
+    : '';
+  const subtitle = entry.subtitle ? `<p class="gallery-subtitle">${entry.subtitle}</p>` : '';
+  return `
+    <section class="gallery-entry" aria-labelledby="g-${entry.id}">
+      <h3 id="g-${entry.id}">${entry.label}</h3>
+      ${subtitle}
+      <div class="shot-pair">
+        <figure><img src="${entry.id}/before.png" alt="${entry.label}: page at normal text size" loading="lazy"><figcaption>Before</figcaption></figure>
+        <figure><img src="${entry.id}/after.png" alt="${entry.label}: the same page with text at 200%" loading="lazy"><figcaption>After (2×)</figcaption></figure>
+      </div>
+      ${demo}
+    </section>`;
+}
+const galleryHtml =
+  '<h2>Function demos</h2><p>Small test pages, each showing one way websites size their text.</p>' +
+  galleryEntries.filter((e) => !e.isRealWorld).map(galleryEntryHtml).join('') +
+  '<h2>Real sites</h2><p>Saved copies of real websites, shown on a phone.</p>' +
+  galleryEntries.filter((e) => e.isRealWorld).map(galleryEntryHtml).join('');
 writePage(path.join(DIST, 'gallery', 'index.html'), {
   title: 'Screenshot gallery',
   assetRoot: '../',

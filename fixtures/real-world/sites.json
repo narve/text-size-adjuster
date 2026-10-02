@@ -1,22 +1,26 @@
 [
   {
     "id": "ap-no",
+    "name": "Aftenposten",
     "url": "https://www.ap.no/",
     "description": "Norwegian news site — the original motivating example"
   },
   {
     "id": "hacker-news",
+    "name": "Hacker News",
     "url": "https://news.ycombinator.com/",
-    "description": "dense, text-heavy, minimal CSS"
+    "description": "Dense, text-heavy page with minimal styling"
   },
   {
     "id": "wikipedia-article",
+    "name": "Wikipedia",
     "url": "https://en.wikipedia.org/wiki/Web_browser",
-    "description": "long-form reference article, mixed heading levels, tables, infobox"
+    "description": "Long reference article with mixed headings, tables and an infobox"
   },
   {
     "id": "bbc-news",
+    "name": "BBC News",
     "url": "https://www.bbc.com/news",
-    "description": "international news, heavier/denser layout and componentry"
+    "description": "International news with a dense, component-heavy layout"
   }
 ]

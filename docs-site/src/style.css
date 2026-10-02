@@ -393,8 +393,14 @@ th {
   box-shadow: var(--shadow);
 }
 
-.gallery-entry h2 {
-  margin-top: 0;
+.gallery-entry h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.gallery-subtitle {
+  margin: 0.2rem 0 0;
+  color: var(--fg-muted);
 }
 
 .shot-pair {
