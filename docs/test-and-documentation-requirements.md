@@ -110,6 +110,13 @@ subset, with explicit pass/fail criteria, to be checked by hand per release.
   approach, the known limitations from FR6) and installation for all four combinations: Firefox
   Desktop userscript, Firefox Desktop extension, Firefox Android userscript, Firefox Android
   extension (sideloading).
+- **TR5.2a**: The site briefly explains how this differs from permanently changing the browser's
+  or OS's font-size/zoom accessibility settings (FR1.4): those apply everywhere, all the time,
+  and often just zoom the whole layout (causing sideways scrolling) rather than reflowing text;
+  this tool is per-page, resets on reload unless persistence is explicitly enabled for that site
+  (FR5), and reflows text within the existing layout instead of zooming it. A couple of sentences
+  is enough — this isn't a FAQ, just enough context for a reader to understand why this exists
+  alongside those settings rather than instead of them.
 - **TR5.3**: It includes a screenshot gallery generated from Layer 1's artifacts: one page per
   fixture, before/after image pairs per factor — including the TR1a real-world site snapshots,
   as the most relatable demonstration of the tool for a reader deciding whether to install it.
