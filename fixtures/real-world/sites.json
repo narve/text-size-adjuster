@@ -24,5 +24,11 @@
     "url": "https://www.bbc.com/news/articles/c3kgqw7zvz47o",
     "description": "International news article",
     "screenshotFrom": "[data-component='text-block'] >> nth=1"
+  },
+  {
+    "id": "norvig",
+    "name": "Peter Norvig: Teach Yourself Programming in Ten Years",
+    "url": "https://norvig.com/21-days.html",
+    "description": "Essay with no mobile layout: phones show it 980px wide, shrunk to fit"
   }
 ]

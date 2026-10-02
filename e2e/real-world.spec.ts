@@ -14,7 +14,14 @@ const sites = readSites();
 
 // A phone-sized viewport: the tool's motivating use case, and the layout the snapshots were
 // captured in (see fixtures/real-world/download.js). deviceScaleFactor 2 keeps screenshots crisp.
-test.use({ viewport: PHONE_VIEWPORT, deviceScaleFactor: PHONE_SCALE });
+// isMobile makes Chromium lay pages out like a phone browser, so a page without a viewport meta
+// tag is laid out 980px wide and shrunk to fit, as on a real phone. Playwright's Firefox can't
+// emulate that, so the gallery screenshots come from Chromium only.
+test.use({
+  viewport: PHONE_VIEWPORT,
+  deviceScaleFactor: PHONE_SCALE,
+  isMobile: async ({ browserName }, use) => use(browserName === 'chromium'),
+});
 
 /**
  * Scrolls so the element matching the Playwright `selector` (e.g. an article's first paragraph, past its big headline) sits
@@ -43,7 +50,10 @@ async function scrollToElement(page: Page, selector: string | undefined): Promis
  * on a real, messy page without crashing and visibly scales a meaningful chunk of it."
  */
 for (const site of sites) {
-  test(`${site.id} (${site.description})`, async ({ page }) => {
+  test(`${site.id} (${site.description})`, async ({ page, browserName }) => {
+    const screenshot = async (factor: number) => {
+      if (browserName === 'chromium') await page.screenshot({ path: realWorldScreenshot(site.id, factor) });
+    };
     test.skip(
       !fs.existsSync(realWorldSnapshot(site.id)),
       `No snapshot for "${site.id}" — run "npm run download -w fixtures" first.`,
@@ -56,7 +66,7 @@ for (const site of sites) {
     await gotoAndAttach(page, `/real-world/snapshots/${site.id}/`, { waitUntil: 'load', timeout: 30_000 });
 
     await scrollToElement(page, site.screenshotFrom);
-    await page.screenshot({ path: realWorldScreenshot(site.id, 1) });
+    await screenshot(1);
 
     const scaledCount = await page.evaluate(() => document.querySelectorAll('[data-tsa-scaled]').length);
     // A real page has at least a handful of text elements; this just confirms capture actually
@@ -66,7 +76,7 @@ for (const site of sites) {
     await setFactor(page, 2);
     await scrollToElement(page, site.screenshotFrom);
 
-    await page.screenshot({ path: realWorldScreenshot(site.id, 2) });
+    await screenshot(2);
 
     // Not asserted on: snapshots have their own scripts stripped, so errors here would come from
     // live third-party iframes (ads, embeds) — out of our control. Logged for visibility only.
