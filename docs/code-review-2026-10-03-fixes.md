@@ -21,36 +21,36 @@ commit; "left" says why. What is still open is listed in `TODO.md`.
 
 ## Other engine and content-script findings
 
-| Finding                                         | Status | Commit(s)     | Notes                                                                                                                                                      |
-| ----------------------------------------------- | ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<head>` contents, `br`, `wbr`, SVG captured    | fixed  | `39133d2`     | Skipped; SVG treated as a picture and left at its size.                                                                                                    |
-| `document.write` replaces the root element      | fixed  | `876c4ec`     | The factor variable goes on the document's current root element.                                                                                           |
-| `message.factor` not validated                  | fixed  | `876c4ec`     | `isFactor` in the content script and the background relay.                                                                                                 |
-| `detach()` leaves styles; no `restore()`        | left   | —             | No caller: Firefox runs no content-script code when an add-on is disabled. `releaseElements` (`11c060b`) is the building block if one is needed.           |
-| `autoRemember` true until settings load         | fixed  | `71e419b`     | The gated store waits for the setting.                                                                                                                     |
-| Settings change re-mounts the control           | fixed  | `71e419b`     | Only position/visibility changes re-create it.                                                                                                             |
-| "Remember this site" stores 1 at 100%           | fixed  | `4a1f5b5`     | Maintainer's decision (2026-10-04): at 100% the button saves nothing and the popup says so.                                                                |
-| Popup silent on pages without a content script  | fixed  | `18f6a54`     | Buttons disabled, one-sentence explanation; unit tests. It doesn't tell a revoked permission apart from Firefox's own pages.                               |
-| `strict_min_version` 142 excludes ESR 140       | fixed  | (this commit) | Desktop lowered to 140; Android stays at 142, the first version there with `data_collection_permissions` (MDN). Takes effect with the next signed release. |
-| Both `service_worker` and `scripts` in manifest | fixed  | `494f849`     | The Chrome variant derives the worker; `web-ext lint` is clean.                                                                                            |
-| Background ignores extension-page messages      | fixed  | `71e419b`     | Stated in `background.ts`.                                                                                                                                 |
-| Android QA cases missing                        | fixed  | `b2955c4`     | No-viewport page, rotation, iframes, `on-zoom` default, Remember flow, popup on Firefox pages.                                                             |
-| `large-dom-performance` too small               | fixed  | `e97e001`     | 2,500 items, two elements each.                                                                                                                            |
+| Finding                                         | Status | Commit(s) | Notes                                                                                                                                                      |
+| ----------------------------------------------- | ------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<head>` contents, `br`, `wbr`, SVG captured    | fixed  | `39133d2` | Skipped; SVG treated as a picture and left at its size.                                                                                                    |
+| `document.write` replaces the root element      | fixed  | `876c4ec` | The factor variable goes on the document's current root element.                                                                                           |
+| `message.factor` not validated                  | fixed  | `876c4ec` | `isFactor` in the content script and the background relay.                                                                                                 |
+| `detach()` leaves styles; no `restore()`        | left   | —         | No caller: Firefox runs no content-script code when an add-on is disabled. `releaseElements` (`11c060b`) is the building block if one is needed.           |
+| `autoRemember` true until settings load         | fixed  | `71e419b` | The gated store waits for the setting.                                                                                                                     |
+| Settings change re-mounts the control           | fixed  | `71e419b` | Only position/visibility changes re-create it.                                                                                                             |
+| "Remember this site" stores 1 at 100%           | fixed  | `4a1f5b5` | Maintainer's decision (2026-10-04): at 100% the button saves nothing and the popup says so.                                                                |
+| Popup silent on pages without a content script  | fixed  | `18f6a54` | Buttons disabled, one-sentence explanation; unit tests. It doesn't tell a revoked permission apart from Firefox's own pages.                               |
+| `strict_min_version` 142 excludes ESR 140       | fixed  | `f718057` | Desktop lowered to 140; Android stays at 142, the first version there with `data_collection_permissions` (MDN). Takes effect with the next signed release. |
+| Both `service_worker` and `scripts` in manifest | fixed  | `494f849` | The Chrome variant derives the worker; `web-ext lint` is clean.                                                                                            |
+| Background ignores extension-page messages      | fixed  | `71e419b` | Stated in `background.ts`.                                                                                                                                 |
+| Android QA cases missing                        | fixed  | `b2955c4` | No-viewport page, rotation, iframes, `on-zoom` default, Remember flow, popup on Firefox pages.                                                             |
+| `large-dom-performance` too small               | fixed  | `e97e001` | 2,500 items, two elements each.                                                                                                                            |
 
 ## End-user documentation and accessibility
 
-| Finding                                        | Status   | Commit(s)     | Notes                                                                                                                       |
-| ---------------------------------------------- | -------- | ------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Limitations: embedded content promise          | fixed    | `6a7f2e2`     | True now that C1/H1–H3 are fixed.                                                                                           |
-| Limitations missing M1–M3 and restricted pages | fixed    | `11c060b`     |                                                                                                                             |
-| "Remember this site … in the button's menu"    | fixed    | `b2955c4`     |                                                                                                                             |
-| "Zoom in and the control appears" on phones    | fixed    | `c005b35`     | True after M4.                                                                                                              |
-| Userscript control on "every page"             | fixed    | `6a7f2e2`     | Accurate after H3; no wording change needed.                                                                                |
-| Embed: hidden control returns on reload        | fixed    | `b2955c4`     |                                                                                                                             |
-| Store description: minimum version, permission | fixed    | (this commit) | Maintainer's decision (2026-10-04): in the install guides instead of the store text. The version is read from the manifest. |
-| Control's targets 26 px, 13–15 px text         | fixed    | `dc9c4a2`     | 40 px buttons, 22 px symbols, 16 px display.                                                                                |
-| No keyboard shortcut; `×` is final             | accepted | —             | Maintainer's decision (2026-10-04): acceptable as is; proposals in `TODO.md`.                                               |
-| Docs-site `table { display: block }`           | fixed    | `902529d`     | Tables wrapped in a scrolling `div`.                                                                                        |
+| Finding                                        | Status   | Commit(s) | Notes                                                                                                                       |
+| ---------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Limitations: embedded content promise          | fixed    | `6a7f2e2` | True now that C1/H1–H3 are fixed.                                                                                           |
+| Limitations missing M1–M3 and restricted pages | fixed    | `11c060b` |                                                                                                                             |
+| "Remember this site … in the button's menu"    | fixed    | `b2955c4` |                                                                                                                             |
+| "Zoom in and the control appears" on phones    | fixed    | `c005b35` | True after M4.                                                                                                              |
+| Userscript control on "every page"             | fixed    | `6a7f2e2` | Accurate after H3; no wording change needed.                                                                                |
+| Embed: hidden control returns on reload        | fixed    | `b2955c4` |                                                                                                                             |
+| Store description: minimum version, permission | fixed    | `f718057` | Maintainer's decision (2026-10-04): in the install guides instead of the store text. The version is read from the manifest. |
+| Control's targets 26 px, 13–15 px text         | fixed    | `dc9c4a2` | 40 px buttons, 22 px symbols, 16 px display.                                                                                |
+| No keyboard shortcut; `×` is final             | accepted | —         | Maintainer's decision (2026-10-04): acceptable as is; proposals in `TODO.md`.                                               |
+| Docs-site `table { display: block }`           | fixed    | `902529d` | Tables wrapped in a scrolling `div`.                                                                                        |
 
 ## Security and privacy
 
