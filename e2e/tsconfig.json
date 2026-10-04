@@ -1,7 +1,9 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "allowJs": true,
     "types": ["node", "@playwright/test"]
   },
-  "include": ["."]
+  "include": ["."],
+  "exclude": ["node_modules", "playwright-report", "test-results", "screenshots"]
 }

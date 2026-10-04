@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "playwright test",
     "test:extension": "playwright test --config playwright.extension.config.ts",
     "test:extension:chrome": "playwright test --config playwright.extension-chrome.config.ts",

@@ -25,7 +25,6 @@ device first: the review fixes may already cover some of them.
       through `web-ext`).
 - [ ] GitHub Actions are pinned by tag, not by commit.
 - [ ] `sign.js` runs `npx`, which needs `npx.cmd` or a shell on Windows.
-- [ ] `tools/paths.d.ts` is a hand-maintained twin of `tools/paths.js`.
 - [ ] The `private.env` key names are written out in three places (developer
       guide, a comment, the code).
 
