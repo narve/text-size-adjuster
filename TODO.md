@@ -51,12 +51,6 @@ drawbacks of its own. Proposals:
 
 ## Code review: needs a decision
 
-- [ ] `strict_min_version` is 142, which excludes Firefox ESR 140. Lowering it
-      changes what a release supports; check which Firefox for Android version
-      first supports `data_collection_permissions`.
-- [ ] Store description: say which Firefox version is needed, and that the
-      "Access your data for all websites" permission has to be accepted. Waits
-      for the `strict_min_version` decision.
 - [ ] Privacy statement: `data-tsa-scaled` on every element lets a page detect
       the add-on. Worth a sentence?
 - [ ] The embed file is not versioned, so the guide can't offer a Subresource
@@ -68,6 +62,10 @@ drawbacks of its own. Proposals:
 - [ ] M5: the Android manual-install guide may describe steps that can't install
       the unlisted `.xpi`. Walk the steps on a current release build of Firefox
       for Android and rewrite them with the menu names.
+- [ ] Desktop minimum lowered to Firefox 140 in the manifest: release it. Until
+      a build with it is signed and released, the install guide (which reads the
+      version from the manifest) says 140 while the downloadable 1.3.0 still
+      needs 142. Not tried on a real Firefox 140.
 - [ ] `release-github.js`: the check for an existing tag (`a035905`) was only
       syntax-checked; watch it on the next release.
 

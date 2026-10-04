@@ -18,6 +18,10 @@ signed by Mozilla.
 If the file downloads instead of installing (for example in another browser),
 drag it onto a Firefox window.
 
+You need Firefox {{firefoxMin}} or newer. Firefox asks for permission to
+**access your data for all websites**. {{name}} needs that to resize the text on
+the pages you visit, and [collects nothing](privacy.html).
+
 From version 1.3.0 on, Firefox keeps it up to date: it checks for new versions
 and installs them itself. Earlier versions (1.1.0) don't update; if you have
 one, install it once more from the link above to get updates from then on. To

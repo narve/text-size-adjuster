@@ -13,6 +13,10 @@ The unsigned file is the current build, packaged but _not signed by Mozilla_.
 Building it yourself is described in
 [the contributor section](../dev/developer-guide.html).
 
+Both need Firefox {{firefoxMin}} or newer. Firefox asks for permission to
+**access your data for all websites**. {{name}} needs that to resize the text on
+the pages you visit, and [collects nothing](privacy.html).
+
 ## 1. Temporary load (quickest, for trying it out)
 
 1. Open `about:debugging#/runtime/this-firefox`.

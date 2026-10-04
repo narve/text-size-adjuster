@@ -11,6 +11,10 @@ turned on once before it can install it. It takes a minute.
    add-on from file** and choose the file you downloaded.
 4. Tap **Add** when Firefox asks.
 
+You need Firefox for Android {{firefoxAndroidMin}} or newer. Firefox asks for
+permission to **access your data for all websites**. {{name}} needs that to
+resize the text on the pages you visit, and [collects nothing](privacy.html).
+
 Then visit any page: zoom in and the control appears. Your chosen size is
 remembered for each site, the same as on a computer. See
 [how to use it](install.html).

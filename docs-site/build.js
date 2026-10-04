@@ -135,13 +135,21 @@ fs.copyFileSync(path.join(EXTENSION_DIR, 'icons', 'icon.svg'), path.join(DIST, '
 const guidesDir = path.join(SRC, 'guides');
 const guideFiles = fs.readdirSync(guidesDir).filter((f) => f.endsWith('.md'));
 const guideLinks = [];
+// The oldest Firefox that installs the extension, per platform: "140.0" in the manifest → "140".
+const geckoSettings = readJson(path.join(EXTENSION_DIR, 'manifest.json')).browser_specific_settings;
+const minFirefox = Object.fromEntries(
+  ['gecko', 'gecko_android'].map((key) => [key, geckoSettings[key].strict_min_version.replace(/\.0$/, '')]),
+);
 for (const file of guideFiles) {
-  // Guides may use {{name}}, {{homepage}} and {{signedXpi}} (the latest signed release's .xpi).
+  // Guides may use {{name}}, {{homepage}}, {{signedXpi}} (the latest signed release's .xpi), and
+  // {{firefoxMin}} / {{firefoxAndroidMin}} (the oldest Firefox the extension's manifest accepts).
   const raw = fs
     .readFileSync(path.join(guidesDir, file), 'utf8')
     .replaceAll('{{name}}', product.name)
     .replaceAll('{{homepage}}', product.homepage)
-    .replaceAll('{{signedXpi}}', product.signedXpiUrl);
+    .replaceAll('{{signedXpi}}', product.signedXpiUrl)
+    .replaceAll('{{firefoxMin}}', minFirefox.gecko)
+    .replaceAll('{{firefoxAndroidMin}}', minFirefox.gecko_android);
   const slug = file.replace(/\.md$/, '');
   const titleMatch = raw.match(/^#\s+(.+)$/m);
   const title = titleMatch ? titleMatch[1] : slugTitle(file);
