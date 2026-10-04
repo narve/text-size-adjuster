@@ -16,6 +16,7 @@
     "release:github": "node release-github.js",
     "amo:listing": "node amo-listing.js",
     "amo:screenshots": "node amo-screenshots.js",
+    "amo:upload-screenshots": "node amo-upload-screenshots.js",
     "chrome:store": "node chrome-store.js",
     "version:bump": "node bump-version.js",
     "icons": "node render-icons.js"

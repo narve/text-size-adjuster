@@ -124,8 +124,10 @@ contributor section). Edit the sources, not generated files.
    archive to `web-ext-artifacts/` without submitting, to check them first.
    Store screenshots can't be uploaded by `web-ext`:
    `npm run amo:screenshots -w packages/extension` renders them (1280×800, after
-   `npm run docs:build`) into `web-ext-artifacts/amo-screenshots/` for uploading
-   on the add-on's page in the developer hub.
+   `npm run docs:build`) into `web-ext-artifacts/amo-screenshots/`, and
+   `npm run amo:upload-screenshots -w packages/extension` uploads them to the
+   listing with their captions (add `-- --replace` to replace the ones already
+   there).
 
 3. For self-distribution without a public listing: submit as **unlisted** on
    AMO. You still get a Mozilla-signed `.xpi` (required for Firefox to install
