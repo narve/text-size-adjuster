@@ -29,10 +29,28 @@ fixes are in 1.3.0).
 - [ ] `npm audit`: `esbuild` (held at 0.27 by `tsup`) and `node-forge` (through
       `web-ext`). Both are dev tooling and don't reach the shipped bundles.
 
+## The × button
+
+`×` hides the control until the next page load. That is acceptable as it is
+(maintainer, 2026-10-04); change it only for a solution that is good and has no
+drawbacks of its own. Proposals:
+
+- [ ] Userscript: a "Text size control: show" command in the userscript
+      manager's menu. The menu already exists and its other commands already
+      bring the control back as a side effect of changing a setting; this one
+      would do it without changing anything. No drawback found.
+- [ ] Extension: a "Show the control on this page" button in the popup, shown
+      only while the control is hidden. Small gain, since the popup's own
+      buttons already change the size; costs one more message type.
+- Rejected: `×` collapsing the control to one small button. Something would
+  still cover the page, which is what `×` is pressed to get rid of.
+- Rejected: keyboard shortcuts. Desktop only, they can clash with a site's or
+  the browser's own shortcuts, and they don't help userscript or embed users.
+- Embed: nothing proposed. The site owner decides how the control is shown, and
+  a reload brings it back (documented in the embed guide).
+
 ## Code review: needs a decision
 
-- [ ] The control has no keyboard shortcut, and `×` hides it until the next page
-      load. Make `×` minimise to a single button?
 - [ ] `strict_min_version` is 142, which excludes Firefox ESR 140. Lowering it
       changes what a release supports; check which Firefox for Android version
       first supports `data_collection_permissions`.
