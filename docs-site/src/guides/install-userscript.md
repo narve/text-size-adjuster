@@ -32,3 +32,6 @@ of every page.
 Open your userscript manager's menu (its toolbar icon) while on any page:
 {{name}} adds commands there to place the control in a different corner, or to
 show it only after you zoom in. Your choice is remembered.
+
+If you hide the control with **×**, the **show** command in the same menu brings
+it back; so does loading the page again.

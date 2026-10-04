@@ -33,12 +33,9 @@ fixes are in 1.3.0).
 
 `×` hides the control until the next page load. That is acceptable as it is
 (maintainer, 2026-10-04); change it only for a solution that is good and has no
-drawbacks of its own. Proposals:
+drawbacks of its own. The userscript has a "show" command in its manager's menu.
+Remaining proposal:
 
-- [ ] Userscript: a "Text size control: show" command in the userscript
-      manager's menu. The menu already exists and its other commands already
-      bring the control back as a side effect of changing a setting; this one
-      would do it without changing anything. No drawback found.
 - [ ] Extension: a "Show the control on this page" button in the popup, shown
       only while the control is hidden. Small gain, since the popup's own
       buttons already change the size; costs one more message type.

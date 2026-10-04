@@ -199,7 +199,8 @@ available in all delivery mechanisms, not just the extension.
     forms `tl`, `tr`, `bl`, `br` are accepted. If both are given, the attribute
     wins; unknown values fall back to the default.
   - _Userscript_ (FR3.2): commands in the userscript manager's menu
-    (Tampermonkey/Violentmonkey), remembered in the manager's own storage.
+    (Tampermonkey/Violentmonkey), remembered in the manager's own storage. A
+    "show" command there brings back a control hidden with ×.
 - **FR10.4 Defaults**: placement bottom-right everywhere. Visibility: _until the
   user zooms_ for the extension (it always has its toolbar/menu button as well);
   _always_ for the script tag and the userscript, where the on-page control is

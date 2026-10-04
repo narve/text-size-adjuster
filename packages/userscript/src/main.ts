@@ -67,6 +67,8 @@ function registerMenuCommands(settings: WidgetSettings, apply: (next: WidgetSett
     void storage.setValue(SETTINGS_KEY, next);
     apply(next);
   };
+  // The way back after hiding the control with ×, without changing a setting.
+  GM_registerMenuCommand('Text size control: show', () => apply(settings));
   for (const [position, label] of Object.entries(POSITION_LABELS) as Array<[WidgetPosition, string]>) {
     GM_registerMenuCommand(`Text size control: place ${label}`, () => save({ ...settings, position }));
   }

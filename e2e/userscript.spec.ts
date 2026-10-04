@@ -40,6 +40,33 @@ test('the built .user.js mounts its widget and scales the page via the widget al
   expect(after).toBeGreaterThan(before);
 });
 
+/** The manager's menu is the way back to a control hidden with ×: its "show" command restores it. */
+test('the "show" menu command brings back a control hidden with ×', async ({ page }) => {
+  // Stand-ins for the userscript manager's APIs, which the bundle looks up as globals.
+  await page.addInitScript(() => {
+    const commands: Record<string, () => void> = {};
+    Object.assign(window, {
+      tsaMenuCommands: commands,
+      GM: { getValue: async () => undefined, setValue: async () => {} },
+      GM_registerMenuCommand: (caption: string, onClick: () => void) => (commands[caption] = onClick),
+    });
+  });
+  await page.addInitScript({ path: USERSCRIPT_BUNDLE });
+  await page.goto('/plain-px/');
+
+  const widgetHost = page.locator('[data-tsa-ignore]');
+  await widgetHost.locator('[data-action="increase"]').click();
+  await widgetHost.locator('[data-action="close"]').click();
+  await expect(widgetHost).not.toBeAttached();
+
+  await page.evaluate(() =>
+    (window as unknown as { tsaMenuCommands: Record<string, () => void> }).tsaMenuCommands['Text size control: show']!(),
+  );
+  await expect(widgetHost).toBeAttached();
+  // Same page, same size: the control comes back showing what the page is at.
+  await expect(widgetHost.locator('[data-tsa-display]')).toHaveText('110%');
+});
+
 /**
  * Userscript managers run a script in every frame unless its header says otherwise; without
  * `@noframes`, every ad, video and comments frame got its own control, scaling on its own (code

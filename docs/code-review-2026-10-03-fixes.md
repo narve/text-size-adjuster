@@ -39,18 +39,18 @@ commit; "left" says why. What is still open is listed in `TODO.md`.
 
 ## End-user documentation and accessibility
 
-| Finding                                        | Status   | Commit(s) | Notes                                                                                                                       |
-| ---------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Limitations: embedded content promise          | fixed    | `6a7f2e2` | True now that C1/H1–H3 are fixed.                                                                                           |
-| Limitations missing M1–M3 and restricted pages | fixed    | `11c060b` |                                                                                                                             |
-| "Remember this site … in the button's menu"    | fixed    | `b2955c4` |                                                                                                                             |
-| "Zoom in and the control appears" on phones    | fixed    | `c005b35` | True after M4.                                                                                                              |
-| Userscript control on "every page"             | fixed    | `6a7f2e2` | Accurate after H3; no wording change needed.                                                                                |
-| Embed: hidden control returns on reload        | fixed    | `b2955c4` |                                                                                                                             |
-| Store description: minimum version, permission | fixed    | `f718057` | Maintainer's decision (2026-10-04): in the install guides instead of the store text. The version is read from the manifest. |
-| Control's targets 26 px, 13–15 px text         | fixed    | `dc9c4a2` | 40 px buttons, 22 px symbols, 16 px display.                                                                                |
-| No keyboard shortcut; `×` is final             | accepted | —         | Maintainer's decision (2026-10-04): acceptable as is; proposals in `TODO.md`.                                               |
-| Docs-site `table { display: block }`           | fixed    | `902529d` | Tables wrapped in a scrolling `div`.                                                                                        |
+| Finding                                        | Status   | Commit(s) | Notes                                                                                                                           |
+| ---------------------------------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Limitations: embedded content promise          | fixed    | `6a7f2e2` | True now that C1/H1–H3 are fixed.                                                                                               |
+| Limitations missing M1–M3 and restricted pages | fixed    | `11c060b` |                                                                                                                                 |
+| "Remember this site … in the button's menu"    | fixed    | `b2955c4` |                                                                                                                                 |
+| "Zoom in and the control appears" on phones    | fixed    | `c005b35` | True after M4.                                                                                                                  |
+| Userscript control on "every page"             | fixed    | `6a7f2e2` | Accurate after H3; no wording change needed.                                                                                    |
+| Embed: hidden control returns on reload        | fixed    | `b2955c4` |                                                                                                                                 |
+| Store description: minimum version, permission | fixed    | `f718057` | Maintainer's decision (2026-10-04): in the install guides instead of the store text. The version is read from the manifest.     |
+| Control's targets 26 px, 13–15 px text         | fixed    | `dc9c4a2` | 40 px buttons, 22 px symbols, 16 px display.                                                                                    |
+| No keyboard shortcut; `×` is final             | accepted | —         | Maintainer's decision (2026-10-04): acceptable as is. The userscript got a "show" menu command; one more proposal in `TODO.md`. |
+| Docs-site `table { display: block }`           | fixed    | `902529d` | Tables wrapped in a scrolling `div`.                                                                                            |
 
 ## Security and privacy
 
