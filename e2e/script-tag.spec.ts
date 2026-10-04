@@ -83,4 +83,29 @@ test.describe('on a phone, on a page without a viewport meta tag', () => {
     await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 });
     await expect.poll(async () => (await panelState(page)).hidden).toBe(false);
   });
+
+  test('a control added to a page that has already loaded is inside the visible area', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'mobile emulation needs Chromium');
+    // The way the extension and the userscript add it: after the page has settled at its fitted
+    // scale, so no viewport event follows to put a misplaced control right.
+    await page.goto('/plain-px/');
+    expect(await page.evaluate(() => window.visualViewport!.scale)).toBeLessThan(0.6);
+    await page.addScriptTag({ url: '/__bundles/text-size-adjuster.user.js' });
+    const panel = await page.evaluate(() => {
+      const el = document.querySelector('[data-tsa-ignore]')!.shadowRoot!.querySelector('.tsa-widget')!;
+      const rect = el.getBoundingClientRect();
+      const viewport = window.visualViewport!;
+      return {
+        inside:
+          rect.left >= viewport.offsetLeft - 1 &&
+          rect.top >= viewport.offsetTop - 1 &&
+          rect.right <= viewport.offsetLeft + viewport.width + 1 &&
+          rect.bottom <= viewport.offsetTop + viewport.height + 1,
+      };
+    });
+    expect(panel.inside).toBe(true);
+  });
 });

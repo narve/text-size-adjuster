@@ -81,23 +81,6 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
 
     shadow.append(style, panel);
 
-    const win = doc.defaultView;
-    const position = options.position ?? DEFAULT_POSITION;
-    if (win) {
-      // Registered before followVisualViewport on purpose: both react to the same visualViewport
-      // `resize`, and the panel has to be revealed first or the positioning measures it at zero
-      // size.
-      if (options.show === 'on-zoom') {
-        panel.hidden = true;
-        const stopWatching = watchForZoom(win, () => {
-          panel.hidden = false;
-          stopWatching();
-        });
-        cleanups.push(stopWatching);
-      }
-      cleanups.push(followVisualViewport(win, panel, position));
-    }
-
     shadow.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
       const action = target.closest('[data-action]')?.getAttribute('data-action');
@@ -122,6 +105,25 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
 
     const container = root instanceof Document ? (root.body ?? root.documentElement) : root;
     container.appendChild(hostEl);
+
+    // Only now that the panel is in the page: followVisualViewport measures it, and it has no
+    // size before.
+    const win = doc.defaultView;
+    const position = options.position ?? DEFAULT_POSITION;
+    if (win) {
+      // Registered before followVisualViewport on purpose: both react to the same `resize`
+      // events, and the panel has to be revealed first or the positioning measures it at zero
+      // size.
+      if (options.show === 'on-zoom') {
+        panel.hidden = true;
+        const stopWatching = watchForZoom(win, () => {
+          panel.hidden = false;
+          stopWatching();
+        });
+        cleanups.push(stopWatching);
+      }
+      cleanups.push(followVisualViewport(win, panel, position));
+    }
   }
 
   function unmount(): void {

@@ -67,11 +67,14 @@ export function followVisualViewport(win: Window, panel: HTMLElement, position: 
     );
   };
 
+  // The window's `resize` too: that's the event browser page zoom reveals an on-zoom panel on.
   viewport.addEventListener('resize', update);
   viewport.addEventListener('scroll', update);
+  win.addEventListener('resize', update);
   update();
   return () => {
     viewport.removeEventListener('resize', update);
     viewport.removeEventListener('scroll', update);
+    win.removeEventListener('resize', update);
   };
 }
