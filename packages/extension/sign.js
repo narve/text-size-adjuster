@@ -1,9 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
   EXTENSION_ARTIFACTS as ARTIFACTS,
-  EXTENSION_DIR,
   EXTENSION_DIST as DIST,
   REPO_ROOT,
   SIGNED_XPI,
@@ -12,6 +10,7 @@ import {
   writeJson,
 } from '../../tools/paths.js';
 import { readProduct } from '../../tools/product.js';
+import { runWebExt } from '../../tools/web-ext.js';
 import { amoCredentials } from './amo-credentials.js';
 import { writeAmoMetadata, writeSourceArchive } from './amo-listing.js';
 
@@ -33,8 +32,7 @@ requireBuilt(manifestFile, 'packages/extension');
 const { version } = readJson(manifestFile);
 const listed = process.argv.includes('--listed');
 const webExt = (args) =>
-  execFileSync('npx', ['web-ext', 'sign', '--source-dir', DIST, '--artifacts-dir', ARTIFACTS, ...args], {
-    cwd: EXTENSION_DIR,
+  runWebExt(['sign', '--source-dir', DIST, '--artifacts-dir', ARTIFACTS, ...args], {
     stdio: 'inherit',
     env: { ...process.env, WEB_EXT_API_KEY: issuer, WEB_EXT_API_SECRET: secret },
   });

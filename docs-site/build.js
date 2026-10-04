@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 import MarkdownIt from 'markdown-it';
 import { chromium } from 'playwright';
 import { readProduct } from '../tools/product.js';
@@ -24,6 +23,7 @@ import {
   writeJson,
 } from '../tools/paths.js';
 import { imageDataUri, screenshotHtml } from '../tools/render-image.js';
+import { runWebExt } from '../tools/web-ext.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(__dirname, 'src');
@@ -328,16 +328,15 @@ if (userscriptBundle) {
   fs.writeFileSync(path.join(DIST, 'downloads', USERSCRIPT_FILENAME), userscriptBundle, 'utf8');
 }
 if (fs.existsSync(path.join(EXTENSION_DIST, 'manifest.json'))) {
-  execFileSync(
-    'npx',
+  runWebExt(
     [
-      'web-ext', 'build',
+      'build',
       '--source-dir', EXTENSION_DIST,
       '--artifacts-dir', path.join(DIST, 'downloads'),
       '--filename', UNSIGNED_XPI_FILENAME,
       '--overwrite-dest',
     ],
-    { cwd: EXTENSION_DIR, stdio: 'ignore' },
+    { stdio: 'ignore' },
   );
 } else {
   console.warn('[downloads] extension not built — skipping the .xpi. Run "npm run build -w packages/extension" first.');

@@ -1,16 +1,15 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
   EXTENSION_ARTIFACTS,
   EXTENSION_CHROME_DIST as CHROME_DIST,
-  EXTENSION_DIR,
   EXTENSION_DIST,
   chromeZipFilename,
   readJson,
   requireBuilt,
   writeJson,
 } from '../../tools/paths.js';
+import { runWebExt } from '../../tools/web-ext.js';
 
 // FR8 (best-effort, not a primary target): reuses the built Firefox extension as-is — the
 // bundles are already cross-browser via webextension-polyfill's `browser` global — and only
@@ -37,9 +36,8 @@ writeJson(path.join(CHROME_DIST, 'manifest.json'), manifest);
 
 // The upload package for the Chrome Web Store (or Microsoft Edge Add-ons): dist-chrome/ zipped.
 const zip = chromeZipFilename(manifest.version);
-execFileSync(
-  'npx',
-  ['web-ext', 'build', '--source-dir', CHROME_DIST, '--artifacts-dir', EXTENSION_ARTIFACTS, '--filename', zip, '--overwrite-dest'],
-  { cwd: EXTENSION_DIR, stdio: 'ignore' },
+runWebExt(
+  ['build', '--source-dir', CHROME_DIST, '--artifacts-dir', EXTENSION_ARTIFACTS, '--filename', zip, '--overwrite-dest'],
+  { stdio: 'ignore' },
 );
 console.log(`Chrome build written to dist-chrome/ and web-ext-artifacts/${zip} (best-effort, FR8).`);
