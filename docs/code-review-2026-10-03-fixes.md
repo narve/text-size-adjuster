@@ -54,13 +54,13 @@ commit; "left" says why. What is still open is listed in `TODO.md`.
 
 ## Security and privacy
 
-| Finding                                       | Status       | Commit(s)     | Notes                                                                                                                                    |
-| --------------------------------------------- | ------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `data-tsa-scaled` makes the add-on detectable | fixed        | (this commit) | Maintainer's decision (2026-10-04): one sentence on the privacy page.                                                                    |
-| Embed not versioned, so no SRI                | left         | —             | Needs a release rule: a versioned file must never change once published, while the docs workflow republishes on every push.              |
-| `.idea/` not ignored                          | fixed        | `9456038`     |                                                                                                                                          |
-| `npm audit` advisories in dev tooling         | partly fixed | `5e43f12`     | vitest upgraded to 5. No fix to install yet for `esbuild` (held at 0.27 by `tsup`) or `node-forge` (comes with every current `web-ext`). |
-| Actions pinned by tag, not SHA                | fixed        | `266aae1`     |                                                                                                                                          |
+| Finding                                       | Status       | Commit(s) | Notes                                                                                                                                    |
+| --------------------------------------------- | ------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-tsa-scaled` makes the add-on detectable | fixed        | `f274e36` | Maintainer's decision (2026-10-04): one sentence on the privacy page.                                                                    |
+| Embed not versioned, so no SRI                | left         | —         | Needs a release rule: a versioned file must never change once published, while the docs workflow republishes on every push.              |
+| `.idea/` not ignored                          | fixed        | `9456038` |                                                                                                                                          |
+| `npm audit` advisories in dev tooling         | partly fixed | `5e43f12` | vitest upgraded to 5. No fix to install yet for `esbuild` (held at 0.27 by `tsup`) or `node-forge` (comes with every current `web-ext`). |
+| Actions pinned by tag, not SHA                | fixed        | `266aae1` |                                                                                                                                          |
 
 ## Code quality, tests, build, CI
 
