@@ -23,7 +23,6 @@ device first: the review fixes may already cover some of them.
 
 - [ ] `npm audit` advisories in dev tooling (`esbuild`, `vitest`, `node-forge`
       through `web-ext`).
-- [ ] GitHub Actions are pinned by tag, not by commit.
 - [ ] The `private.env` key names are written out in three places (developer
       guide, a comment, the code).
 
