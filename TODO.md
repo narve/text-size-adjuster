@@ -47,15 +47,13 @@ Remaining proposal:
 - Embed: nothing proposed. The site owner decides how the control is shown, and
   a reload brings it back (documented in the embed guide).
 
-## Code review: needs a real device or a real release
+## Code review: needs a real device
 
 - [ ] M5: the Android manual-install guide may describe steps that can't install
       the unlisted `.xpi`. Walk the steps on a current release build of Firefox
       for Android and rewrite them with the menu names.
 - [ ] The desktop minimum is Firefox 140 from 1.4.0 on. Not tried on a real
       Firefox 140.
-- [ ] `release-github.js`: the check for an existing tag (`a035905`) was only
-      syntax-checked; watch it on the next release.
 
 ## Code review: not planned
 
