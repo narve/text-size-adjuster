@@ -46,6 +46,9 @@ Unknown values are ignored.
 - For a production site, download that file and serve it from your own server
   instead of linking to this documentation site — that way it can't change or
   disappear underneath you.
+- The copy on this site is replaced whenever a new version is published, so an
+  `integrity` attribute (Subresource Integrity) on a script tag pointing at it
+  would stop working at the next update. With your own copy you can add one.
 - The chosen size is not remembered between page loads; each visit starts at
   normal size. (The browser extension is the version that remembers a size per
   site.)

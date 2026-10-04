@@ -49,12 +49,6 @@ drawbacks of its own. Proposals:
 - Embed: nothing proposed. The site owner decides how the control is shown, and
   a reload brings it back (documented in the embed guide).
 
-## Code review: needs a decision
-
-- [ ] The embed file is not versioned, so the guide can't offer a Subresource
-      Integrity hash. Needs a release rule: a versioned file must never change
-      once published, while the docs workflow republishes on every push.
-
 ## Code review: needs a real device or a real release
 
 - [ ] M5: the Android manual-install guide may describe steps that can't install
@@ -69,6 +63,9 @@ drawbacks of its own. Proposals:
 
 ## Code review: not planned
 
+- A versioned embed file that never changes, so the guide could offer a
+  Subresource Integrity hash. Left for now (maintainer, 2026-10-04); the embed
+  guide says that the copy on the docs site doesn't support one.
 - `detach()` leaves the scaled styles in place and there is no `restore()`.
   Nothing would call it: Firefox runs no content-script code when an add-on is
   disabled. `releaseElements` is the building block if it's ever needed.
