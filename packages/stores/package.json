@@ -14,7 +14,7 @@
     "@tsa/core": "*"
   },
   "devDependencies": {
-    "vitest": "^3.2.7",
+    "vitest": "^5.0.3",
     "jsdom": "^26.1.0"
   }
 }

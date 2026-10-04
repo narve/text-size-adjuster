@@ -32,7 +32,7 @@
     "@types/firefox-webext-browser": "^143.0.1",
     "@types/webextension-polyfill": "^0.12.3",
     "playwright": "^1.63.0",
-    "vitest": "^3.2.7",
+    "vitest": "^5.0.3",
     "jsdom": "^26.1.0"
   }
 }
