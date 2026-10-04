@@ -6,25 +6,28 @@ including the ones already fixed.
 
 ## Seen on Android
 
-Reported by the maintainer on 2026-10-04. Check each against 1.3.0 on a real
-device first: the review fixes may already cover some of them.
+Reported by the maintainer on 2026-10-04. Still to do for each: check it on a
+real device with the current build, and note the page, whether the on-page
+control or the toolbar popup was used, and the installed version (the review
+fixes are in 1.3.0).
 
-- [ ] The control does not always appear when zooming. Could be fixed by M4
-      (`c005b35`).
+- [ ] The control does not always appear when zooming. Two fixes may cover it:
+      M4 (`c005b35`), and `45957c6`: a control added after the page had loaded
+      was placed almost entirely outside the visible area on a page shown zoomed
+      out to fit.
 - [ ] The control does not always update its number: adjusting the text size
       works, but the display stays at 100%. This matches the symptom of C1 (text
       scales, the display keeps showing "100%"), fixed in `876c4ec` and
-      `71e419b`.
+      `71e419b`. Not reproduced on an emulated phone in Chromium.
 - [ ] Sometimes, after adjusting up a few notches and then pressing the reset
       button, the text ends up a lot smaller than it originally was. Could be
-      tied to the previous item.
+      tied to the previous item. Not reproduced on an emulated phone in Chromium
+      (four fixtures; increase, rotate, rotate back, reset).
 
-## Code review: clear fix
+## Waiting for a fix upstream
 
-- [ ] `npm audit` advisories in dev tooling (`esbuild`, `vitest`, `node-forge`
-      through `web-ext`).
-- [ ] The `private.env` key names are written out in three places (developer
-      guide, a comment, the code).
+- [ ] `npm audit`: `esbuild` (held at 0.27 by `tsup`) and `node-forge` (through
+      `web-ext`). Both are dev tooling and don't reach the shipped bundles.
 
 ## Code review: needs a decision
 

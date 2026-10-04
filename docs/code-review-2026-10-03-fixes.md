@@ -1,8 +1,8 @@
 # Code review 2026-10-03 — status of the findings
 
-What happened to each finding of `code-review-2026-10-03.md` on the
-`review-fixes` branch. "Fixed" names the commit; "left" says why. What is still
-open is listed in `TODO.md`.
+What happened to each finding of `code-review-2026-10-03.md`, on the
+`review-fixes` branch and in a second pass on 2026-10-04. "Fixed" names the
+commit; "left" says why. What is still open is listed in `TODO.md`.
 
 ## Summary findings
 
@@ -54,13 +54,13 @@ open is listed in `TODO.md`.
 
 ## Security and privacy
 
-| Finding                                       | Status | Commit(s) | Notes                                                                                                                       |
-| --------------------------------------------- | ------ | --------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `data-tsa-scaled` makes the add-on detectable | left   | —         | Privacy-statement wording is the maintainer's call.                                                                         |
-| Embed not versioned, so no SRI                | left   | —         | Needs a release rule: a versioned file must never change once published, while the docs workflow republishes on every push. |
-| `.idea/` not ignored                          | fixed  | `9456038` |                                                                                                                             |
-| `npm audit` advisories in dev tooling         | left   | —         | Dependency upgrades are better done on their own than mid-release.                                                          |
-| Actions pinned by tag, not SHA                | left   | —         | Nit.                                                                                                                        |
+| Finding                                       | Status       | Commit(s) | Notes                                                                                                                                    |
+| --------------------------------------------- | ------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-tsa-scaled` makes the add-on detectable | left         | —         | Privacy-statement wording is the maintainer's call.                                                                                      |
+| Embed not versioned, so no SRI                | left         | —         | Needs a release rule: a versioned file must never change once published, while the docs workflow republishes on every push.              |
+| `.idea/` not ignored                          | fixed        | `9456038` |                                                                                                                                          |
+| `npm audit` advisories in dev tooling         | partly fixed | `5e43f12` | vitest upgraded to 5. No fix to install yet for `esbuild` (held at 0.27 by `tsup`) or `node-forge` (comes with every current `web-ext`). |
+| Actions pinned by tag, not SHA                | fixed        | `266aae1` |                                                                                                                                          |
 
 ## Code quality, tests, build, CI
 
@@ -70,11 +70,11 @@ open is listed in `TODO.md`.
 | No CI for lint, types, unit tests               | fixed  | `9456038`            | `ci.yml`; browser suites opt-in there.                                                                                                                                                            |
 | Two `applyingExternal` flags                    | fixed  | `71e419b`            | The content script no longer needs one.                                                                                                                                                           |
 | `createGMValueStore` unused                     | fixed  | `b2955c4`            | Documented as ready for FR5.3.                                                                                                                                                                    |
-| `tools/paths.d.ts` hand-maintained twin         | left   | —                    | Converting `tools/` to TypeScript or checked JSDoc is a larger refactor than this pass.                                                                                                           |
+| `tools/paths.d.ts` hand-maintained twin         | fixed  | `c2f2300`            | Types are JSDoc in `paths.js`, checked by the new e2e typecheck.                                                                                                                                  |
 | TR2 "order of magnitude" vs `/3`                | fixed  | `b2955c4`            | Assertion is `/10` now.                                                                                                                                                                           |
 | `fixtures.json` claims Layer 2 coverage         | fixed  | `71e419b`            | True now.                                                                                                                                                                                         |
 | `amo-screenshots.js` referenced but uncommitted | n/a    | —                    | Already committed before this branch; the guide covers the `amo:*` scripts.                                                                                                                       |
-| `sign.js` runs `npx` (Windows)                  | left   | —                    | Release tooling in use for the current release; not testable here.                                                                                                                                |
+| `sign.js` runs `npx` (Windows)                  | fixed  | `6c474b7`            | `web-ext` is started with Node directly (`tools/web-ext.js`). Checked through the Chrome build; signing itself was not run.                                                                       |
 | `release-github.js` doesn't check the tag       | fixed  | `a035905`            | Syntax-checked only; not run.                                                                                                                                                                     |
 | Specificity story told twice                    | fixed  | `b2955c4`            | Kept in `capture.ts`.                                                                                                                                                                             |
 | `no-unused-vars` only a warning                 | fixed  | `9456038`            |                                                                                                                                                                                                   |
@@ -82,12 +82,12 @@ open is listed in `TODO.md`.
 
 ## Developer documentation
 
-| Finding                                        | Status | Commit(s)            | Notes                                         |
-| ---------------------------------------------- | ------ | -------------------- | --------------------------------------------- |
-| Developer guide: cross-origin "solved"         | fixed  | `71e419b`            | Describes the new design and its tests.       |
-| TR3 claims popup coverage                      | fixed  | `71e419b`            |                                               |
-| Implementation plan: options config, manifests | fixed  | `b2955c4`, `494f849` |                                               |
-| FR6 lacks M1–M3                                | fixed  | `11c060b`            | FR6.2, FR6.3, FR6.5.                          |
-| Android QA checklist                           | fixed  | `b2955c4`            | Install steps themselves left with M5.        |
-| `private.env` key names in three places        | left   | —                    | Part of the release tooling in use right now. |
-| Dangling `npm run dev -w packages/extension`   | fixed  | `b2955c4`            | Removed from the command list.                |
+| Finding                                        | Status | Commit(s)            | Notes                                      |
+| ---------------------------------------------- | ------ | -------------------- | ------------------------------------------ |
+| Developer guide: cross-origin "solved"         | fixed  | `71e419b`            | Describes the new design and its tests.    |
+| TR3 claims popup coverage                      | fixed  | `71e419b`            |                                            |
+| Implementation plan: options config, manifests | fixed  | `b2955c4`, `494f849` |                                            |
+| FR6 lacks M1–M3                                | fixed  | `11c060b`            | FR6.2, FR6.3, FR6.5.                       |
+| Android QA checklist                           | fixed  | `b2955c4`            | Install steps themselves left with M5.     |
+| `private.env` key names in three places        | fixed  | `9bd953a`            | The comment points at the developer guide. |
+| Dangling `npm run dev -w packages/extension`   | fixed  | `b2955c4`            | Removed from the command list.             |
