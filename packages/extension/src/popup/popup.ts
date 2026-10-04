@@ -62,10 +62,14 @@ document.getElementById('options')!.addEventListener('click', (event) => {
   window.close();
 });
 
+/** How long the "nothing to remember" note stays up. */
+const NOTE_MS = 4000;
+
 /**
  * FR9.5: with automatic remembering off, offer to remember the current tab's site. Saving its
  * current size adds it to the options page's list; the content script's store then keeps updating
- * it on later changes (see createGatedStore).
+ * it on later changes (see createGatedStore). At normal size there is nothing to remember — a
+ * stored site always has a size of its own (see bindStore) — so the button only says so.
  */
 async function setUpRememberButton(): Promise<void> {
   if (!(await initial)) return;
@@ -78,9 +82,18 @@ async function setUpRememberButton(): Promise<void> {
 
   const button = document.getElementById('remember') as HTMLButtonElement;
   button.hidden = false;
+  const note = document.getElementById('remember-note')!;
+  let noteTimer: ReturnType<typeof setTimeout> | undefined;
   button.addEventListener('click', async () => {
-    const current = await send({ type: 'tsa:getFactor' });
-    await browser.storage.local.set({ [origin]: current?.factor ?? 1 });
+    const factor = (await send({ type: 'tsa:getFactor' }))?.factor ?? 1;
+    if (factor === 1) {
+      note.hidden = false;
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(() => (note.hidden = true), NOTE_MS);
+      return;
+    }
+    note.hidden = true;
+    await browser.storage.local.set({ [origin]: factor });
     button.textContent = 'Site remembered';
     button.disabled = true;
   });

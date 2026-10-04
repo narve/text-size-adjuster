@@ -172,8 +172,10 @@ the unscaled page, and produces no new horizontal scrollbar.
   "Remember this site" button for the current tab's site (shown only if that
   site isn't remembered yet). It saves the current size; the site then appears
   in the FR9.2 list, and its later size changes are saved too, until it's
-  removed from the list. (The button lives in the popup rather than on the
-  options page because only the popup knows which site is current.)
+  removed from the list. At normal size (100%) there is nothing to remember: the
+  button saves nothing and the popup says so for a few seconds. (The button
+  lives in the popup rather than on the options page because only the popup
+  knows which site is current.)
 
 ## FR10. On-page control settings
 

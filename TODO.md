@@ -31,9 +31,6 @@ fixes are in 1.3.0).
 
 ## Code review: needs a decision
 
-- [ ] "Remember this site" stores `1` when the page is at 100%, so the options
-      page lists the site at 100%. Hide the button at 100%, or let it mean
-      "remember normal size"?
 - [ ] The control has no keyboard shortcut, and `×` hides it until the next page
       load. Make `×` minimise to a single button?
 - [ ] `strict_min_version` is 142, which excludes Firefox ESR 140. Lowering it

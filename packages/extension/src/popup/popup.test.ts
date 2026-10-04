@@ -45,4 +45,31 @@ describe('popup', () => {
     for (const id of ['decrease', 'increase', 'reset']) expect(element(id).disabled).toBe(true);
     expect(element('remember').hidden).toBe(true);
   });
+
+  describe('"Remember this site", with automatic remembering off', () => {
+    beforeEach(() => {
+      browser.storage.local.get.mockResolvedValue({ 'tsa:settings': { autoRemember: false } });
+    });
+
+    it("saves the page's size for the site", async () => {
+      browser.tabs.sendMessage.mockResolvedValue({ factor: 1.5 });
+      await openPopup();
+      await vi.waitFor(() => expect(element('remember').hidden).toBe(false));
+      element('remember').click();
+      await vi.waitFor(() =>
+        expect(browser.storage.local.set).toHaveBeenCalledWith({ 'https://example.com': 1.5 }),
+      );
+      expect(element('remember').disabled).toBe(true);
+    });
+
+    it('saves nothing at normal size, and says why', async () => {
+      browser.tabs.sendMessage.mockResolvedValue({ factor: 1 });
+      await openPopup();
+      await vi.waitFor(() => expect(element('remember').hidden).toBe(false));
+      element('remember').click();
+      await vi.waitFor(() => expect(element('remember-note').hidden).toBe(false));
+      expect(browser.storage.local.set).not.toHaveBeenCalled();
+      expect(element('remember').disabled).toBe(false);
+    });
+  });
 });
