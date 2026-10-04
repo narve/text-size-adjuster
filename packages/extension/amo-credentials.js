@@ -3,11 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { REPO_ROOT } from '../../tools/paths.js';
 
-// addons.mozilla.org API credentials (from https://addons.mozilla.org/developers/addon/api/key/),
-// from the repo's gitignored `private.env`, or from the environment (e.g. CI secrets):
-//   JWT issuer: firefox_jwt_issuer or AMO_JWT_ISSUER   (looks like "user:12345678:123")
-//   JWT secret: firefox_auth_key / firefox_jwt_secret or AMO_JWT_SECRET
-// Never print them.
+// addons.mozilla.org API credentials, from the repo's gitignored `private.env` or from the
+// environment (e.g. CI secrets). Where to get them and what to call them is in the developer
+// guide's "Publishing" section. Never print them.
 
 function readPrivateEnv() {
   const file = path.join(REPO_ROOT, 'private.env');
