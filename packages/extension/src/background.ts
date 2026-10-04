@@ -35,6 +35,11 @@ browser.runtime.onMessage.addListener(
         void browser.tabs.sendMessage(tabId, relay).catch(() => {});
         return undefined;
       }
+      case 'tsa:openOptions': {
+        // From the gear on the on-page control (FR9.6), which only the top frame has.
+        if (sender.frameId === 0) void browser.runtime.openOptionsPage().catch(() => {});
+        return undefined;
+      }
       default:
         return undefined;
     }

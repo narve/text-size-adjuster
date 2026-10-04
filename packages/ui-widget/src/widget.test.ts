@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_IGNORE_ATTR } from '@tsa/core';
 import { createFakeEngine } from '@tsa/core/test-helpers';
 import { createFloatingWidget } from './widget.js';
@@ -32,6 +32,22 @@ describe('createFloatingWidget', () => {
     expect(shadow?.querySelector('[data-action="reset"]')).not.toBeNull();
     expect(shadow?.querySelector('[data-action="close"]')).not.toBeNull();
     expect(shadow?.querySelector('[data-tsa-display]')?.textContent).toBe('150%');
+  });
+
+  it('has no settings button unless there are settings to open', () => {
+    createFloatingWidget().mount(createFakeEngine());
+    expect(getHost()!.shadowRoot!.querySelector('[data-action="settings"]')).toBeNull();
+  });
+
+  it('with onOpenSettings, has a gear button that calls it, also when the icon itself is clicked', () => {
+    const onOpenSettings = vi.fn();
+    createFloatingWidget({ onOpenSettings }).mount(createFakeEngine());
+    const button = getHost()!.shadowRoot!.querySelector('[data-action="settings"]')!;
+    expect(button.getAttribute('aria-label')).toBe('Text size settings');
+
+    (button as HTMLElement).click();
+    button.querySelector('svg')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onOpenSettings).toHaveBeenCalledTimes(2);
   });
 
   it('clicking + / - / reset drives the engine, not its own state', () => {

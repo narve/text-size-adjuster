@@ -35,7 +35,11 @@ function runTopFrame(): void {
   // FR9.3: a change on the options page applies to already-open pages straight away. The control
   // is only re-created when its own settings changed, so toggling an unrelated setting doesn't
   // hide a control the user has just revealed by zooming.
-  const widget = createRemountableWidget(engine);
+  const widget = createRemountableWidget(engine, {
+    onOpenSettings: () => {
+      void browser.runtime.sendMessage({ type: 'tsa:openOptions' } satisfies Message).catch(() => {});
+    },
+  });
   let shown: ControlSettings | null = null;
   watchSettings((settings) => {
     autoRemember = Promise.resolve(settings.autoRemember);

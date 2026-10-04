@@ -13,7 +13,9 @@ export type Message =
   // Background → every frame of the tab: follow the top frame (subframes only).
   | { type: 'tsa:setFactor'; factor: number }
   // Subframe → background, answered with the top frame's FactorResponse (or nothing).
-  | { type: 'tsa:getTopFactor' };
+  | { type: 'tsa:getTopFactor' }
+  // Top frame → background: open the options page (a content script can't do that itself).
+  | { type: 'tsa:openOptions' };
 
 export interface FactorResponse {
   factor: number;

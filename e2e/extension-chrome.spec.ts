@@ -67,6 +67,19 @@ test('the popup drives the page in the active tab', async ({ context, extensionI
   await expect.poll(() => largeRefSize(page)).toBeCloseTo(before * 1.1, 0);
 });
 
+/** FR9.6. The control is hidden until the user zooms (FR10.4); its buttons still work. */
+test("the control's gear opens the options page", async ({ context }) => {
+  const page = await context.newPage();
+  await page.goto('/plain-px/');
+  const gear = page.locator('[data-tsa-ignore]').locator('[data-action="settings"]');
+  await expect(gear).toBeAttached();
+  const [options] = await Promise.all([
+    context.waitForEvent('page'),
+    gear.evaluate((button) => (button as HTMLButtonElement).click()),
+  ]);
+  await expect(options).toHaveURL(/\/options\.html$/);
+});
+
 test('the options page shows the version and the saved settings', async ({ context, extensionId }) => {
   const options = await context.newPage();
   await options.goto(`chrome-extension://${extensionId}/options.html`);

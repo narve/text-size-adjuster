@@ -11,6 +11,38 @@ export interface FloatingWidgetOptions {
   position?: WidgetPosition;
   /** `always`, or hidden until the user zooms in (FR10.2). Default `always`. */
   show?: WidgetVisibility;
+  /**
+   * Opens the delivery's settings. When given, the control gets a gear button that calls it; only
+   * the extension has a settings page to open (FR9.6).
+   */
+  onOpenSettings?: () => void;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * A gear drawn with three circles (hub, rim, and a dashed outer ring for the teeth) rather than
+ * the ⚙ character, which phones tend to show as a colour emoji.
+ */
+function createGearIcon(doc: Document): SVGSVGElement {
+  const svg = doc.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const circles: Array<[radius: number, width: number, dashes?: string]> = [
+    [2.5, 2],
+    [6.5, 2],
+    [9.5, 3, '3.73 3.73'],
+  ];
+  for (const [radius, width, dashes] of circles) {
+    const circle = doc.createElementNS(SVG_NS, 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', String(radius));
+    circle.setAttribute('stroke-width', String(width));
+    if (dashes) circle.setAttribute('stroke-dasharray', dashes);
+    svg.append(circle);
+  }
+  return svg;
 }
 
 /**
@@ -76,13 +108,18 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
       display,
       makeButton('increase', 'Increase text size', '+'),
       makeButton('reset', 'Reset text size', '↺', 'Reset'),
-      makeButton('close', 'Hide text size controls', '×', 'Hide'),
     );
+    if (options.onOpenSettings) {
+      const settings = makeButton('settings', 'Text size settings', '', 'Settings');
+      settings.append(createGearIcon(doc));
+      panel.append(settings);
+    }
+    panel.append(makeButton('close', 'Hide text size controls', '×', 'Hide'));
 
     shadow.append(style, panel);
 
     shadow.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement;
+      const target = event.target as Element;
       const action = target.closest('[data-action]')?.getAttribute('data-action');
       switch (action) {
         case 'increase':
@@ -93,6 +130,9 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
           break;
         case 'reset':
           engine.reset();
+          break;
+        case 'settings':
+          options.onOpenSettings?.();
           break;
         case 'close':
           unmount();
@@ -140,14 +180,18 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
 
 /**
  * A floating widget that can be re-created with new settings (FR9.3/FR10.3: a settings change
- * applies to the open page straight away). The first `apply` mounts it.
+ * applies to the open page straight away). The first `apply` mounts it. `extras` are the options
+ * that aren't settings and stay the same across re-creations.
  */
-export function createRemountableWidget(engine: TextSizeEngine): { apply(settings: WidgetSettings): void } {
+export function createRemountableWidget(
+  engine: TextSizeEngine,
+  extras: Pick<FloatingWidgetOptions, 'onOpenSettings'> = {},
+): { apply(settings: WidgetSettings): void } {
   let widget: UIAdapter | null = null;
   return {
     apply(settings) {
       widget?.unmount();
-      widget = createFloatingWidget(settings);
+      widget = createFloatingWidget({ ...settings, ...extras });
       widget.mount(engine);
     },
   };

@@ -67,6 +67,8 @@ For the extension variant only, also check:
   options, change the size, open the popup and tap **Remember this site**; the
   site appears in the options page's list, and reopening it reapplies the size
   (FR9.5).
+- **Gear**: the **⚙** on the on-page control opens the options page (FR9.6).
+  Automated tests only follow this to the options page in Chromium.
 - **Firefox's own pages** (e.g. `about:addons`): the popup says it can't change
   the page and its buttons are disabled.
 

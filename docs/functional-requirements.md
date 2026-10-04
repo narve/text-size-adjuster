@@ -176,6 +176,9 @@ the unscaled page, and produces no new horizontal scrollbar.
   button saves nothing and the popup says so for a few seconds. (The button
   lives in the popup rather than on the options page because only the popup
   knows which site is current.)
+- **FR9.6**: The extension's on-page control has a gear button that opens the
+  options page directly. The userscript and the script tag have no options page,
+  so their control has no gear.
 
 ## FR10. On-page control settings
 

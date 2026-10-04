@@ -42,8 +42,8 @@ is on Firefox Add-ons, you can install it from there instead:
 
 - **Zoom in on a page** (pinch with two fingers, or Ctrl/Cmd + **+** on a
   computer) and a small round control appears in a corner. Tap **+** to make the
-  text bigger and **−** to make it smaller. **↺** goes back to normal, and **×**
-  hides the control on that page.
+  text bigger and **−** to make it smaller. **↺** goes back to normal, **⚙**
+  opens the settings, and **×** hides the control on that page.
 - You can also adjust the size any time from the {{name}} button in Firefox's
   toolbar (or the extensions menu on Android) — no zooming needed.
 - Your chosen size is remembered for each website. Next time you visit, it's
@@ -51,8 +51,8 @@ is on Firefox Add-ons, you can install it from there instead:
 
 ## Settings
 
-Open the add-on's **Options** (from the {{name}} button → _Options…_, or from
-Firefox's Add-ons page). There you can:
+Open the add-on's **Options** (from the **⚙** on the control, from the {{name}}
+button → _Options…_, or from Firefox's Add-ons page). There you can:
 
 - choose which **corner** the control sits in;
 - choose to show the control **always**, instead of only after you zoom in;

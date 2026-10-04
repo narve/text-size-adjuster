@@ -54,6 +54,12 @@ export const WIDGET_CSS = `
     text-align: center;
     padding: 0 4px;
   }
+  .tsa-widget button svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+  }
   .tsa-widget [data-action='close'] {
     font-size: 18px;
     opacity: 0.7;

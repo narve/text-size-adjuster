@@ -91,6 +91,21 @@ test('content script auto-attaches, the widget scales the page, and the factor p
 });
 
 /**
+ * FR9.6: the on-page control has a gear that asks the background to open the options page. Only
+ * that it's there and can be pressed without errors is checked here: Firefox opens the options
+ * tab outside the test's isolated browser context, where Playwright can't see it. The Chrome
+ * suite (extension-chrome.spec.ts) follows it all the way to the options page.
+ */
+test('the control has a gear for the options page', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/plain-px/');
+  await expect(page.locator('[data-tsa-ignore]').locator('[data-action="settings"]')).toBeAttached();
+  await clickWidget(page, 'settings');
+  await page.waitForTimeout(500);
+  expect(errors).toEqual([]);
+});
+
+/**
  * FR6.1/FR3.3: a cross-origin frame runs its own engine and follows the top frame, and a size
  * change still updates the control and is remembered. `delayed.html` holds the frame's document
  * back until well after the top frame's content script ran, which used to leave a dead child
