@@ -4,6 +4,20 @@ Open work. The review items come from `docs/code-review-2026-10-03.md`;
 `docs/code-review-2026-10-03-fixes.md` has the status of every finding,
 including the ones already fixed.
 
+## Releases
+
+- [ ] 1.6.0 (adds the gear on the on-page control) is signed by Mozilla but not
+      published. `npm run release:github` publishes it: installed copies then
+      update to it, and the install guide's download link serves it. The signed
+      file is
+      `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`,
+      which is not in git. Until then the install guide mentions the gear while
+      the downloadable 1.4.0 doesn't have it.
+- [ ] Try the gear once in Firefox, on desktop and Android: the automated tests
+      only follow it to the options page in Chromium.
+- [ ] addons.mozilla.org: 1.5.0 (without the gear) is waiting for review. Chrome
+      Web Store: submitted by the maintainer on 2026-10-04.
+
 ## Seen on Android
 
 Reported by the maintainer on 2026-10-04. Still to do for each: check it on a
