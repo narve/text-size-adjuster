@@ -19,7 +19,7 @@ Then visit any page: zoom in and the control appears. Your chosen size is
 remembered for each site, the same as on a computer. See
 [how to use it](install.html).
 
-From version 1.3.0 on, Firefox keeps it up to date: it checks for new versions
+From version 1.4.0 on, Firefox keeps it up to date: it checks for new versions
 and installs them itself. Earlier versions (1.1.0) don't update; if you have
 one, install it once more from the link above to get updates from then on. To
 see your version, open the add-on's **Options**.

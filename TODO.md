@@ -9,7 +9,8 @@ including the ones already fixed.
 Reported by the maintainer on 2026-10-04. Still to do for each: check it on a
 real device with the current build, and note the page, whether the on-page
 control or the toolbar popup was used, and the installed version (the review
-fixes are in 1.3.0).
+fixes are in 1.4.0; 1.3.0 was never released, so before that the installed
+version was 1.1.0, without them).
 
 - [ ] The control does not always appear when zooming. Two fixes may cover it:
       M4 (`c005b35`), and `45957c6`: a control added after the page had loaded
@@ -51,10 +52,8 @@ Remaining proposal:
 - [ ] M5: the Android manual-install guide may describe steps that can't install
       the unlisted `.xpi`. Walk the steps on a current release build of Firefox
       for Android and rewrite them with the menu names.
-- [ ] Desktop minimum lowered to Firefox 140 in the manifest: release it. Until
-      a build with it is signed and released, the install guide (which reads the
-      version from the manifest) says 140 while the downloadable 1.3.0 still
-      needs 142. Not tried on a real Firefox 140.
+- [ ] The desktop minimum is Firefox 140 from 1.4.0 on. Not tried on a real
+      Firefox 140.
 - [ ] `release-github.js`: the check for an existing tag (`a035905`) was only
       syntax-checked; watch it on the next release.
 
@@ -68,7 +67,7 @@ Remaining proposal:
   disabled. `releaseElements` is the building block if it's ever needed.
 - A stray fixture server on port 4310 would be reused by local Playwright runs.
   Not observed.
-- Embed origins stored by versions before 1.3.0 (H1) stay in users' storage:
+- Embed origins stored by versions before 1.4.0 (H1) stay in users' storage:
   they can't be told apart from sites the user visited.
 - The popup doesn't tell a revoked site permission apart from Firefox's own
   pages; both get the same "can't change this page" message.
