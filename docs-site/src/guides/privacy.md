@@ -14,6 +14,9 @@
   the add-on.
 - **Why it can access every website:** so it can resize text on any page you
   visit, and apply your saved size when you come back.
+- **What a website can notice:** a website can tell that its text has been
+  resized by {{name}}, and so that you use it. It can't see your settings or the
+  sizes you chose on other websites.
 
 Updates: if you installed it from this website (not from an add-ons store), your
 browser checks this website for new versions. That request is made by the

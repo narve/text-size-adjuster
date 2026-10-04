@@ -51,8 +51,6 @@ drawbacks of its own. Proposals:
 
 ## Code review: needs a decision
 
-- [ ] Privacy statement: `data-tsa-scaled` on every element lets a page detect
-      the add-on. Worth a sentence?
 - [ ] The embed file is not versioned, so the guide can't offer a Subresource
       Integrity hash. Needs a release rule: a versioned file must never change
       once published, while the docs workflow republishes on every push.
