@@ -1,7 +1,8 @@
 # Code review 2026-10-03 — status of the findings
 
 What happened to each finding of `code-review-2026-10-03.md` on the
-`review-fixes` branch. "Fixed" names the commit; "left" says why.
+`review-fixes` branch. "Fixed" names the commit; "left" says why. What is still
+open is listed in `TODO.md`.
 
 ## Summary findings
 
@@ -90,18 +91,3 @@ What happened to each finding of `code-review-2026-10-03.md` on the
 | Android QA checklist                           | fixed  | `b2955c4`            | Install steps themselves left with M5.        |
 | `private.env` key names in three places        | left   | —                    | Part of the release tooling in use right now. |
 | Dangling `npm run dev -w packages/extension`   | fixed  | `b2955c4`            | Removed from the command list.                |
-
-## Follow-up todo
-
-Seen by the maintainer on Android, reported 2026-10-04. Check each against 1.3.0
-on a real device first: the review fixes may already cover some of them.
-
-- [ ] The control does not always appear when zooming. Could be fixed by M4
-      (`c005b35`).
-- [ ] The control does not always update its number: adjusting the text size
-      works, but the display stays at 100%. This matches the symptom of C1 (text
-      scales, the display keeps showing "100%"), fixed in `876c4ec` and
-      `71e419b`.
-- [ ] Sometimes, after adjusting up a few notches and then pressing the reset
-      button, the text ends up a lot smaller than it originally was. Could be
-      tied to the previous item.
