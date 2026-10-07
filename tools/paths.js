@@ -50,6 +50,15 @@ export const chromeZipFilename = (/** @type {string} */ version) =>
   `text-size-adjuster-chrome-${version}.zip`;
 export const UNSIGNED_XPI_FILENAME = 'text-size-adjuster-unsigned.xpi';
 export const SIGNED_XPI = path.join(EXTENSION_ARTIFACTS, 'text-size-adjuster-signed.xpi');
+/**
+ * The signed .xpi addons.mozilla.org returned for `version`, as web-ext saved it, or undefined.
+ * @param {string} version
+ */
+export function signedXpiFor(version) {
+  if (!fs.existsSync(EXTENSION_ARTIFACTS)) return undefined;
+  const file = fs.readdirSync(EXTENSION_ARTIFACTS).find((f) => f.endsWith(`-${version}.xpi`));
+  return file && path.join(EXTENSION_ARTIFACTS, file);
+}
 /** File name of the signed .xpi attached to each GitHub release (see release-github.js). */
 export const SIGNED_XPI_FILENAME = 'text-size-adjuster.xpi';
 

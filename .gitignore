@@ -12,3 +12,4 @@ playwright-report/
 *.log
 private.env
 .idea/
+.claude/worktrees/

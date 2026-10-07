@@ -5,6 +5,7 @@ import {
   EXTENSION_DIST as DIST,
   REPO_ROOT,
   SIGNED_XPI,
+  signedXpiFor,
   readJson,
   requireBuilt,
   writeJson,
@@ -61,13 +62,10 @@ writeJson(manifestFile, manifest);
 console.log(`Signing version ${version} as an unlisted add-on (usually takes a few minutes)...`);
 webExt(['--channel', 'unlisted']);
 
-const signed = fs
-  .readdirSync(ARTIFACTS)
-  .filter((f) => f.endsWith('.xpi') && f.includes(version))
-  .map((f) => path.join(ARTIFACTS, f));
-if (signed.length === 0) {
+const signed = signedXpiFor(version);
+if (!signed) {
   console.error('web-ext finished but no signed .xpi for this version was found in web-ext-artifacts/.');
   process.exit(1);
 }
-fs.copyFileSync(signed[0], SIGNED_XPI);
+fs.copyFileSync(signed, SIGNED_XPI);
 console.log(`Signed: ${path.relative(REPO_ROOT, SIGNED_XPI)}`);
