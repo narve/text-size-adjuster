@@ -9,8 +9,8 @@ including the ones already fixed.
 Numbering from 2.1.0 on: x.Y.0 for addons.mozilla.org, x.Y.1 and up for GitHub
 (developer guide, "Version numbers").
 
-- [ ] addons.mozilla.org: 2.1.0 was submitted on 2026-10-08 and is waiting for
-      review; the listing serves 1.7.0 until then.
+- addons.mozilla.org: 2.1.0 was submitted on 2026-10-08 and approved within
+  minutes; it is the version the listing serves.
 - GitHub: 2.1.1 was released on 2026-10-08, the same code as 2.1.0. Copies
   installed from the site update to it.
 - Both carry everything up to the fixes from the independent review of
