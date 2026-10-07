@@ -4,6 +4,14 @@ export interface CaptureOptions {
   scaledAttr: string;
 }
 
+export interface CaptureContext extends CaptureOptions {
+  /**
+   * Whether the text is currently scaled (a factor other than 1), wherever the factor variable is
+   * set: on `styleTarget` or, for a shadow root that follows its page, further up.
+   */
+  scaled: boolean;
+}
+
 /**
  * Captures each element's *unscaled* computed font-size (and px line-height) and reapplies it as
  * an inline `calc(original * factor) !important` style.
@@ -35,14 +43,23 @@ export interface CaptureOptions {
  * read an already-scaled value when this runs after the first scale change (e.g. via the
  * MutationObserver path in `engine.ts`), and capturing that as its "original" size would compound
  * the scaling on every subsequent change.
+ *
+ * That only works if the sizes follow the variable at once. A page's own `transition` on
+ * `font-size` (`transition: all` on links and buttons is common) would have the read return the
+ * size the transition starts from: the scaled one. So while the text is scaled, transitions are
+ * switched off on the elements being read and on their ancestors (whose size they may inherit),
+ * and switched back on only after the styles have settled at the restored factor — otherwise the
+ * way back would be animated on every capture.
  */
 export function captureElements(
   elements: Element[],
   styleTarget: HTMLElement,
   factorVar: string,
-  opts: CaptureOptions,
+  opts: CaptureContext,
 ): void {
   if (elements.length === 0) return;
+
+  const restoreTransitions = opts.scaled ? suppressTransitions(elements, styleTarget) : null;
 
   const prevFactor = styleTarget.style.getPropertyValue(factorVar);
   styleTarget.style.setProperty(factorVar, '1');
@@ -68,6 +85,37 @@ export function captureElements(
 
   if (prevFactor) styleTarget.style.setProperty(factorVar, prevFactor);
   else styleTarget.style.removeProperty(factorVar);
+
+  if (restoreTransitions) {
+    // Reading an element's style settles it and its ancestors: everything switched off above.
+    for (const { el } of reads) void getComputedStyle(el).fontSize;
+    restoreTransitions();
+  }
+}
+
+/**
+ * Switches transitions off, inline, on `elements`, their ancestors and `styleTarget`. Returns a
+ * function that puts each element's own inline `transition-property` back.
+ */
+function suppressTransitions(elements: Element[], styleTarget: HTMLElement): () => void {
+  const PROP = 'transition-property';
+  const seen = new Set<Element>([styleTarget]);
+  for (const el of elements) {
+    for (let node: Element | null = el; node && !seen.has(node); node = node.parentElement) seen.add(node);
+  }
+  const saved: Array<[style: CSSStyleDeclaration, value: string, priority: string]> = [];
+  for (const el of seen) {
+    const style = (el as Partial<ElementCSSInlineStyle>).style;
+    if (!style) continue;
+    saved.push([style, style.getPropertyValue(PROP), style.getPropertyPriority(PROP)]);
+    style.setProperty(PROP, 'none', 'important');
+  }
+  return () => {
+    for (const [style, value, priority] of saved) {
+      if (value) style.setProperty(PROP, value, priority);
+      else style.removeProperty(PROP);
+    }
+  };
 }
 
 const SCALED_PROPS = ['font-size', 'line-height'] as const;

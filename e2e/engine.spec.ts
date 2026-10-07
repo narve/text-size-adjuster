@@ -357,6 +357,95 @@ test.describe('viewport width changes', () => {
   });
 });
 
+/**
+ * Content that arrives while the text is scaled has to be read at its unscaled size, or it is
+ * scaled twice. Two things used to get in the way of that read: a shadow host carrying its own
+ * copy of the factor, and a page's own transition on font-size.
+ */
+test.describe('content added while scaled', () => {
+  const fontSize = (page: Page, id: string) =>
+    page.evaluate((i) => Math.round(parseFloat(getComputedStyle(document.getElementById(i)!).fontSize) * 10) / 10, id);
+  const settle = (page: Page) => page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 400)));
+
+  test("an element added to a shadow host's own children is scaled once", async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML('beforeend', '<div id="host" style="font-size: 16px"><span id="first">first</span></div>');
+      document.getElementById('host')!.attachShadow({ mode: 'open' }).innerHTML = '<slot></slot><b>shadow</b>';
+    });
+    await attachEngine(page);
+    await setFactor(page, 1.5);
+    await page.evaluate(() => document.getElementById('host')!.insertAdjacentHTML('beforeend', '<span id="late">late</span>'));
+    await expect.poll(() => fontSize(page, 'late')).toBe(24);
+    expect(await fontSize(page, 'first')).toBe(24);
+    const shadowSize = () =>
+      page.evaluate(() => getComputedStyle(document.getElementById('host')!.shadowRoot!.querySelector('b')!).fontSize);
+    expect(await shadowSize()).toBe('24px');
+
+    await setFactor(page, 1);
+    expect(await fontSize(page, 'late')).toBe(16);
+    expect(await shadowSize()).toBe('16px');
+  });
+
+  test('an element added inside one with a font-size transition is scaled once', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<a id="link" href="#" style="font-size: 16px; transition: all 0.2s">link</a>',
+      );
+    });
+    await attachEngine(page);
+    await setFactor(page, 1.5);
+    await settle(page);
+    await page.evaluate(() => {
+      const late = document.createElement('span');
+      late.id = 'late';
+      late.textContent = 'late';
+      late.style.transition = 'all 0.2s';
+      document.getElementById('link')!.append(late);
+      // A page that measures what it has just added: the element has a style, at the scaled
+      // size, before the engine gets to see it.
+      void late.offsetHeight;
+    });
+    await settle(page);
+    expect(await fontSize(page, 'late')).toBe(24);
+    expect(await fontSize(page, 'link')).toBe(24);
+    // The page's own inline transition is back as it was.
+    expect(await page.evaluate(() => document.getElementById('link')!.style.transitionProperty)).toBe('all');
+
+    await setFactor(page, 1);
+    await settle(page);
+    expect(await fontSize(page, 'late')).toBe(16);
+  });
+
+  test('a resize while scaled keeps the size of text that has a font-size transition', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 600 });
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.head.insertAdjacentHTML('beforeend', '<style>#link { font-size: 16px; transition: all 0.2s }</style>');
+      document.body.insertAdjacentHTML('beforeend', '<a id="link" href="#">link</a>');
+    });
+    await attachEngine(page);
+    for (const factor of [1.5, 0.7]) {
+      await setFactor(page, factor);
+      await settle(page);
+      const scaled = await fontSize(page, 'link');
+      const width = page.viewportSize()!.width === 800 ? 500 : 800;
+      await page.setViewportSize({ width, height: 600 });
+      // Longer than the engine's wait for the width to stay put, plus the transition.
+      await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 700)));
+      expect(await fontSize(page, 'link')).toBe(scaled);
+      await setFactor(page, 1);
+      await settle(page);
+      expect(await fontSize(page, 'link')).toBe(16);
+    }
+  });
+});
+
 test.describe('spa-mutation', () => {
   test('content injected after load is captured automatically, without a manual rescan', async ({
     page,

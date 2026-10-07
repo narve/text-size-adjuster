@@ -103,6 +103,61 @@ describe('bindStore', () => {
     expect(store.set).toHaveBeenCalledWith('https://example.com', 1.1);
   });
 
+  /** A store whose writes finish only when `finishWrite` is called, each reporting itself to subscribers. */
+  function createSlowStore() {
+    const data = new Map<string, number>();
+    const pending: Array<() => void> = [];
+    let report: ((value: number | undefined) => void) | undefined;
+    const later = (apply: () => number | undefined) =>
+      new Promise<void>((resolve) => {
+        pending.push(() => {
+          report?.(apply());
+          resolve();
+        });
+      });
+    const store: Store = {
+      get: async (key) => data.get(key),
+      set: vi.fn((key: string, value: number) => later(() => data.set(key, value).get(key))),
+      remove: vi.fn((key: string) => later(() => (data.delete(key), undefined))),
+      subscribe: (_key, callback) => {
+        report = callback;
+        return () => {};
+      },
+    };
+    const finishWrite = async () => {
+      pending.shift()?.();
+      await new Promise((resolve) => setTimeout(resolve));
+    };
+    return { store, data, finishWrite, pendingWrites: () => pending.length };
+  }
+
+  it("doesn't go back to an earlier size when the store reports its own write late", async () => {
+    const engine = createFakeEngine();
+    const { store, data, finishWrite } = createSlowStore();
+    bindStore(engine, store, 'https://example.com');
+    engine.setFactor(1.1);
+    engine.setFactor(1.2);
+    engine.setFactor(1.3);
+    await finishWrite();
+    expect(engine.getFactor()).toBe(1.3);
+    await finishWrite();
+    expect(engine.getFactor()).toBe(1.3);
+    expect(data.get('https://example.com')).toBe(1.3);
+    // The size in between was never written: only the first and the newest.
+    expect(store.set).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a reset that follows a change still being written', async () => {
+    const engine = createFakeEngine();
+    const { store, data, finishWrite, pendingWrites } = createSlowStore();
+    bindStore(engine, store, 'https://example.com');
+    engine.increase();
+    engine.reset();
+    while (pendingWrites() > 0) await finishWrite();
+    expect(engine.getFactor()).toBe(1);
+    expect(data.has('https://example.com')).toBe(false);
+  });
+
   it('resets the engine to normal size when the key is removed elsewhere', () => {
     const engine = createFakeEngine(1.8);
     const store = createFakeStore();

@@ -39,6 +39,17 @@ interface Child {
  * `setFactor` scale a whole page, shadow DOM and same-origin iframes included, from one call.
  */
 export function createEngine(options: EngineOptions = {}): TextSizeEngine {
+  return createEngineFor(options, false);
+}
+
+/**
+ * `followsPage` is for the child engine of a shadow root: it doesn't set the factor variable on
+ * its host, because the host inherits it from the page's root element, which the engine that
+ * created this one keeps at the same factor. A copy on the host would stay at the scaled factor
+ * while the page's engine reads unscaled sizes (see `captureElements`), so the host's own
+ * children, which that engine captures, would be read scaled and then scaled once more.
+ */
+function createEngineFor(options: EngineOptions, followsPage: boolean): TextSizeEngine {
   const opts = { ...DEFAULTS, ...options };
   const root: Document | ShadowRoot = options.root ?? document;
   // `root instanceof Document` would silently be false for a same-origin iframe's document: it's
@@ -107,14 +118,16 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     if (!target) return;
     const unscaled = elements.filter(isScalable);
     if (unscaled.length === 0) return;
-    captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr });
+    captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr, scaled: factor !== 1 });
     // A root element that replaced the one the factor was written to (document.open) starts
     // without the variable.
-    if (factor !== 1) target.style.setProperty(FACTOR_VAR, String(factor));
+    if (factor !== 1 && !followsPage) target.style.setProperty(FACTOR_VAR, String(factor));
   }
 
   function attachChildFor(childRoot: Document | ShadowRoot, iframe?: HTMLIFrameElement): Child {
-    const child: Child = { engine: createEngine({ ...options, root: childRoot }), root: childRoot, iframe };
+    // An iframe's document has a root element of its own; a shadow root's host inherits ours.
+    const engine = createEngineFor({ ...options, root: childRoot }, !iframe);
+    const child: Child = { engine, root: childRoot, iframe };
     children.add(child);
     child.engine.setFactor(factor);
     child.engine.attach();
@@ -227,7 +240,7 @@ export function createEngine(options: EngineOptions = {}): TextSizeEngine {
     // Rounded so repeated ±step arithmetic (1 + 0.1 - 0.1 = 1.0000000000000002) lands back on
     // exact values — "back to 100%" must compare equal to 1.
     factor = Math.round(clampFactor(k, opts.min, opts.max) * 1000) / 1000;
-    styleTarget()?.style.setProperty(FACTOR_VAR, String(factor));
+    if (!followsPage) styleTarget()?.style.setProperty(FACTOR_VAR, String(factor));
     // One unreachable child (a frame that navigated away or was removed) must never stop the
     // rest of the page, or the change notification below, from happening (code review C1).
     for (const child of Array.from(children)) {
