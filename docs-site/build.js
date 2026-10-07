@@ -141,12 +141,14 @@ const minFirefox = Object.fromEntries(
   ['gecko', 'gecko_android'].map((key) => [key, geckoSettings[key].strict_min_version.replace(/\.0$/, '')]),
 );
 for (const file of guideFiles) {
-  // Guides may use {{name}}, {{homepage}}, {{signedXpi}} (the latest signed release's .xpi), and
+  // Guides may use {{name}}, {{homepage}}, {{amoListing}} (the page on addons.mozilla.org),
+  // {{signedXpi}} (the latest signed release's .xpi), and
   // {{firefoxMin}} / {{firefoxAndroidMin}} (the oldest Firefox the extension's manifest accepts).
   const raw = fs
     .readFileSync(path.join(guidesDir, file), 'utf8')
     .replaceAll('{{name}}', product.name)
     .replaceAll('{{homepage}}', product.homepage)
+    .replaceAll('{{amoListing}}', product.amoListing)
     .replaceAll('{{signedXpi}}', product.signedXpiUrl)
     .replaceAll('{{firefoxMin}}', minFirefox.gecko)
     .replaceAll('{{firefoxAndroidMin}}', minFirefox.gecko_android);

@@ -1,42 +1,44 @@
 # Install {{name}}
 
 {{name}} is a Firefox add-on. It works on your computer and on your Android
-phone.
-
-{{name}} is waiting for Mozilla's review before it appears on Firefox Add-ons.
-Until then, you can install it straight from this site. It's the same add-on,
-signed by Mozilla.
+phone, and you get it from Firefox Add-ons, Mozilla's own site for add-ons.
 
 ## On your computer
 
-1. Open this page in **Firefox** and click
-   [**Download {{name}}**]({{signedXpi}}).
-2. Firefox says it prevented this site from installing software. Click
-   **Continue to Installation**.
-3. Click **Add** when Firefox asks.
+1. Open [**{{name}} on Firefox Add-ons**]({{amoListing}}) in **Firefox** and
+   click **Add to Firefox**.
+2. Click **Add** when Firefox asks.
 
-If the file downloads instead of installing (for example in another browser),
-drag it onto a Firefox window.
-
-You need Firefox {{firefoxMin}} or newer. Firefox asks for permission to
-**access your data for all websites**. {{name}} needs that to resize the text on
-the pages you visit, and [collects nothing](privacy.html).
-
-From version 1.4.0 on, Firefox keeps it up to date: it checks for new versions
-and installs them itself. Earlier versions (1.1.0) don't update; if you have
-one, install it once more from the link above to get updates from then on. To
-see your version, open the add-on's **Options**.
+You need Firefox {{firefoxMin}} or newer.
 
 ## On your Android phone
 
-Firefox for Android only installs add-ons that aren't on Firefox Add-ons after
-you turn on a hidden option once. The steps are in
-[installing on Android](install-extension-manually-android.html). Once {{name}}
-is on Firefox Add-ons, you can install it from there instead:
+1. Open [**{{name}} on Firefox Add-ons**]({{amoListing}}) in **Firefox** on your
+   phone and tap **Add to Firefox**.
+2. Tap **Add** when Firefox asks.
 
-1. Open Firefox, tap the **⋮** menu, then **Extensions** (or **Add-ons**).
-2. Find **{{name}}** in the list or search, and tap **+**.
-3. Tap **Add** when Firefox asks.
+You need Firefox for Android {{firefoxAndroidMin}} or newer.
+
+## What Firefox asks
+
+Firefox asks for permission to **access your data for all websites**. {{name}}
+needs that to resize the text on the pages you visit, and
+[collects nothing](privacy.html).
+
+Firefox keeps the add-on up to date: it checks for new versions and installs
+them itself. To see your version, open the add-on's **Options**.
+
+## If you installed it from this site before
+
+Before {{name}} was on Firefox Add-ons, this page offered it as a file to
+download. That copy keeps working, and from version 1.4.0 on it updates itself.
+Version 1.1.0 doesn't: install {{name}} from Firefox Add-ons, as described
+above, to replace it.
+
+The file is still here, signed by Mozilla, if you'd rather not use Firefox
+Add-ons: [download {{name}}]({{signedXpi}}) and open it in Firefox on your
+computer, or follow the steps for
+[installing the file on Android](install-extension-manually-android.html).
 
 ## How to use it
 

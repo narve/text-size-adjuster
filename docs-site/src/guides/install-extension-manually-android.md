@@ -1,7 +1,9 @@
-# Install on Android
+# Install the file on Android
 
-Until {{name}} is on Firefox Add-ons, Firefox for Android needs a hidden option
-turned on once before it can install it. It takes a minute.
+Most people should [install {{name}} from Firefox Add-ons](install.html), which
+takes two taps. This page is for installing the file from this site instead.
+Firefox for Android needs a hidden option turned on once before it can do that.
+It takes a minute.
 
 1. Download [{{name}}]({{signedXpi}}) on your phone. The file is signed by
    Mozilla.

@@ -23,7 +23,7 @@ export function stripComments(text) {
  * lives in packages/extension/package.json, where `npm run release:extension` bumps it.
  */
 export function readProduct(store = 'firefox') {
-  const { name, summary, homepage, repository, license, platforms, limits } = JSON.parse(
+  const { name, summary, homepage, repository, amoListing, license, platforms, limits } = JSON.parse(
     fs.readFileSync(path.join(REPO_ROOT, 'product.json'), 'utf8'),
   );
   const { version } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'packages', 'extension', 'package.json'), 'utf8'));
@@ -37,7 +37,7 @@ export function readProduct(store = 'firefox') {
   const signedXpiUrl = `${repository}/releases/latest/download/${SIGNED_XPI_FILENAME}`;
   // Where Firefox checks for newer GitHub-released versions (see the docs build's updates.json).
   const updateUrl = `${homepage}updates.json`;
-  return { name, summary, homepage, repository, license, version, description, signedXpiUrl, updateUrl };
+  return { name, summary, homepage, repository, amoListing, license, version, description, signedXpiUrl, updateUrl };
 }
 
 /** Checks each text against `limits` from product.json (see its `_about` for where they come from). */
