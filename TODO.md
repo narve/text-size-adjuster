@@ -18,24 +18,34 @@ including the ones already fixed.
   100% (FR2.6), and the popup's "Show the control on this page" (FR9.7).
 - [ ] Try on a real phone, with 1.8.0: the first tap on a large page (it now
       does the capture), and **↺** on a page with a lot of text.
-- [ ] Try the gear once in Firefox, on desktop and Android: the automated tests
-      only follow it to the options page in Chromium.
+- [ ] Try the gear once in Firefox on desktop. On Android it opens the options
+      page (tried 2026-10-07, Firefox 157); the automated tests only follow it
+      there in Chromium.
+- [ ] Three fixes of 2026-10-07 are in no released version: the popup shown at a
+      fraction of its size on Android (`ce40426`), the control off-screen on a
+      page wider than the screen (`84f6087`), and the options page wider than
+      the screen (`1f1ac50`). They need a new version number on each channel.
 - [ ] Chrome Web Store: submitted by the maintainer on 2026-10-04.
 
 ## Bugs
 
 - [ ] Sometimes, when increasing the text size makes the page reflow, the
       on-page control moves along with the reflow, some pixels up. Reported by
-      the maintainer on 2026-10-07. Not yet reproduced; still to note: the page,
-      the browser and the installed version.
+      the maintainer on 2026-10-07. Not seen on the phone on 2026-10-07 (norvig,
+      Wikipedia, scottaaronson.blog). A candidate, fixed that day (`84f6087`):
+      when the bigger text makes something wider than the screen, the layout
+      viewport grows and the control's corner moves with it. Still to note if it
+      shows again: the page and the installed version.
 - On a Samsung Galaxy Z Flip7, opening the add-on from the browser's menu shows
   an extremely small popup. Reported by the maintainer on 2026-10-07. Fixed the
   same day (`ce40426`) and checked on that phone with Firefox 157: the popup had
-  no viewport tag. Not in 1.7.0 or 1.8.0; it needs a new version.
-- [ ] On the same phone the options page appears to start zoomed in: lines run
-      past the edge of the screen, so reading them takes horizontal scrolling,
-      which is what this add-on exists to avoid. After zooming out by hand the
-      page looks normal. Reported by the maintainer on 2026-10-07.
+  no viewport tag.
+- On the same phone the options page ran past the edge of the screen. Reported
+  by the maintainer on 2026-10-07. Fixed the same day (`1f1ac50`) and checked on
+  that phone: a long site name in the list made the page's grid column wider
+  than the screen.
+- [ ] Options page, list of sites, on a phone: the size and "Remove" leave room
+      for about ten characters of the site's name. Let the name wrap.
 
 ## Feature requests
 
@@ -54,13 +64,29 @@ Firefox enlarges its body text and zooms out to fit. Giving the page the tag
 makes Firefox lay it out at the screen's width, like a page made for phones, and
 the size the user picks then means what it says.
 
-- [ ] First, on a phone, with a build that has only the button: does Firefox for
-      Android lay the page out again when the tag is inserted after load, and
-      when it is taken out? What does it do with a block wider than the screen
-      once the tag is there: scroll sideways, or zoom out again (then the tag
-      needs `minimum-scale=1`, or wide blocks have to be kept from growing past
-      the page)? And what do `screen.width` and the layout width report, in the
-      normal and in the "desktop site" mode?
+- Tried on 2026-10-07 on the Galaxy Z Flip (Firefox 157), with the prototype on
+  the `fit-to-screen` branch (a button on the control; not for release):
+  - Inserting the tag after load works: the page is laid out 360 px wide at
+    once, at scale 1, and Firefox stops enlarging the text.
+  - Taking the tag out does nothing. The way back is to change it to
+    `width=980`, which works.
+  - `screen.width` is 360 and the layout width 980 before, 360 after, so the
+    test for when to offer the button holds. "Desktop site" mode was not tried.
+  - norvig.com: reads well fitted, and 140% is 1.4 times as big. The code block
+    stays wider than the screen: the page scrolls sideways, and at 140% Firefox
+    also zooms out a little (scale 0.9) to fit it.
+  - scottaaronson.blog/?p=10169: not usable fitted. Its text column has a fixed
+    width of about 760 px, so every line runs past the screen.
+- [ ] So fitting is not enough on its own, and on a page with fixed-width
+      columns it makes things worse. To decide before building the rest: - also
+      keep blocks from being wider than the screen while fitted
+      (`max-width: 100%`, and a sideways scroll of their own for code and
+      tables). That is a step towards a reader mode, and changes layout; - or
+      leave the page's layout alone and take over Firefox's enlarging: switch it
+      off (`text-size-adjust: none`) and start each element from the size
+      Firefox had given it, measured by comparing a line's height with and
+      without. Text then grows from what the user sees at 100%, on any page. Not
+      tried; wide blocks still need handling at large sizes.
 - [ ] A button on the on-page control and in the popup that inserts the tag, and
       takes it out again. Shown only where it does something: the page has no
       viewport tag and is laid out wider than the screen
@@ -109,12 +135,12 @@ tag) and a Wikipedia article (mobile layout).
       the page (may still be needed, see the plan's first item), and taking over
       from Firefox's own enlarging (fragile: it differs per block and scripts
       can't read it).
-- [ ] The control does not always appear when zooming. Not reproduced: after a
-      double-tap zoom on the norvig page it appeared, in its corner and at its
-      normal size. A pinch could not be sent over adb, and a page with a mobile
-      layout was not tried. Two earlier fixes may cover it: M4 (`c005b35`), and
-      `45957c6` (a control added after the page had loaded was placed almost
-      entirely outside the visible area on a page shown zoomed out to fit).
+- [ ] The control does not always appear when zooming. A likely cause found and
+      fixed on 2026-10-07 (`84f6087`): on a page with something wider than the
+      screen, the control's corner was off-screen (seen with the layout viewport
+      at 766 by 1387 around a visible 360 by 652). After the fix it showed on
+      that page. A pinch could not be sent over adb. Earlier fixes in the same
+      area: M4 (`c005b35`) and `45957c6`.
 - [ ] The control does not always update its number. Not reproduced: the number
       followed every one of some twenty taps on the two pages, ten of them in
       quick succession. Candidates fixed earlier: C1 (`876c4ec`, `71e419b`), and
