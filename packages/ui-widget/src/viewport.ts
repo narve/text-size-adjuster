@@ -36,9 +36,14 @@ export function watchForZoom(win: Window, onZoom: () => void): () => void {
 /**
  * A `position: fixed` element is pinned to the layout viewport, which doesn't move or shrink
  * when the user pinch-zooms — so a corner-anchored control would drift off-screen and be
- * magnified with everything else. While pinch-zoomed, this places the panel at the chosen corner
- * of the *visible* area instead and counter-scales it by 1/scale so it keeps its normal size;
- * back at scale 1 it hands positioning back to the plain corner CSS. Returns a stop function.
+ * magnified with everything else. While the visible area isn't the whole layout viewport, this
+ * places the panel at the chosen corner of the *visible* area instead and counter-scales it by
+ * 1/scale so it keeps its normal size; when the two match it hands positioning back to the plain
+ * corner CSS. Returns a stop function.
+ *
+ * Not only while pinch-zoomed: on a phone, a page with something wider than the screen gets a
+ * layout viewport as wide as that content (seen in Firefox for Android: 766 by 1387 around a
+ * visible 360 by 652, at scale 1), and a corner of it is off-screen.
  */
 export function followVisualViewport(win: Window, panel: HTMLElement, position: WidgetPosition): () => void {
   const viewport = win.visualViewport;
@@ -46,7 +51,11 @@ export function followVisualViewport(win: Window, panel: HTMLElement, position: 
 
   const update = () => {
     const scale = viewport.scale;
-    if (Math.abs(scale - 1) < 0.01) {
+    const fillsLayoutViewport =
+      Math.abs(scale - 1) < 0.01 &&
+      Math.abs(viewport.width - win.innerWidth) <= 1 &&
+      Math.abs(viewport.height - win.innerHeight) <= 1;
+    if (fillsLayoutViewport) {
       for (const prop of ['top', 'left', 'right', 'bottom', 'transform', 'transform-origin']) {
         panel.style.removeProperty(prop);
       }

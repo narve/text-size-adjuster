@@ -176,8 +176,21 @@ describe('visibility', () => {
     expect(panel()?.hidden).toBe(false);
   });
 
+  it('at scale 1, follows a visible area smaller than the layout viewport (a page wider than the screen)', () => {
+    const viewport = fakeVisualViewport();
+    Object.assign(viewport, { width: window.innerWidth, height: window.innerHeight });
+    createFloatingWidget().mount(createFakeEngine());
+    expect(panel()?.style.transform).toBe('');
+
+    Object.assign(viewport, { width: 360, height: 652 });
+    viewport.dispatchEvent(new Event('resize'));
+    expect(panel()?.style.transform).toContain('scale(1)');
+    expect(panel()?.style.transform).toContain(`translate(${360 - 16}px, ${652 - 16}px)`);
+  });
+
   it('while pinch-zoomed, counter-scales the control so it keeps its normal size', () => {
     const viewport = fakeVisualViewport();
+    Object.assign(viewport, { width: window.innerWidth, height: window.innerHeight });
     createFloatingWidget().mount(createFakeEngine());
     viewport.scale = 2;
     viewport.dispatchEvent(new Event('resize'));
