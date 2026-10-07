@@ -101,6 +101,21 @@ contributor section). Edit the sources, not generated files.
 
 ## Publishing
 
+### Version numbers
+
+Mozilla signs each version number only once, on one channel, so the listing on
+addons.mozilla.org and the builds released on GitHub can't share a number:
+
+- A version for **addons.mozilla.org** is `x.Y.0`.
+  `npm run version:bump -w packages/extension` bumps to the next one.
+- The builds released on **GitHub** after it are `x.Y.1`, `x.Y.2`, and so on.
+  `npm run release:extension` bumps to the next one (`version:bump -- --patch`).
+
+So a GitHub build is always newer than the listed version it follows, and the
+next listed version is newer than both. The scheme starts with 2.1.0 on
+addons.mozilla.org (maintainer, 2026-10-08); the versions before it, up to
+1.9.0, were numbered in the order they were signed.
+
 ### Firefox Desktop extension
 
 1. `npm run build -w packages/extension` produces `packages/extension/dist/`
@@ -133,7 +148,7 @@ contributor section). Edit the sources, not generated files.
    AMO. You still get a Mozilla-signed `.xpi` (required for Firefox to install
    it at all outside of temporary `about:debugging` loading), but it isn't
    published to the public catalog.
-4. Signing is scripted: `npm run release:extension` bumps the extension's minor
+4. Signing is scripted: `npm run release:extension` bumps the extension's patch
    version (in `packages/extension/package.json`), builds the extension and
    signs it as an unlisted add-on (`packages/extension/sign.js`, wrapping
    `web-ext sign --channel unlisted`). The signed file ends up at

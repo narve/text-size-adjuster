@@ -19,11 +19,17 @@ including the ones already fixed.
 - [ ] Try the gear once in Firefox on desktop. On Android it opens the options
       page (tried 2026-10-07, Firefox 157); the automated tests only follow it
       there in Chromium.
-- [ ] In no released version yet, all of 2026-10-07: the popup shown at a
+- [ ] In no published version yet, all of 2026-10-07: the popup shown at a
       fraction of its size on Android (`ce40426`), the control off-screen on a
       page wider than the screen (`84f6087`), the options page wider than the
-      screen (`1f1ac50`), and the message when a page opens at a remembered size
-      (FR9.8, `ec4de83`). They need a new version number on each channel.
+      screen (`1f1ac50`), the message when a page opens at a remembered size
+      (FR9.8, `ec4de83`), and taking over the browser's enlarging (FR2.7,
+      `9ea267e`). 1.9.0 has them all: signed as unlisted for trying on the
+      phone, not published anywhere.
+- [ ] Next: 2.1.0 on addons.mozilla.org, then 2.1.1 on GitHub (the numbering
+      agreed on 2026-10-08, see the developer guide's "Version numbers"). Set
+      2.1.0 by hand in `packages/extension/package.json`; `version:bump` takes
+      it from there.
 - [ ] Chrome Web Store: submitted by the maintainer on 2026-10-04.
 
 ## Bugs
@@ -65,25 +71,25 @@ Two ways were tried on 2026-10-07 on the Galaxy Z Flip (Firefox 157), as
 prototypes on the `fit-to-screen` branch (not for release), on
 norvig.com/spell-correct.html and scottaaronson.blog/?p=10169.
 
-**Taking over Firefox's enlarging** (recommended, not built for release). While
-the text is scaled, Firefox's own enlarging is switched off
+**Taking over Firefox's enlarging**: built (FR2.7, `9ea267e`), automatic, in
+1.9.0. While the text is scaled, Firefox's own enlarging is switched off
 (`text-size-adjust: none` on the root element) and each element starts from the
 size Firefox had given it: its line's height with the enlarging on, against the
 same line with it off. Nothing for the user to do, no setting, no button.
 
-- Both pages: 140% is 1.4 times as big and 200% twice (measured on the
-  screenshots), the text wraps in its column, no sideways scrolling, and reset
-  gives back the page exactly. The page's own layout is kept.
-- Code blocks get a sideways scroll of their own while scaled
-  (`overflow-x: auto` on `pre`), so they don't widen the page.
+- Prototype, both pages: 140% is 1.4 times as big and 200% twice (measured on
+  the screenshots), the text wraps in its column, no sideways scrolling, and
+  reset gives back the page exactly. The page's own layout is kept.
+- The signed 1.9.0 on the phone, norvig.com at 140%: the same.
+- Preformatted blocks get a sideways scroll of their own while scaled, so they
+  don't widen the page.
 - Left as it was: a header of fixed height overflows at 200% on the blog
   (FR6.3). Margins set in `em` grow with the text. Text Firefox doesn't enlarge
-  (code, small print) starts from its small size.
-- [ ] Build it properly in the engine: only where the page is laid out wider
-      than the screen; new content and a rotation measured the same way; tables
-      wider than the page; tests. Firefox's enlarging could not be switched on
-      in desktop Firefox (the `font.size.inflation.*` preferences had no
-      effect), so the measuring can only be checked on a phone.
+  (code, small print) starts from its small size (limitations guide).
+- [ ] Tables wider than the page are not handled.
+- The measuring can only be checked on a phone: Firefox's enlarging could not be
+  switched on in desktop Firefox (the `font.size.inflation.*` preferences had no
+  effect). The automated tests stand in for it by faking the line heights.
 
 **Fitting the page to the screen** (works, but not recommended as the answer). A
 button inserts a viewport tag, so the page is laid out at the screen's width.
@@ -112,10 +118,25 @@ button inserts a viewport tag, so the page is laid out at the screen's width.
 Reported by the maintainer on 2026-10-04, with the builds of that time (1.1.0 to
 1.4.0).
 
-Tried on 2026-10-07 on a Galaxy Z Flip (SM-F766B, Android 16, Firefox 157) with
-the 1.8.0 build, driven over adb. `norvig.com/spell-correct.html` (no viewport
-tag) and a Wikipedia article (mobile layout).
+Tried on 2026-10-07 on a Galaxy Z Flip (SM-F766B, Firefox 157) with the 1.8.0
+build, and on 2026-10-08 with the signed 1.9.0, driven over adb.
+`norvig.com/spell-correct.html` (no viewport tag) and a Wikipedia article
+(mobile layout).
 
+- Not reproduced, 2026-10-08, 1.9.0: aftenposten.no, remembered at 110%, opening
+  at 100%. It opened at 110% with the message saying so, and the popup showed
+  110%. On 2026-10-07 a prototype build had shown it at 100% once.
+- Not a bug: the add-on does nothing on its own page on addons.mozilla.org.
+  Firefox lets no add-on run on Mozilla's add-ons site; the limitations guide
+  says so, and from 2026-10-08 the popup's message names that site.
+- [ ] Installing a signed file through Firefox's debug menu did not last once:
+      after 1.9.0 was installed over the 1.8.0 that had been installed the same
+      way, the add-on showed as switched off, and after Firefox restarted it was
+      gone. Installing 1.9.0 again worked and stayed for the rest of the
+      session. Not understood; it may have to do with the earlier build loaded
+      through `web-ext`. Check that it is still there after the next restart.
+      The debug menu itself goes away when Firefox restarts (the guide could say
+      so).
 - [ ] On a page without a viewport tag, a bigger size can make the text smaller.
       Seen on norvig.com: at 140% the main text is hardly bigger than at 100%,
       and at 200% it is clearly smaller. This is likely what "the text ends up a

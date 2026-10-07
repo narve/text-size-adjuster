@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "npm run build -w packages --if-present && npm run test:e2e && npm run docs:build",
-    "release:extension": "npm run version:bump --workspace packages/extension && npm run build --workspace packages/extension && npm run sign --workspace packages/extension",
+    "release:extension": "npm run version:bump --workspace packages/extension -- --patch && npm run build --workspace packages/extension && npm run sign --workspace packages/extension",
     "release:github": "npm run release:github --workspace packages/extension",
     "submit:amo": "npm run build --workspace packages/extension && npm run sign --workspace packages/extension -- --listed",
     "test": "npm run test:unit && npm run test:e2e",
