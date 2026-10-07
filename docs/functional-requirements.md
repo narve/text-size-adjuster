@@ -125,6 +125,10 @@ the unscaled page, and produces no new horizontal scrollbar.
   state are not followed: a class added afterwards (hover/open states, a site's
   dark or reading mode) or the site's own text-size switch leaves the affected
   elements at the size captured before, until the next capture or a reload.
+- **FR6.6**: The scaling is written into the page as inline styles and a marker
+  attribute (FR2.1), also at normal size. A page that saves or sends its own
+  markup takes them along: text written in a `contenteditable` editor (webmail,
+  a blogging tool) can carry them into what is stored or sent.
 
 ## FR8. Cross-browser compatibility (best-effort)
 

@@ -13,6 +13,11 @@ including the ones already fixed.
       `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`,
       which is not in git. Until then the install guide mentions the gear while
       the downloadable 1.4.0 doesn't have it.
+- [ ] The fixes of 2026-10-07 are in no signed build, 1.6.0 included: sizes
+      going back to an earlier one or a reset being undone while a size is being
+      saved, and text scaled twice (added to a shadow host's own children, or
+      with a font-size transition on the page, when added or after a rotation).
+      They need a new version number.
 - [ ] Try the gear once in Firefox, on desktop and Android: the automated tests
       only follow it to the options page in Chromium.
 - [ ] addons.mozilla.org: 1.5.0 (without the gear) is approved and available
@@ -37,16 +42,25 @@ version was 1.1.0, without them).
 - [ ] The control does not always update its number: adjusting the text size
       works, but the display stays at 100%. This matches the symptom of C1 (text
       scales, the display keeps showing "100%"), fixed in `876c4ec` and
-      `71e419b`. Not reproduced on an emulated phone in Chromium.
+      `71e419b`. Not reproduced on an emulated phone in Chromium. A second
+      candidate, fixed on 2026-10-07: the number going back to an earlier size
+      when storage reported the engine's own write late, likelier on a slow
+      phone.
 - [ ] Sometimes, after adjusting up a few notches and then pressing the reset
       button, the text ends up a lot smaller than it originally was. Could be
       tied to the previous item. Not reproduced on an emulated phone in Chromium
-      (four fixtures; increase, rotate, rotate back, reset).
+      (four fixtures; increase, rotate, rotate back, reset). The double scaling
+      fixed on 2026-10-07 left a wrong size after reset too, but a larger one
+      after adjusting up, so it doesn't explain this. Not looked at: Firefox for
+      Android's automatic font sizing on pages without a viewport tag.
 
 ## Waiting for a fix upstream
 
-- [ ] `npm audit`: `esbuild` (held at 0.27 by `tsup`) and `node-forge` (through
-      `web-ext`). Both are dev tooling and don't reach the shipped bundles.
+- [ ] `npm audit`: `node-forge` (through `web-ext`), with no fixed version to
+      install. Dev tooling; it doesn't reach the shipped bundles.
+- [ ] The `overrides` in the root `package.json` lift `esbuild` (held at 0.27 by
+      `tsup`) and `shell-quote` (pinned by `web-ext`'s `fx-runner`) past their
+      advisories. Remove each once its parent asks for a fixed version itself.
 
 ## The × button
 
@@ -64,6 +78,18 @@ Remaining proposal:
   the browser's own shortcuts, and they don't help userscript or embed users.
 - Embed: nothing proposed. The site owner decides how the control is shown, and
   a reload brings it back (documented in the embed guide).
+
+## Proposal: capture only once the size changes
+
+The engine writes inline sizes and its marker attribute on every element of
+every page as soon as it loads, also at 100%. That is what makes the add-on
+detectable (privacy guide) and what a page's own editor can carry into saved or
+sent text (FR6.6).
+
+- [ ] Capture on the first change away from 100% instead (a remembered size
+      counts). Pages the user never resizes would be left untouched, and would
+      skip the capture's cost. Needs a look at what the first tap then costs on
+      a large page.
 
 ## Code review: needs a real device
 

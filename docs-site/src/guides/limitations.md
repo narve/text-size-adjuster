@@ -22,6 +22,10 @@ its reach:
   text-size or reading-mode button, or when you open a menu — that text may keep
   the size it had before. Reloading the page fixes it. (Turning your phone or
   resizing the window is fine: the page adjusts.)
+- **Text you write in a page's own editor can carry this tool's sizes with it.**
+  Some editors for formatted text (webmail, blogging tools) save the styling
+  along with the words, and that includes the sizes this tool sets. Plain text
+  boxes, like search fields and most comment forms, are not affected.
 - **Boxes sized to fit their text can grow with it.** On a few pages, a very
   large size can make such a box wider than the screen.
 - **The Firefox add-on can't work on Firefox's own pages** (settings, the
