@@ -24,6 +24,10 @@ including the ones already fixed.
       on-page control moves along with the reflow, some pixels up. Reported by
       the maintainer on 2026-10-07. Not yet reproduced; still to note: the page,
       the browser and the installed version.
+- [ ] On a Samsung Galaxy Z Flip7, opening the add-on from the browser's menu
+      shows an extremely small popup. The options page is reasonably sized.
+      Reported by the maintainer on 2026-10-07. Still to note: the browser and
+      the installed version.
 
 ## Feature requests
 
