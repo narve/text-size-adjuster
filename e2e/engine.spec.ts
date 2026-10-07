@@ -598,6 +598,126 @@ test.describe("the browser's own enlarging of text", () => {
   });
 });
 
+/** Findings of the independent review of 2026-10-08. */
+test.describe('edge cases of capture and release', () => {
+  const start = async (page: Page, options: object = {}) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate((o) => {
+      const w = window as unknown as { TSA_CORE: { createEngine: (o: object) => MinimalEngine }; __tsa: MinimalEngine };
+      w.__tsa = w.TSA_CORE.createEngine(o);
+      w.__tsa.attach();
+    }, options);
+  };
+  const tick = (page: Page) => page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 50)));
+
+  test('a parent and its child added in one go are each captured once, and let go of at 100%', async ({ page }) => {
+    await start(page);
+    await setFactor(page, 2);
+    await page.evaluate(() => {
+      const parent = document.createElement('div');
+      document.body.appendChild(parent);
+      const child = document.createElement('span');
+      child.id = 'child';
+      child.textContent = 'child';
+      parent.appendChild(child);
+    });
+    await tick(page);
+    expect(await page.evaluate(() => document.getElementById('child')!.getAttribute('data-tsa-scaled'))).toBe('');
+    await setFactor(page, 1);
+    expect(await page.evaluate(() => document.getElementById('child')!.hasAttribute('style'))).toBe(false);
+  });
+
+  test("a marker attribute of the page's own doesn't stop a reset", async ({ page }) => {
+    await start(page);
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML('afterbegin', '<p data-tsa-scaled="null">odd</p><p data-tsa-scaled="[1">odder</p>');
+    });
+    await setFactor(page, 2);
+    await setFactor(page, 1);
+    expect(
+      await page.evaluate(() => ({
+        factor: document.documentElement.style.getPropertyValue('--tsa-k'),
+        scaled: document.querySelectorAll('[style*="--tsa-k"]').length,
+      })),
+    ).toEqual({ factor: '', scaled: 0 });
+  });
+
+  test('an element added and taken out again at once is captured when it comes back', async ({ page }) => {
+    await start(page);
+    await setFactor(page, 2);
+    await page.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.id = 'probe';
+      probe.style.fontSize = '10px';
+      probe.textContent = 'probe';
+      document.body.appendChild(probe);
+      probe.remove();
+      (window as unknown as { probe: HTMLElement }).probe = probe;
+    });
+    await tick(page);
+    await page.evaluate(() => document.body.appendChild((window as unknown as { probe: HTMLElement }).probe));
+    await expect
+      .poll(() => page.evaluate(() => getComputedStyle(document.getElementById('probe')!).fontSize))
+      .toBe('20px');
+  });
+
+  test('a reset at 100% leaves the page untouched', async ({ page }) => {
+    await start(page);
+    await setFactor(page, 1);
+    expect(await page.evaluate(() => document.documentElement.hasAttribute('style'))).toBe(false);
+  });
+
+  test('a shadow host taken out of the page is let go of, and found again when put back', async ({ page }) => {
+    await start(page);
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML('beforeend', '<div id="host"></div>');
+      document.getElementById('host')!.attachShadow({ mode: 'open' }).innerHTML = '<b>shadow</b>';
+    });
+    await setFactor(page, 2);
+    const addInside = (id: string) =>
+      page.evaluate((i) => {
+        const host = (window as unknown as { host: HTMLElement }).host;
+        host.shadowRoot!.appendChild(Object.assign(document.createElement('i'), { id: i, textContent: i }));
+      }, id);
+    const marked = (id: string) =>
+      page.evaluate(
+        (i) => (window as unknown as { host: HTMLElement }).host.shadowRoot!.getElementById(i)!.hasAttribute('data-tsa-scaled'),
+        id,
+      );
+    await page.evaluate(() => {
+      const host = document.getElementById('host')!;
+      (window as unknown as { host: HTMLElement }).host = host;
+      host.remove();
+    });
+    await tick(page);
+    await addInside('while-out');
+    await tick(page);
+    expect(await marked('while-out')).toBe(false);
+
+    await page.evaluate(() => document.body.appendChild((window as unknown as { host: HTMLElement }).host));
+    await tick(page);
+    await addInside('back-in');
+    await expect.poll(() => marked('back-in')).toBe(true);
+    expect(await marked('while-out')).toBe(true);
+  });
+
+  test("taking over the browser's enlarging doesn't make a large page's first change slow", async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/large-dom-performance/');
+    const ms = await page.evaluate(() => {
+      const w = window as unknown as { TSA_CORE: { createEngine: (o: object) => MinimalEngine } };
+      const engine = w.TSA_CORE.createEngine({ browserEnlarging: 'take-over' });
+      engine.attach();
+      const t0 = performance.now();
+      engine.setFactor(1.5);
+      return performance.now() - t0;
+    });
+    // Measured after the fix: about 100 ms in Firefox, where it was 885 ms with a Range per element.
+    expect(ms).toBeLessThan(500);
+  });
+});
+
 test.describe('spa-mutation', () => {
   test('content injected after load is captured automatically, without a manual rescan', async ({
     page,

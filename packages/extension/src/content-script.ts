@@ -26,12 +26,20 @@ function runTopFrame(): void {
   // the settings have been read, a save waits for them rather than assuming either way.
   let autoRemember: Promise<boolean> = readSettings().then((settings) => settings.autoRemember);
   const store = createGatedStore(createLocalExtensionStore(browser as unknown as BrowserStorageLike), () => autoRemember);
-  bindStore(engine, store, location.origin);
-  // FR9.8: a page that opens at a remembered size says so, since nothing on it shows why its
-  // text is bigger or smaller than its author made it.
-  void store.get(location.origin).then((size) => {
-    if (size !== undefined && size !== 1) showToast(`Text size: ${formatFactor(size)}`);
-  });
+  // A local file, or any other page without an origin of its own, is not a site: all of them
+  // would share one size, under a key the options page doesn't list.
+  if (location.origin !== 'null') {
+    bindStore(engine, store, location.origin);
+    // FR9.8: a page that opens at a remembered size says so, since nothing on it shows why its
+    // text is bigger or smaller than its author made it. Once the tab is in view: a page opened
+    // in the background would otherwise say it to nobody.
+    void store.get(location.origin).then((size) => {
+      if (size === undefined || size === 1) return;
+      const show = () => showToast(`Text size: ${formatFactor(size)}`);
+      if (!document.hidden) show();
+      else document.addEventListener('visibilitychange', show, { once: true });
+    });
+  }
 
   // FR9.3: a change on the options page applies to already-open pages straight away. The control
   // is only re-created when its own settings changed, so toggling an unrelated setting doesn't

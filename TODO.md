@@ -157,6 +157,61 @@ build, and on 2026-10-08 with the signed 1.9.0, driven over adb.
   Android opens as a full page, had no viewport tag and was shown at a fraction
   of its size. Not in 1.7.0 or 1.8.0.
 
+## Independent review, 2026-10-08
+
+A second, independent review of the whole repository at `5ddac1b`. Fixed the
+same day, each with a test that failed before:
+
+- The first change on a large page not made for phones took seconds in Firefox
+  (885 ms on the 5,000-element fixture, 6 s on 15,000 elements): measuring the
+  browser's enlarging made a Range per element, and Firefox keeps every live
+  Range up to date on each later write. One Range now; about 100 ms.
+- A parent and its child added in one go: the child was captured twice, and kept
+  the engine's own size as "its own" after a reset.
+- A page's own `data-tsa-scaled="null"` made every reset stop halfway.
+- An element added and taken out again at once was captured without a size.
+- A reset at 100% left `--tsa-k: 1` on the root element.
+- Child engines of shadow hosts taken out of the page were kept, each with an
+  observer and a resize listener.
+- `npm run lint` failed on `master` since the toast (`prefer-const`).
+- Local files and other pages without an origin shared one size under the key
+  `null`, which the options page doesn't list. They are no longer remembered.
+- The message at a remembered size was shown in background tabs, to nobody. It
+  now waits until the tab is in view.
+- The manual-install guide said the control appears on any page; the default is
+  after zooming.
+
+Left, for the maintainer to decide:
+
+- [ ] While scaled, every batch of new content makes the browser restyle the
+      whole page twice: reading unscaled sizes sets the factor to 1 on the root
+      element and back. Measured on a 15,000-element page: about 90 ms
+      (Chromium) and 140 ms (Firefox) per added element, more on a phone. That
+      is jank on feeds and infinite scroll. Setting the factor to 1 only around
+      the new content (on its nearest captured ancestor) would restyle a
+      subtree; it changes how the read phase works, so it needs care and
+      measuring.
+- [ ] The site embed and the extension (or userscript) on the same page fight:
+      both write `--tsa-k` on the root element and use the same marker. Seen:
+      one at 150%, the other set to 120% resizes the page while the first still
+      says 150%. This is every extension user on a site that embeds the script,
+      this project's demo pages included. Ways out: the embed stands down when
+      the extension is there, the extension drives the embed's engine, or each
+      gets a variable and marker of its own (then the sizes multiply).
+- [ ] A page's script can press the control's gear and open the options tab,
+      over and over: the control's shadow root is open and the background opens
+      the tab for any click. Only acting on real clicks (`isTrusted`) would stop
+      it, and the tests press the buttons from script, so they would need
+      another way in.
+- [ ] The message at a remembered size is shown again on every page of the site.
+      Once per visit to the site might be enough.
+- [ ] A tap in the first moments, before the remembered size has been read, is
+      overwritten by the remembered size. The extension corrects itself through
+      storage; a store without change events would not.
+- Not checked by the review: Firefox for Android's real enlarging (whether
+  content added later is enlarged by the same amount as at the first capture),
+  and memory growth on pages of components.
+
 ## Waiting for a fix upstream
 
 - [ ] `npm audit`: `node-forge` (through `web-ext`), with no fixed version to

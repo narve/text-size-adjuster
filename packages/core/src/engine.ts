@@ -136,7 +136,10 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
   function captureNew(elements: Element[]): void {
     const target = styleTarget();
     if (!target) return;
-    const unscaled = elements.filter(isScalable);
+    // Each element once: a parent and its child added in one go are both reported, and the child
+    // again among the parent's descendants; captured twice, its second "own" inline size would be
+    // the engine's. And only elements in the document: one already taken out again has no size.
+    const unscaled = Array.from(new Set(elements)).filter((el) => el.isConnected && isScalable(el));
     if (unscaled.length === 0) return;
     // Nothing in a document is scaled before its first capture. A shadow root's content can
     // inherit a scaled size from its host from the start.
@@ -160,6 +163,20 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     child.engine.setFactor(factor);
     child.engine.attach();
     return child;
+  }
+
+  /**
+   * Lets go of the child engines whose iframe or shadow host is no longer in the document: each
+   * holds an observer and a resize listener, and a page of components creates and discards hosts
+   * all the time. A host put back later is found again like a new one.
+   */
+  function dropDetachedChildren(): void {
+    for (const child of Array.from(children)) {
+      const anchor = child.iframe ?? (child.root.nodeType === 9 ? null : (child.root as ShadowRoot).host);
+      if (!anchor || anchor.isConnected) continue;
+      scannedShadowHosts.delete(anchor);
+      dropChild(child);
+    }
   }
 
   /**
@@ -271,14 +288,12 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     // Before the factor changes: the first capture then reads a page that isn't scaled yet.
     if (attached && next !== 1) startCapturing();
     factor = next;
-    if (!followsPage) styleTarget()?.style.setProperty(FACTOR_VAR, String(factor));
+    // Not at factor 1 with nothing captured: the page is to stay untouched (FR2.6).
+    if (!followsPage && (capturing || factor !== 1)) styleTarget()?.style.setProperty(FACTOR_VAR, String(factor));
     // One unreachable child (a frame that navigated away or was removed) must never stop the
     // rest of the page, or the change notification below, from happening (code review C1).
+    dropDetachedChildren();
     for (const child of Array.from(children)) {
-      if (child.iframe && !child.iframe.isConnected) {
-        dropChild(child);
-        continue;
-      }
       try {
         child.engine.setFactor(factor);
       } catch {
@@ -344,6 +359,7 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
   function startObserving(): void {
     observer = new MutationObserver((mutations) => {
       const added: Element[] = [];
+      if (mutations.some((mutation) => mutation.removedNodes.length > 0)) dropDetachedChildren();
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType !== Node.ELEMENT_NODE) return;

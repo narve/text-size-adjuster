@@ -38,9 +38,9 @@ Firefox ignores this setting.
 
 ## After installing
 
-Visit any page. The on-page **−/+** control appears, and the extension's toolbar
-button gives you another way to adjust the size. Come back to that site later —
-your chosen size is already applied.
+Visit any page and zoom in: the on-page **−/+** control appears. The extension's
+toolbar button adjusts the size at any time, without zooming. Come back to that
+site later — your chosen size is already applied.
 
 Prefer not to deal with any of this? The [userscript](install-userscript.html)
 needs no signing at all; it just doesn't remember a size per site.

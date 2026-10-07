@@ -46,12 +46,11 @@ export function showToast(text: string, doc: Document = document, duration: numb
 
   const win = doc.defaultView;
   const stopFollowing = win ? followVisualViewport(win, panel, 'top-left') : () => {};
-  let timer: ReturnType<typeof setTimeout> | undefined;
   const remove = () => {
     clearTimeout(timer);
     stopFollowing();
     host.remove();
   };
-  timer = setTimeout(remove, duration);
+  const timer = setTimeout(remove, duration);
   return remove;
 }

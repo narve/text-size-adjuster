@@ -31,11 +31,15 @@ export function setBrowserEnlarging(root: HTMLElement, on: boolean): void {
   }
 }
 
-/** The height of the first line box of the element's own text, or 0 when it has none. */
-function ownTextHeight(el: Element): number {
+/**
+ * The height of the first line box of the element's own text, or 0 when it has none. `range` is
+ * one Range for all elements: Firefox keeps every live Range up to date on each change to the
+ * document, so a Range per element made the writes that follow slower with every element
+ * measured (seconds on a page of a few thousand).
+ */
+function ownTextHeight(el: Element, range: Range): number {
   for (const node of el.childNodes) {
     if (node.nodeType !== 3 || !node.nodeValue || node.nodeValue.trim() === '') continue;
-    const range = el.ownerDocument.createRange();
     range.selectNodeContents(node);
     return range.getClientRects()[0]?.height ?? 0;
   }
@@ -50,10 +54,11 @@ function ownTextHeight(el: Element): number {
  * enlarging switched off.
  */
 function measureEnlarging(elements: Element[], root: HTMLElement): number[] {
+  const range = root.ownerDocument.createRange();
   setBrowserEnlarging(root, true);
-  const enlarged = elements.map(ownTextHeight);
+  const enlarged = elements.map((el) => ownTextHeight(el, range));
   setBrowserEnlarging(root, false);
-  const plain = elements.map(ownTextHeight);
+  const plain = elements.map((el) => ownTextHeight(el, range));
   return enlarged.map((height, i) => (height > 0 && plain[i]! > 0 ? Math.max(1, height / plain[i]!) : 1));
 }
 
@@ -213,7 +218,9 @@ function recordOriginal(el: HTMLElement, withScroll: boolean): string {
 function parseOriginal(raw: string | null): Original {
   if (!raw) return {};
   try {
-    return JSON.parse(raw) as Original;
+    // The attribute may be the page's own, with anything in it.
+    const parsed: unknown = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Original) : {};
   } catch {
     return {};
   }
