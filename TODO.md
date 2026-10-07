@@ -13,11 +13,14 @@ including the ones already fixed.
       `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`,
       which is not in git. Until then the install guide mentions the gear while
       the downloadable 1.4.0 doesn't have it.
-- [ ] The fixes of 2026-10-07 are in no signed build, 1.6.0 included: sizes
-      going back to an earlier one or a reset being undone while a size is being
-      saved, and text scaled twice (added to a shadow host's own children, or
-      with a font-size transition on the page, when added or after a rotation).
-      They need a new version number.
+- [ ] The changes of 2026-10-07 are in no signed build, 1.6.0 included. Fixes:
+      sizes going back to an earlier one or a reset being undone while a size is
+      being saved, and text scaled twice (added to a shadow host's own children,
+      or with a font-size transition on the page, when added or after a
+      rotation). New: pages are left untouched at 100% (FR2.6), and the popup's
+      "Show the control on this page" (FR9.7). They need a new version number.
+- [ ] Try on a real phone, with that build: the first tap on a large page (it
+      now does the capture), and **↺** on a page with a lot of text.
 - [ ] Try the gear once in Firefox, on desktop and Android: the automated tests
       only follow it to the options page in Chromium.
 - [ ] addons.mozilla.org: 1.5.0 (without the gear) is approved and available
@@ -64,32 +67,16 @@ version was 1.1.0, without them).
 
 ## The × button
 
-`×` hides the control until the next page load. That is acceptable as it is
-(maintainer, 2026-10-04); change it only for a solution that is good and has no
-drawbacks of its own. The userscript has a "show" command in its manager's menu.
-Remaining proposal:
+`×` hides the control until the next page load. The extension's popup has a
+"Show the control on this page" button for the way back (FR9.7), and the
+userscript a "show" command in its manager's menu.
 
-- [ ] Extension: a "Show the control on this page" button in the popup, shown
-      only while the control is hidden. Small gain, since the popup's own
-      buttons already change the size; costs one more message type.
 - Rejected: `×` collapsing the control to one small button. Something would
   still cover the page, which is what `×` is pressed to get rid of.
 - Rejected: keyboard shortcuts. Desktop only, they can clash with a site's or
   the browser's own shortcuts, and they don't help userscript or embed users.
 - Embed: nothing proposed. The site owner decides how the control is shown, and
   a reload brings it back (documented in the embed guide).
-
-## Proposal: capture only once the size changes
-
-The engine writes inline sizes and its marker attribute on every element of
-every page as soon as it loads, also at 100%. That is what makes the add-on
-detectable (privacy guide) and what a page's own editor can carry into saved or
-sent text (FR6.6).
-
-- [ ] Capture on the first change away from 100% instead (a remembered size
-      counts). Pages the user never resizes would be left untouched, and would
-      skip the capture's cost. Needs a look at what the first tap then costs on
-      a large page.
 
 ## Code review: needs a real device
 

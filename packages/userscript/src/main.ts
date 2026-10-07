@@ -59,7 +59,11 @@ async function loadSettings(): Promise<WidgetSettings> {
   return storage ? normalizeWidgetSettings(await storage.getValue(SETTINGS_KEY, {}), settings) : settings;
 }
 
-function registerMenuCommands(settings: WidgetSettings, apply: (next: WidgetSettings) => void): void {
+function registerMenuCommands(
+  settings: WidgetSettings,
+  apply: (next: WidgetSettings) => void,
+  show: () => void,
+): void {
   const storage = userscriptStorage();
   if (!storage || typeof GM_registerMenuCommand !== 'function') return;
   const save = (next: WidgetSettings) => {
@@ -68,7 +72,7 @@ function registerMenuCommands(settings: WidgetSettings, apply: (next: WidgetSett
     apply(next);
   };
   // The way back after hiding the control with ×, without changing a setting.
-  GM_registerMenuCommand('Text size control: show', () => apply(settings));
+  GM_registerMenuCommand('Text size control: show', show);
   for (const [position, label] of Object.entries(POSITION_LABELS) as Array<[WidgetPosition, string]>) {
     GM_registerMenuCommand(`Text size control: place ${label}`, () => save({ ...settings, position }));
   }
@@ -88,7 +92,7 @@ async function start(): Promise<void> {
 
   // A settings change from the menu is a deliberate request to see the control — show it now
   // rather than waiting for a zoom.
-  registerMenuCommands(settings, (next) => widget.apply({ ...next, show: 'always' }));
+  registerMenuCommands(settings, (next) => widget.apply({ ...next, show: 'always' }), widget.show);
 }
 
 // Defensive regardless of the userscript manager actually honoring `@run-at document-idle`

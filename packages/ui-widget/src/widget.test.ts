@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_IGNORE_ATTR } from '@tsa/core';
 import { createFakeEngine } from '@tsa/core/test-helpers';
-import { createFloatingWidget } from './widget.js';
+import { createFloatingWidget, createRemountableWidget } from './widget.js';
 
 function getHost(): HTMLElement | null {
   return document.body.querySelector(`[${DEFAULT_IGNORE_ATTR}]`);
@@ -186,5 +186,45 @@ describe('visibility', () => {
     viewport.scale = 1;
     viewport.dispatchEvent(new Event('resize'));
     expect(panel()?.style.transform).toBe('');
+  });
+});
+
+describe('createRemountableWidget', () => {
+  const panel = () => getHost()?.shadowRoot?.querySelector<HTMLElement>('.tsa-widget');
+  const close = () => (getHost()!.shadowRoot!.querySelector('[data-action="close"]') as HTMLElement).click();
+
+  it('show() brings the control back, in its corner, after ×', () => {
+    const widget = createRemountableWidget(createFakeEngine());
+    widget.apply({ position: 'top-left', show: 'always' });
+    expect(widget.isVisible()).toBe(true);
+
+    close();
+    expect(widget.isVisible()).toBe(false);
+    expect(getHost()).toBeNull();
+
+    widget.show();
+    expect(widget.isVisible()).toBe(true);
+    expect(panel()?.dataset.position).toBe('top-left');
+  });
+
+  it('show() reveals a control that is still waiting for a zoom', () => {
+    const widget = createRemountableWidget(createFakeEngine());
+    widget.apply({ position: 'bottom-right', show: 'on-zoom' });
+    expect(widget.isVisible()).toBe(false);
+
+    widget.show();
+    expect(widget.isVisible()).toBe(true);
+    expect(panel()?.hidden).toBe(false);
+  });
+
+  it('show() does nothing before the first apply, or while the control is visible', () => {
+    const widget = createRemountableWidget(createFakeEngine());
+    widget.show();
+    expect(getHost()).toBeNull();
+
+    widget.apply({ position: 'bottom-right', show: 'always' });
+    const host = getHost();
+    widget.show();
+    expect(getHost()).toBe(host);
   });
 });

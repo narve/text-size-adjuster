@@ -45,7 +45,8 @@ computer, or follow the steps for
 - **Zoom in on a page** (pinch with two fingers, or Ctrl/Cmd + **+** on a
   computer) and a small round control appears in a corner. Tap **+** to make the
   text bigger and **−** to make it smaller. **↺** goes back to normal, **⚙**
-  opens the settings, and **×** hides the control on that page.
+  opens the settings, and **×** hides the control on that page; **Show the
+  control on this page** under the {{name}} button brings it back.
 - You can also adjust the size any time from the {{name}} button in Firefox's
   toolbar (or the extensions menu on Android) — no zooming needed.
 - Your chosen size is remembered for each website. Next time you visit, it's

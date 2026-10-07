@@ -46,6 +46,21 @@ describe('popup', () => {
     expect(element('remember').hidden).toBe(true);
   });
 
+  it("offers to show the page's control only while it can't be seen", async () => {
+    browser.tabs.sendMessage.mockResolvedValue({ factor: 1, controlVisible: true });
+    await openPopup();
+    expect(element('show-control').hidden).toBe(true);
+
+    browser.tabs.sendMessage.mockResolvedValue({ factor: 1, controlVisible: false });
+    await openPopup();
+    expect(element('show-control').hidden).toBe(false);
+
+    browser.tabs.sendMessage.mockResolvedValue({ factor: 1, controlVisible: true });
+    element('show-control').click();
+    await vi.waitFor(() => expect(element('show-control').hidden).toBe(true));
+    expect(browser.tabs.sendMessage).toHaveBeenLastCalledWith(1, { type: 'tsa:showControl' }, { frameId: 0 });
+  });
+
   describe('"Remember this site", with automatic remembering off', () => {
     beforeEach(() => {
       browser.storage.local.get.mockResolvedValue({ 'tsa:settings': { autoRemember: false } });

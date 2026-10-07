@@ -47,6 +47,8 @@ For both variants, also check:
   real-world site, or the `script-tag/on-zoom.html` fixture for the embed): it
   opens zoomed out to fit; with "show after zooming", pinching it up to a
   readable size reveals the control (FR10.2).
+- **Back to normal**: set a larger size, then tap **↺**; the page looks exactly
+  as it did before the first change (FR2.6).
 - **Rotation**: set a larger size, rotate the phone to landscape and back; the
   text keeps the chosen size relative to the page's own layout, with no sideways
   scrolling (FR6.5).
@@ -69,6 +71,10 @@ For the extension variant only, also check:
   (FR9.5).
 - **Gear**: the **⚙** on the on-page control opens the options page (FR9.6).
   Automated tests only follow this to the options page in Chromium.
+- **Show the control**: hide the on-page control with **×**, open the popup and
+  tap **Show the control on this page**; the control is back in its corner and
+  the button is gone from the popup (FR9.7). With "show after zooming", the
+  button is also there before the first zoom.
 - **Firefox's own pages** (e.g. `about:addons`): the popup says it can't change
   the page and its buttons are disabled.
 

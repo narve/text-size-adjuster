@@ -25,15 +25,21 @@ async function send(message: Message): Promise<FactorResponse | undefined> {
 }
 
 const display = document.getElementById('display')!;
+const showControl = document.getElementById('show-control') as HTMLButtonElement;
 
-function render(factor: number): void {
-  display.textContent = formatFactor(factor);
+/**
+ * The size, and FR9.7: while the page's own control can't be seen (hidden with ×, or still
+ * waiting for a zoom), a button that brings it back.
+ */
+function render(result: FactorResponse): void {
+  display.textContent = formatFactor(result.factor);
+  showControl.hidden = result.controlVisible !== false;
 }
 
 function wire(buttonId: string, message: Message): void {
   document.getElementById(buttonId)!.addEventListener('click', () => {
     void send(message).then((result) => {
-      if (result) render(result.factor);
+      if (result) render(result);
     });
   });
 }
@@ -41,6 +47,7 @@ function wire(buttonId: string, message: Message): void {
 wire('increase', { type: 'tsa:increase' });
 wire('decrease', { type: 'tsa:decrease' });
 wire('reset', { type: 'tsa:reset' });
+wire('show-control', { type: 'tsa:showControl' });
 
 /** No content script answers here: Firefox's own pages, or a site the add-on may not access. */
 function showUnavailable(): void {
@@ -51,7 +58,7 @@ function showUnavailable(): void {
 }
 
 const initial = send({ type: 'tsa:getFactor' }).then((result) => {
-  if (result) render(result.factor);
+  if (result) render(result);
   else showUnavailable();
   return result;
 });

@@ -45,6 +45,11 @@ function createGearIcon(doc: Document): SVGSVGElement {
   return svg;
 }
 
+export interface FloatingWidget extends UIAdapter {
+  /** False after `×`, and while a control shown `on-zoom` still waits for the zoom. */
+  isVisible(): boolean;
+}
+
 /**
  * An in-page floating +/- widget, rendered in its own shadow root for isolation from the host
  * page's CSS. This is the only UI available to the userscript (userscript managers have no
@@ -54,8 +59,9 @@ function createGearIcon(doc: Document): SVGSVGElement {
  * widget's own text — see `createEngine`'s `ignoreAttr` option. This is a generic engine
  * mechanism, not special-cased to this widget; any UI could use the same convention.
  */
-export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAdapter {
+export function createFloatingWidget(options: FloatingWidgetOptions = {}): FloatingWidget {
   let hostEl: HTMLElement | null = null;
+  let panelEl: HTMLElement | null = null;
   let shadow: ShadowRoot | null = null;
   let unsubscribe: (() => void) | null = null;
   const cleanups: Array<() => void> = [];
@@ -117,6 +123,7 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
     panel.append(makeButton('close', 'Hide text size controls', '×', 'Hide'));
 
     shadow.append(style, panel);
+    panelEl = panel;
 
     shadow.addEventListener('click', (event) => {
       const target = event.target as Element;
@@ -172,10 +179,21 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
     for (const cleanup of cleanups.splice(0)) cleanup();
     hostEl?.remove();
     hostEl = null;
+    panelEl = null;
     shadow = null;
   }
 
-  return { mount, unmount };
+  return { mount, unmount, isVisible: () => panelEl !== null && !panelEl.hidden };
+}
+
+export interface RemountableWidget {
+  apply(settings: WidgetSettings): void;
+  isVisible(): boolean;
+  /**
+   * Brings the control back, where it was, after `×`, or before the zoom an `on-zoom` control
+   * waits for: asking for it is a request to see it now. Does nothing before the first `apply`.
+   */
+  show(): void;
 }
 
 /**
@@ -186,13 +204,20 @@ export function createFloatingWidget(options: FloatingWidgetOptions = {}): UIAda
 export function createRemountableWidget(
   engine: TextSizeEngine,
   extras: Pick<FloatingWidgetOptions, 'onOpenSettings'> = {},
-): { apply(settings: WidgetSettings): void } {
-  let widget: UIAdapter | null = null;
+): RemountableWidget {
+  let widget: FloatingWidget | null = null;
+  let applied: WidgetSettings | null = null;
+  function apply(settings: WidgetSettings): void {
+    applied = settings;
+    widget?.unmount();
+    widget = createFloatingWidget({ ...settings, ...extras });
+    widget.mount(engine);
+  }
   return {
-    apply(settings) {
-      widget?.unmount();
-      widget = createFloatingWidget({ ...settings, ...extras });
-      widget.mount(engine);
+    apply,
+    isVisible: () => widget?.isVisible() ?? false,
+    show() {
+      if (applied && !widget?.isVisible()) apply({ ...applied, show: 'always' });
     },
   };
 }

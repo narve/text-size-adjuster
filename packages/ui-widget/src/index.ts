@@ -1,5 +1,5 @@
 export { createFloatingWidget, createRemountableWidget } from './widget.js';
-export type { FloatingWidgetOptions } from './widget.js';
+export type { FloatingWidget, FloatingWidgetOptions, RemountableWidget } from './widget.js';
 export {
   parsePosition,
   parseShow,

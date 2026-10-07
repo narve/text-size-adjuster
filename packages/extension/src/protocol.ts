@@ -8,6 +8,8 @@ export type Message =
   | { type: 'tsa:increase' }
   | { type: 'tsa:decrease' }
   | { type: 'tsa:reset' }
+  // Popup → the tab's top frame: bring the on-page control back (FR9.7).
+  | { type: 'tsa:showControl' }
   // Top frame → background: the tab's size changed.
   | { type: 'tsa:factorChanged'; factor: number }
   // Background → every frame of the tab: follow the top frame (subframes only).
@@ -19,6 +21,8 @@ export type Message =
 
 export interface FactorResponse {
   factor: number;
+  /** From the top frame: whether its on-page control can be seen (not hidden with ×, not waiting for a zoom). */
+  controlVisible?: boolean;
 }
 
 /** A factor received in a message: anything else (NaN, a string) would make every `calc()` invalid. */

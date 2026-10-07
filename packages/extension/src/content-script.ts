@@ -16,10 +16,6 @@ import { readSettings, watchSettings, type ControlSettings } from './settings.js
  */
 const engine = createEngine();
 
-function respond(factor: number): FactorResponse {
-  return { factor };
-}
-
 if (window === window.top) runTopFrame();
 else runSubframe();
 
@@ -40,6 +36,7 @@ function runTopFrame(): void {
       void browser.runtime.sendMessage({ type: 'tsa:openOptions' } satisfies Message).catch(() => {});
     },
   });
+  const respond = (factor: number): FactorResponse => ({ factor, controlVisible: widget.isVisible() });
   let shown: ControlSettings | null = null;
   watchSettings((settings) => {
     autoRemember = Promise.resolve(settings.autoRemember);
@@ -59,6 +56,9 @@ function runTopFrame(): void {
         return Promise.resolve(respond(engine.decrease()));
       case 'tsa:reset':
         return Promise.resolve(respond(engine.reset()));
+      case 'tsa:showControl':
+        widget.show();
+        return Promise.resolve(respond(engine.getFactor()));
       default:
         // Including the relay's own tsa:setFactor, which reaches this frame too: the top frame
         // is where changes come from, it never follows.
