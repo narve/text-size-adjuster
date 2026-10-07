@@ -70,7 +70,8 @@ type Message =
   | { type: 'tsa:increase' } | { type: 'tsa:decrease' } | { type: 'tsa:reset' }
   | { type: 'tsa:factorChanged'; factor: number }      // top frame → background
   | { type: 'tsa:setFactor'; factor: number }          // background → subframes
-  | { type: 'tsa:getTopFactor' };                      // subframe → background
+  | { type: 'tsa:getTopFactor' }                       // subframe → background
+  | { type: 'tsa:showControl' };                       // popup → top frame (FR9.7)
 ```
 
 Override mechanism (FR2.5): each captured element gets its scaled
@@ -80,6 +81,11 @@ stylesheet declaration regardless of specificity. Why that, and not a
 high-specificity injected rule, is explained in the header comment of
 `packages/core/src/capture.ts`. The one case still unhandled is a page script
 rewriting the element's inline style afterwards (FR6.4, accepted).
+
+Capture is lazy (FR2.6): an attached engine does nothing to the page at
+factor 1. The first change to another factor captures and starts the
+`MutationObserver`; a return to 1 releases every element and removes the factor
+variable.
 
 ## Phased build order (one commit per phase)
 

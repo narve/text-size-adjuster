@@ -37,6 +37,10 @@ interface Child {
  * created automatically for every open shadow root and reachable same-origin iframe document
  * discovered within the root, and kept in lock-step with the parent's factor — this is what lets
  * `setFactor` scale a whole page, shadow DOM and same-origin iframes included, from one call.
+ *
+ * An attached engine leaves the page alone while the factor is 1: sizes are captured, and new
+ * content watched for, from the first change to another factor, and everything is let go of
+ * again on the way back to 1 (FR2.6). A page nobody resizes is never modified.
  */
 export function createEngine(options: EngineOptions = {}): TextSizeEngine {
   return createEngineFor(options, false);
@@ -73,6 +77,10 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
 
   let factor = 1;
   let attached = false;
+  /** Attached and at a factor other than 1: sizes are captured and new content is watched for. */
+  let capturing = false;
+  /** Whether this root holds sizes captured earlier, which later reads have to see through. */
+  let hasCaptured = false;
   let observer: MutationObserver | null = null;
   const listeners = new Set<EngineListener>();
   const children = new Set<Child>();
@@ -118,7 +126,11 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     if (!target) return;
     const unscaled = elements.filter(isScalable);
     if (unscaled.length === 0) return;
-    captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr, scaled: factor !== 1 });
+    // Nothing in a document is scaled before its first capture. A shadow root's content can
+    // inherit a scaled size from its host from the start.
+    const scaled = factor !== 1 && (followsPage || hasCaptured);
+    captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr, scaled });
+    hasCaptured = true;
     // A root element that replaced the one the factor was written to (document.open) starts
     // without the variable.
     if (factor !== 1 && !followsPage) target.style.setProperty(FACTOR_VAR, String(factor));
@@ -239,7 +251,10 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
   function applyFactor(k: number, eventType: 'change' | 'reset'): number {
     // Rounded so repeated ±step arithmetic (1 + 0.1 - 0.1 = 1.0000000000000002) lands back on
     // exact values — "back to 100%" must compare equal to 1.
-    factor = Math.round(clampFactor(k, opts.min, opts.max) * 1000) / 1000;
+    const next = Math.round(clampFactor(k, opts.min, opts.max) * 1000) / 1000;
+    // Before the factor changes: the first capture then reads a page that isn't scaled yet.
+    if (attached && next !== 1) startCapturing();
+    factor = next;
     if (!followsPage) styleTarget()?.style.setProperty(FACTOR_VAR, String(factor));
     // One unreachable child (a frame that navigated away or was removed) must never stop the
     // rest of the page, or the change notification below, from happening (code review C1).
@@ -254,6 +269,7 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
         dropChild(child);
       }
     }
+    if (factor === 1) stopCapturing(true);
     notify(eventType);
     return factor;
   }
@@ -280,6 +296,7 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
   }
 
   function rescan(): void {
+    if (!capturing) return;
     const elements = Array.from(root.querySelectorAll('*')).filter((el) => !isIgnored(el));
     captureNew(elements);
     discoverChildrenIn(elements);
@@ -297,7 +314,7 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
 
   function recapture(): void {
     recaptureTimer = undefined;
-    if (!attached || !win || win.innerWidth === capturedWidth) return;
+    if (!capturing || !win || win.innerWidth === capturedWidth) return;
     capturedWidth = win.innerWidth;
     releaseElements(Array.from(root.querySelectorAll(`[${opts.scaledAttr}]`)), FACTOR_VAR, opts);
     rescan();
@@ -328,6 +345,36 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     observer.observe(root, { childList: true, subtree: true });
   }
 
+  function startCapturing(): void {
+    if (capturing) return;
+    capturing = true;
+    capturedWidth = win?.innerWidth ?? 0;
+    rescan();
+    startObserving();
+    win?.addEventListener('resize', onResize);
+  }
+
+  /**
+   * Stops watching the page. With `release`, also lets go of every captured element and of the
+   * factor variable, so the page is as its author wrote it (back at factor 1).
+   */
+  function stopCapturing(release: boolean): void {
+    if (!capturing) return;
+    capturing = false;
+    observer?.disconnect();
+    observer = null;
+    win?.removeEventListener('resize', onResize);
+    if (recaptureTimer !== undefined) clearTimeout(recaptureTimer);
+    recaptureTimer = undefined;
+    if (!release) return;
+    releaseElements(Array.from(root.querySelectorAll(`[${opts.scaledAttr}]`)), FACTOR_VAR, opts);
+    hasCaptured = false;
+    const target = styleTarget();
+    if (followsPage || !target) return;
+    target.style.removeProperty(FACTOR_VAR);
+    if (target.getAttribute('style') === '') target.removeAttribute('style');
+  }
+
   function attach(): void {
     if (attached) return;
     attached = true;
@@ -338,19 +385,12 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
         dropChild(child);
       }
     }
-    capturedWidth = win?.innerWidth ?? 0;
-    rescan();
-    startObserving();
-    win?.addEventListener('resize', onResize);
+    if (factor !== 1) startCapturing();
   }
 
   function detach(): void {
     attached = false;
-    observer?.disconnect();
-    observer = null;
-    win?.removeEventListener('resize', onResize);
-    if (recaptureTimer !== undefined) clearTimeout(recaptureTimer);
-    recaptureTimer = undefined;
+    stopCapturing(false);
     for (const child of Array.from(children)) {
       try {
         child.engine.detach();

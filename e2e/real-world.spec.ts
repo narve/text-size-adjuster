@@ -68,12 +68,11 @@ for (const site of sites) {
     await scrollToElement(page, site.screenshotFrom);
     await screenshot(1);
 
+    await setFactor(page, 2);
     const scaledCount = await page.evaluate(() => document.querySelectorAll('[data-tsa-scaled]').length);
     // A real page has at least a handful of text elements; this just confirms capture actually
     // ran, not a precise count.
     expect(scaledCount).toBeGreaterThan(10);
-
-    await setFactor(page, 2);
     await scrollToElement(page, site.screenshotFrom);
 
     await screenshot(2);

@@ -44,6 +44,11 @@ the unscaled page, and produces no new horizontal scrollbar.
   font-size styling, including pages that use `!important` with ordinary
   selectors, and inline `!important` styles. (See FR6.4 for the one case this
   does not cover.)
+- **FR2.6**: At the normal size (factor 1) the page is left as its author wrote
+  it. Sizes are captured, and new content is watched for, from the first change
+  to another size (a remembered size counts), and on the way back to the normal
+  size everything is let go of again: the inline styles, the marker attribute
+  and the factor. A page nobody resizes is never modified.
 
 ## FR3. Multiple delivery mechanisms, one engine
 
@@ -125,10 +130,11 @@ the unscaled page, and produces no new horizontal scrollbar.
   state are not followed: a class added afterwards (hover/open states, a site's
   dark or reading mode) or the site's own text-size switch leaves the affected
   elements at the size captured before, until the next capture or a reload.
-- **FR6.6**: The scaling is written into the page as inline styles and a marker
-  attribute (FR2.1), also at normal size. A page that saves or sends its own
-  markup takes them along: text written in a `contenteditable` editor (webmail,
-  a blogging tool) can carry them into what is stored or sent.
+- **FR6.6**: While a page is resized, the scaling is written into it as inline
+  styles and a marker attribute (FR2.1, FR2.6). A page that saves or sends its
+  own markup takes them along: text written in a `contenteditable` editor
+  (webmail, a blogging tool) at another size than the normal one can carry them
+  into what is stored or sent.
 
 ## FR8. Cross-browser compatibility (best-effort)
 
@@ -151,7 +157,9 @@ the unscaled page, and produces no new horizontal scrollbar.
 ## FR7. Performance
 
 - **FR7.1**: Scaling a typical page (hundreds to low-thousands of elements) must
-  complete its initial pass without a noticeable UI freeze.
+  complete its initial pass without a noticeable UI freeze. The initial pass
+  runs at the first change away from the normal size (FR2.6); until then the
+  tool does no work on the page.
 - **FR7.2**: Changing the factor after the initial pass (e.g. clicking + again)
   must be near-instant, since it should only update one CSS custom property
   rather than re-walking the DOM.
@@ -183,6 +191,9 @@ the unscaled page, and produces no new horizontal scrollbar.
 - **FR9.6**: The extension's on-page control has a gear button that opens the
   options page directly. The userscript and the script tag have no options page,
   so their control has no gear.
+- **FR9.7**: While the on-page control can't be seen (hidden with `×`, or still
+  waiting for a zoom), the toolbar popup offers a "Show the control on this
+  page" button that brings it back in its corner, without a reload.
 
 ## FR10. On-page control settings
 

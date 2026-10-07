@@ -446,20 +446,80 @@ test.describe('content added while scaled', () => {
   });
 });
 
+/** FR2.6: at factor 1 the page is as its author wrote it, before any change and after a reset. */
+test.describe('the page at normal size', () => {
+  const marks = (page: Page) =>
+    page.evaluate(() => ({
+      marked: document.querySelectorAll('[data-tsa-scaled]').length,
+      factor: document.documentElement.style.getPropertyValue('--tsa-k'),
+      inline: document.getElementById('inline')!.getAttribute('style'),
+      plain: document.getElementById('plain')!.getAttribute('style'),
+      shadow: document.getElementById('host')!.shadowRoot!.querySelector('b')!.getAttribute('style'),
+    }));
+  const untouched = { marked: 0, factor: '', inline: 'font-size: 10px !important;', plain: null, shadow: null };
+
+  test('is not modified until the size changes, and is let go of again on reset', async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<p id="inline" style="font-size: 10px !important;">inline</p><p id="plain">plain</p><div id="host"></div>',
+      );
+      document.getElementById('host')!.attachShadow({ mode: 'open' }).innerHTML = '<b>shadow</b>';
+    });
+    await attachEngine(page);
+    expect(await marks(page)).toEqual(untouched);
+
+    await setFactor(page, 1.5);
+    expect((await marks(page)).marked).toBeGreaterThan(3);
+
+    await setFactor(page, 1);
+    expect(await marks(page)).toEqual(untouched);
+    expect(await page.evaluate(() => document.documentElement.hasAttribute('style'))).toBe(false);
+
+    // Content added now is left alone too.
+    await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<p id="late">late</p>'));
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    expect((await marks(page)).marked).toBe(0);
+  });
+
+  test("a size the page changed while scaled is the page's again after a reset", async ({ page }) => {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(() => {
+      document.head.insertAdjacentHTML('beforeend', '<style>#mode { font-size: 16px } .big #mode { font-size: 24px }</style>');
+      document.body.insertAdjacentHTML('beforeend', '<p id="mode">mode</p>');
+    });
+    await attachEngine(page);
+    const size = () => page.evaluate(() => getComputedStyle(document.getElementById('mode')!).fontSize);
+    await setFactor(page, 2);
+    await page.evaluate(() => document.body.classList.add('big'));
+    // FR6.5: not followed while scaled.
+    expect(await size()).toBe('32px');
+    await setFactor(page, 1);
+    expect(await size()).toBe('24px');
+    await setFactor(page, 2);
+    expect(await size()).toBe('48px');
+  });
+});
+
 test.describe('spa-mutation', () => {
   test('content injected after load is captured automatically, without a manual rescan', async ({
     page,
   }) => {
     await gotoAndAttach(page, '/spa-mutation/');
+    // New content is only watched for while the text is scaled.
+    await setFactor(page, 2);
     await page.click('#load-more');
     await page.waitForFunction(() => {
       const el = document.querySelector('[data-tsa-ref="large"]');
       return el !== null && el.hasAttribute('data-tsa-scaled');
     });
 
-    const before = await readRefSizes(page);
-    await setFactor(page, 2);
     const after = await readRefSizes(page);
+    await setFactor(page, 1);
+    const before = await readRefSizes(page);
 
     expect(after.large / before.large).toBeCloseTo(2, 1);
     expect(after.small / before.small).toBeCloseTo(2, 1);
@@ -497,7 +557,7 @@ test.describe('line-height-mixed', () => {
 });
 
 test.describe('large-dom-performance', () => {
-  test('initial capture completes promptly; a later factor change is much faster (FR7)', async ({
+  test('the first change, which captures, completes promptly; a later one is much faster (FR7)', async ({
     page,
   }) => {
     await page.addInitScript({ path: CORE_BUNDLE });
@@ -511,8 +571,13 @@ test.describe('large-dom-performance', () => {
       const t1 = performance.now();
       engine.setFactor(1.5);
       const t2 = performance.now();
-      return { initialCaptureMs: t1 - t0, factorChangeMs: t2 - t1 };
+      engine.setFactor(1.6);
+      const t3 = performance.now();
+      return { attachMs: t1 - t0, initialCaptureMs: t2 - t1, factorChangeMs: t3 - t2 };
     });
+
+    // Attaching does no work on the page: sizes are captured at the first change (FR2.6).
+    expect(timings.attachMs).toBeLessThan(5);
 
     // Generous absolute ceiling (CI machines vary) — this is "no noticeable freeze", not a tight budget.
     expect(timings.initialCaptureMs).toBeLessThan(3000);

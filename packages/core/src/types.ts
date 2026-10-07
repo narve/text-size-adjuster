@@ -40,10 +40,17 @@ export interface TextSizeEngine {
   getFactor(): number;
   /** Returns an unsubscribe function. */
   onChange(listener: EngineListener): () => void;
-  /** Captures current page state and starts observing for new content. */
+  /**
+   * Starts scaling the page. While the factor is 1 the page is left untouched: sizes are captured,
+   * and new content is watched for, from the first change to another factor until the next
+   * return to 1.
+   */
   attach(): void;
   detach(): void;
-  /** Forces a fresh capture pass over the current root (e.g. after a caller-known DOM change). */
+  /**
+   * Forces a fresh capture pass over the current root (e.g. after a caller-known DOM change).
+   * Does nothing at factor 1, when nothing is captured.
+   */
   rescan(): void;
 }
 

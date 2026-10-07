@@ -159,5 +159,7 @@ export function releaseElements(elements: Element[], factorVar: string, opts: Ca
       else htmlEl.style.removeProperty(prop);
     }
     el.removeAttribute(opts.scaledAttr);
+    // Taking the last declaration away leaves an empty attribute behind.
+    if (el.getAttribute('style') === '') el.removeAttribute('style');
   }
 }
