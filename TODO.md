@@ -26,30 +26,38 @@ including the ones already fixed.
 
 ## Seen on Android
 
-Reported by the maintainer on 2026-10-04. Still to do for each: check it on a
-real device with the current build, and note the page, whether the on-page
-control or the toolbar popup was used, and the installed version (the review
-fixes are in 1.4.0, those of 2026-10-07 in 1.7.0 and 1.8.0; 1.3.0 was never
-released, so before that the installed version was 1.1.0, without them).
+Reported by the maintainer on 2026-10-04, with the builds of that time (1.1.0 to
+1.4.0).
 
-- [ ] The control does not always appear when zooming. Two fixes may cover it:
-      M4 (`c005b35`), and `45957c6`: a control added after the page had loaded
-      was placed almost entirely outside the visible area on a page shown zoomed
-      out to fit.
-- [ ] The control does not always update its number: adjusting the text size
-      works, but the display stays at 100%. This matches the symptom of C1 (text
-      scales, the display keeps showing "100%"), fixed in `876c4ec` and
-      `71e419b`. Not reproduced on an emulated phone in Chromium. A second
-      candidate, fixed on 2026-10-07: the number going back to an earlier size
-      when storage reported the engine's own write late, likelier on a slow
-      phone.
-- [ ] Sometimes, after adjusting up a few notches and then pressing the reset
-      button, the text ends up a lot smaller than it originally was. Could be
-      tied to the previous item. Not reproduced on an emulated phone in Chromium
-      (four fixtures; increase, rotate, rotate back, reset). The double scaling
-      fixed on 2026-10-07 left a wrong size after reset too, but a larger one
-      after adjusting up, so it doesn't explain this. Not looked at: Firefox for
-      Android's automatic font sizing on pages without a viewport tag.
+Tried on 2026-10-07 on a Galaxy Z Flip (SM-F766B, Android 16, Firefox 157) with
+the 1.8.0 build, driven over adb. `norvig.com/spell-correct.html` (no viewport
+tag) and a Wikipedia article (mobile layout).
+
+- [ ] On a page without a viewport tag, a bigger size can make the text smaller.
+      Firefox enlarges such a page's body text itself, and shows the page zoomed
+      out to fit its width. Seen on the norvig page: at 140% the body text is
+      hardly bigger than at 100% (the code block, which Firefox doesn't enlarge,
+      grows as asked), and at 200% it is clearly smaller, because the code block
+      has become wider than the page and Firefox zooms out further to fit it.
+      This is likely what "the text ends up a lot smaller" was. Reset puts the
+      page back exactly (1.8.0 lets go of everything at 100%); what earlier
+      builds did after reset here was not tried. Not solved: needs a decision on
+      what to do on such pages (for example keeping wide blocks from growing
+      past the page, or taking over from Firefox's own enlarging).
+- [ ] The control does not always appear when zooming. Not reproduced: after a
+      double-tap zoom on the norvig page it appeared, in its corner and at its
+      normal size. A pinch could not be sent over adb, and a page with a mobile
+      layout was not tried. Two earlier fixes may cover it: M4 (`c005b35`), and
+      `45957c6` (a control added after the page had loaded was placed almost
+      entirely outside the visible area on a page shown zoomed out to fit).
+- [ ] The control does not always update its number. Not reproduced: the number
+      followed every one of some twenty taps on the two pages, ten of them in
+      quick succession. Candidates fixed earlier: C1 (`876c4ec`, `71e419b`), and
+      on 2026-10-07 the number going back to an earlier size when storage
+      reported the engine's own write late.
+- Fixed on 2026-10-07, found in the same session: the toolbar popup, which
+  Android opens as a full page, had no viewport tag and was shown at a fraction
+  of its size. Not in 1.7.0 or 1.8.0.
 
 ## Waiting for a fix upstream
 

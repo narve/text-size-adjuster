@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <!-- On Android the popup opens as a full page: without this it is laid out 980px wide and
+       shown at a fraction of its size. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}}</title>
   <link rel="stylesheet" href="theme.css" />
   <style>
@@ -18,6 +21,13 @@
     .actions .button { width: 100%; min-height: 38px; font-size: 0.92rem; }
     .options-link { display: block; margin-top: 10px; text-align: center; font-size: 0.88rem; }
     .unavailable, .note { margin: 10px 0 0; font-size: 0.88rem; }
+    /* As a full page on a phone: use the width, with room for a finger. */
+    @media (hover: none) and (pointer: coarse) {
+      body { width: auto; max-width: 420px; margin: 0 auto; padding: 20px; }
+      .stepper .button { width: 56px; min-height: 56px; }
+      .actions .button { min-height: 48px; font-size: 1rem; }
+      .options-link { padding: 12px; font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
