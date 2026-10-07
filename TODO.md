@@ -6,28 +6,22 @@ including the ones already fixed.
 
 ## Releases
 
-- [ ] 1.6.0 (adds the gear on the on-page control) is signed by Mozilla but not
-      published. `npm run release:github` publishes it: installed copies then
-      update to it, and the install guide's download link serves it. The signed
-      file is
-      `packages/extension/web-ext-artifacts/text-size-adjuster-signed.xpi`,
-      which is not in git. Until then the install guide mentions the gear while
-      the downloadable 1.4.0 doesn't have it.
-- [ ] The changes of 2026-10-07 are in no signed build, 1.6.0 included. Fixes:
-      sizes going back to an earlier one or a reset being undone while a size is
-      being saved, and text scaled twice (added to a shadow host's own children,
-      or with a font-size transition on the page, when added or after a
-      rotation). New: pages are left untouched at 100% (FR2.6), and the popup's
-      "Show the control on this page" (FR9.7). They need a new version number.
-- [ ] Try on a real phone, with that build: the first tap on a large page (it
-      now does the capture), and **↺** on a page with a lot of text.
+- [ ] addons.mozilla.org: 1.7.0 was submitted on 2026-10-07 and is waiting for
+      review; the listing serves 1.5.0 until then. Until it is approved, the
+      install guide describes a gear and a "Show the control on this page"
+      button that the listed version doesn't have.
+- GitHub: 1.8.0 was released on 2026-10-07, the same code as 1.7.0 (Mozilla
+  takes each version number on one channel only). Copies installed from the site
+  update to it. 1.6.0 was signed but never published.
+- Both carry the changes of 2026-10-07. Fixes: sizes going back to an earlier
+  one or a reset being undone while a size is being saved, and text scaled twice
+  (added to a shadow host's own children, or with a font-size transition on the
+  page, when added or after a rotation). New: the gear, pages left untouched at
+  100% (FR2.6), and the popup's "Show the control on this page" (FR9.7).
+- [ ] Try on a real phone, with 1.8.0: the first tap on a large page (it now
+      does the capture), and **↺** on a page with a lot of text.
 - [ ] Try the gear once in Firefox, on desktop and Android: the automated tests
       only follow it to the options page in Chromium.
-- [ ] addons.mozilla.org: 1.5.0 (without the gear) is approved and available
-      (maintainer, 2026-10-07), and the install guide sends people there. The
-      gear needs a new version number there, since 1.6.0 is used up by the
-      unlisted signing. Until that version is listed, the install guide mentions
-      a gear that neither the listed 1.5.0 nor the downloadable 1.4.0 has.
 - [ ] Chrome Web Store: submitted by the maintainer on 2026-10-04.
 
 ## Seen on Android
@@ -35,8 +29,8 @@ including the ones already fixed.
 Reported by the maintainer on 2026-10-04. Still to do for each: check it on a
 real device with the current build, and note the page, whether the on-page
 control or the toolbar popup was used, and the installed version (the review
-fixes are in 1.4.0; 1.3.0 was never released, so before that the installed
-version was 1.1.0, without them).
+fixes are in 1.4.0, those of 2026-10-07 in 1.7.0 and 1.8.0; 1.3.0 was never
+released, so before that the installed version was 1.1.0, without them).
 
 - [ ] The control does not always appear when zooming. Two fixes may cover it:
       M4 (`c005b35`), and `45957c6`: a control added after the page had loaded
