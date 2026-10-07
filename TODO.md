@@ -181,7 +181,8 @@ same day, each with a test that failed before:
 - The manual-install guide said the control appears on any page; the default is
   after zooming.
 
-Left, for the maintainer to decide:
+Left open. Deferred by the maintainer on 2026-10-08, and probably not going to
+be done:
 
 - [ ] While scaled, every batch of new content makes the browser restyle the
       whole page twice: reading unscaled sizes sets the factor to 1 on the root
