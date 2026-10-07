@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 import { bindStore, createEngine } from '@tsa/core';
-import { createRemountableWidget } from '@tsa/ui-widget';
+import { createRemountableWidget, formatFactor, showToast } from '@tsa/ui-widget';
 import { createGatedStore, createLocalExtensionStore, type BrowserStorageLike } from '@tsa/stores';
 import { isFactor, type FactorResponse, type Message } from './protocol.js';
 import { readSettings, watchSettings, type ControlSettings } from './settings.js';
@@ -27,6 +27,11 @@ function runTopFrame(): void {
   let autoRemember: Promise<boolean> = readSettings().then((settings) => settings.autoRemember);
   const store = createGatedStore(createLocalExtensionStore(browser as unknown as BrowserStorageLike), () => autoRemember);
   bindStore(engine, store, location.origin);
+  // FR9.8: a page that opens at a remembered size says so, since nothing on it shows why its
+  // text is bigger or smaller than its author made it.
+  void store.get(location.origin).then((size) => {
+    if (size !== undefined && size !== 1) showToast(`Text size: ${formatFactor(size)}`);
+  });
 
   // FR9.3: a change on the options page applies to already-open pages straight away. The control
   // is only re-created when its own settings changed, so toggling an unrelated setting doesn't

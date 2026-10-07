@@ -50,7 +50,7 @@ computer, or follow the steps for
 - You can also adjust the size any time from the {{name}} button in Firefox's
   toolbar (or the extensions menu on Android) — no zooming needed.
 - Your chosen size is remembered for each website. Next time you visit, it's
-  already applied.
+  already applied, and a short "Text size: 140%" message tells you so.
 
 ## Settings
 

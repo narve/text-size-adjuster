@@ -194,6 +194,8 @@ the unscaled page, and produces no new horizontal scrollbar.
 - **FR9.7**: While the on-page control can't be seen (hidden with `×`, or still
   waiting for a zoom), the toolbar popup offers a "Show the control on this
   page" button that brings it back in its corner, without a reload.
+- **FR9.8**: When a page opens at a size remembered for its site (other than
+  100%), a short message says so for about three seconds: "Text size: 140%".
 
 ## FR10. On-page control settings
 

@@ -34,7 +34,7 @@ test('content script scales the page, and the size persists per origin on reload
   page.on('pageerror', (err) => errors.push(err.message));
   await page.goto('/plain-px/');
 
-  const widget = page.locator('[data-tsa-ignore]');
+  const widget = page.locator('.tsa-widget');
   await expect(widget).toBeAttached();
   const before = await largeRefSize(page);
   // The control is hidden until the user zooms (FR10.4); its buttons still work.
@@ -45,7 +45,7 @@ test('content script scales the page, and the size persists per origin on reload
   expect(after).toBeGreaterThan(before);
 
   await page.reload();
-  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await expect(page.locator('.tsa-widget')).toBeAttached();
   await expect.poll(() => largeRefSize(page)).toBeCloseTo(after, 0);
   expect(errors).toEqual([]);
 });
@@ -53,7 +53,7 @@ test('content script scales the page, and the size persists per origin on reload
 test('the popup drives the page in the active tab', async ({ context, extensionId }) => {
   const page = await context.newPage();
   await page.goto('/plain-px/');
-  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await expect(page.locator('.tsa-widget')).toBeAttached();
   const before = await largeRefSize(page);
 
   // The popup acts on the active tab, which it looks up as it opens: make that the page, not
@@ -71,7 +71,7 @@ test('the popup drives the page in the active tab', async ({ context, extensionI
 test("the control's gear opens the options page", async ({ context }) => {
   const page = await context.newPage();
   await page.goto('/plain-px/');
-  const gear = page.locator('[data-tsa-ignore]').locator('[data-action="settings"]');
+  const gear = page.locator('.tsa-widget').locator('[data-action="settings"]');
   await expect(gear).toBeAttached();
   const [options] = await Promise.all([
     context.waitForEvent('page'),

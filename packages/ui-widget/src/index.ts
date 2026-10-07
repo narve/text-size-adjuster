@@ -1,5 +1,6 @@
 export { createFloatingWidget, createRemountableWidget } from './widget.js';
 export type { FloatingWidget, FloatingWidgetOptions, RemountableWidget } from './widget.js';
+export { showToast, TOAST_MS } from './toast.js';
 export {
   parsePosition,
   parseShow,

@@ -50,14 +50,14 @@ function collectErrors(page: Page): string[] {
 
 /** Clicks the (possibly hidden, FR10.4) on-page control's button `times` times. */
 async function clickWidget(page: Page, action: string, times = 1): Promise<void> {
-  const button = page.locator('[data-tsa-ignore]').locator(`[data-action="${action}"]`);
+  const button = page.locator('.tsa-widget').locator(`[data-action="${action}"]`);
   for (let i = 0; i < times; i += 1) {
     await button.evaluate((el) => (el as HTMLButtonElement).click());
   }
 }
 
 function widgetDisplay(page: Page) {
-  return page.locator('[data-tsa-ignore]').locator('[data-tsa-display]');
+  return page.locator('.tsa-widget').locator('[data-tsa-display]');
 }
 
 test('content script auto-attaches, the widget scales the page, and the factor persists per origin on reload', async ({
@@ -65,13 +65,13 @@ test('content script auto-attaches, the widget scales the page, and the factor p
 }) => {
   await page.goto('/plain-px/');
 
-  const widgetHost = page.locator('[data-tsa-ignore]');
+  const widgetHost = page.locator('.tsa-widget');
   await expect(widgetHost).toBeAttached();
 
   // FR10.4: in the extension the on-page control stays hidden until the user zooms (the toolbar
   // button is always there). Pinch-zoom can't be simulated in Firefox here, so drive the hidden
   // control's buttons directly — they still dispatch to the content script's listeners.
-  expect(await widgetHost.locator('.tsa-widget').evaluate((el) => (el as HTMLElement).hidden)).toBe(true);
+  expect(await widgetHost.evaluate((el) => (el as HTMLElement).hidden)).toBe(true);
 
   const before = await readLargeRefSize(page);
   for (let i = 0; i < 5; i += 1) {
@@ -85,9 +85,11 @@ test('content script auto-attaches, the widget scales the page, and the factor p
   // FR5.1: per-origin persistence — reloading the same origin should reapply the factor
   // automatically, without the user doing anything.
   await page.reload();
-  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  // FR9.8: and says so, for a few seconds.
+  await expect(page.locator('.tsa-toast')).toHaveText(/^Text size: 1\d0%$/);
   const afterReload = await readLargeRefSize(page);
   expect(afterReload).toBeCloseTo(afterClicks, 0);
+  await expect(page.locator('.tsa-toast')).toHaveCount(0, { timeout: 5000 });
 });
 
 /**
@@ -99,7 +101,7 @@ test('content script auto-attaches, the widget scales the page, and the factor p
 test('the control has a gear for the options page', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/plain-px/');
-  await expect(page.locator('[data-tsa-ignore]').locator('[data-action="settings"]')).toBeAttached();
+  await expect(page.locator('.tsa-widget').locator('[data-action="settings"]')).toBeAttached();
   await clickWidget(page, 'settings');
   await page.waitForTimeout(500);
   expect(errors).toEqual([]);
@@ -117,7 +119,7 @@ for (const fixture of ['parent.html', 'delayed.html']) {
   }) => {
     const errors = collectErrors(page);
     await page.goto(`/iframe-cross-origin/${fixture}`);
-    await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+    await expect(page.locator('.tsa-widget')).toBeAttached();
     // All Layer 2 tests share one browser profile and this fixture origin: start from normal size.
     await clickWidget(page, 'reset');
     await expect(widgetDisplay(page)).toHaveText('100%');
@@ -167,7 +169,7 @@ for (const fixture of ['parent.html', 'delayed.html']) {
 test('the frame still follows after the background has been unloaded while idle', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/iframe-cross-origin/parent.html');
-  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await expect(page.locator('.tsa-widget')).toBeAttached();
   await clickWidget(page, 'reset');
   await expect.poll(() => readCrossOriginSize(page)).toBe(18);
 
@@ -185,7 +187,7 @@ test('the frame still follows after the background has been unloaded while idle'
 test('a custom element defined after the content script ran has its shadow content scaled', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/shadow-dom-open/');
-  await expect(page.locator('[data-tsa-ignore]')).toBeAttached();
+  await expect(page.locator('.tsa-widget')).toBeAttached();
   await clickWidget(page, 'reset');
   await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<late-card></late-card>'));
   await page.evaluate(() => {
