@@ -18,6 +18,12 @@ including the ones already fixed.
 - [ ] addons.mozilla.org: 1.5.0 (without the gear) is waiting for review. Chrome
       Web Store: submitted by the maintainer on 2026-10-04.
 
+## Feature requests
+
+- [ ] When a page loads and there is a stored size for that site other than
+      100%, show a toast for about 3 seconds: "Text size: x%". Requested by the
+      maintainer on 2026-10-07.
+
 ## Seen on Android
 
 Reported by the maintainer on 2026-10-04. Still to do for each: check it on a
