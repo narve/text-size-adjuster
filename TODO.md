@@ -6,30 +6,24 @@ including the ones already fixed.
 
 ## Releases
 
-- addons.mozilla.org: 1.7.0 was submitted on 2026-10-07 and approved the same
-  day; it is the version the listing serves.
-- GitHub: 1.8.0 was released on 2026-10-07, the same code as 1.7.0 (Mozilla
-  takes each version number on one channel only). Copies installed from the site
-  update to it. 1.6.0 was signed but never published.
-- Both carry the changes of 2026-10-07. Fixes: sizes going back to an earlier
-  one or a reset being undone while a size is being saved, and text scaled twice
-  (added to a shadow host's own children, or with a font-size transition on the
-  page, when added or after a rotation). New: the gear, pages left untouched at
-  100% (FR2.6), and the popup's "Show the control on this page" (FR9.7).
+Numbering from 2.1.0 on: x.Y.0 for addons.mozilla.org, x.Y.1 and up for GitHub
+(developer guide, "Version numbers").
+
+- [ ] addons.mozilla.org: 2.1.0 was submitted on 2026-10-08 and is waiting for
+      review; the listing serves 1.7.0 until then.
+- GitHub: 2.1.1 was released on 2026-10-08, the same code as 2.1.0. Copies
+  installed from the site update to it.
+- Both carry everything up to the fixes from the independent review of
+  2026-10-08. New since 1.7.0 and 1.8.0: the popup readable on Android, the
+  control kept in view on a page wider than the screen, the options page no
+  wider than the screen, the message when a page opens at a remembered size
+  (FR9.8), and taking over the browser's enlarging on pages not made for phones
+  (FR2.7).
+- Earlier: 1.7.0 (addons.mozilla.org) and 1.8.0 (GitHub), both 2026-10-07. 1.6.0
+  and 1.9.0 were signed as unlisted but never published.
 - [ ] Try the gear once in Firefox on desktop. On Android it opens the options
       page (tried 2026-10-07, Firefox 157); the automated tests only follow it
       there in Chromium.
-- [ ] In no published version yet, all of 2026-10-07: the popup shown at a
-      fraction of its size on Android (`ce40426`), the control off-screen on a
-      page wider than the screen (`84f6087`), the options page wider than the
-      screen (`1f1ac50`), the message when a page opens at a remembered size
-      (FR9.8, `ec4de83`), and taking over the browser's enlarging (FR2.7,
-      `9ea267e`). 1.9.0 has them all: signed as unlisted for trying on the
-      phone, not published anywhere.
-- [ ] Next: 2.1.0 on addons.mozilla.org, then 2.1.1 on GitHub (the numbering
-      agreed on 2026-10-08, see the developer guide's "Version numbers"). Set
-      2.1.0 by hand in `packages/extension/package.json`; `version:bump` takes
-      it from there.
 - [ ] Chrome Web Store: submitted by the maintainer on 2026-10-04.
 
 ## Bugs
