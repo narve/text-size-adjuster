@@ -28,6 +28,9 @@ including the ones already fixed.
       shows an extremely small popup. The options page is reasonably sized.
       Reported by the maintainer on 2026-10-07. Still to note: the browser and
       the installed version.
+- [ ] On the same phone the options page does not work well: lines don't break,
+      so reading them takes horizontal scrolling, which is what this add-on
+      exists to avoid. Reported by the maintainer on 2026-10-07.
 
 ## Feature requests
 
