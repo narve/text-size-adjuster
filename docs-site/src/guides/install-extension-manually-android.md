@@ -7,10 +7,12 @@ It takes a minute.
 
 1. Download [{{name}}]({{signedXpi}}) on your phone. The file is signed by
    Mozilla.
-2. In Firefox, open **Settings → About Firefox** and tap the Firefox logo five
-   times, until it says the debug menu is enabled.
-3. Go back to **Settings**. Near the bottom, under **Advanced**, tap **Install
-   add-on from file** and choose the file you downloaded.
+2. In Firefox, open **⋮ → Settings**, scroll to the bottom and tap **About
+   Firefox**. Tap the Firefox logo five times, until it says the debug menu is
+   enabled.
+3. Go back to **Settings**. Under **Advanced**, tap **Install extension from
+   file** and choose the file you downloaded. If the list of files is empty,
+   open its menu (**☰**) and pick **Downloads**.
 4. Tap **Add** when Firefox asks.
 
 You need Firefox for Android {{firefoxAndroidMin}} or newer. Firefox asks for
