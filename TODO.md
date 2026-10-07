@@ -30,10 +30,10 @@ including the ones already fixed.
       on-page control moves along with the reflow, some pixels up. Reported by
       the maintainer on 2026-10-07. Not yet reproduced; still to note: the page,
       the browser and the installed version.
-- [ ] On a Samsung Galaxy Z Flip7, opening the add-on from the browser's menu
-      shows an extremely small popup. The options page is reasonably sized.
-      Reported by the maintainer on 2026-10-07. Still to note: the browser and
-      the installed version.
+- On a Samsung Galaxy Z Flip7, opening the add-on from the browser's menu shows
+  an extremely small popup. Reported by the maintainer on 2026-10-07. Fixed the
+  same day (`ce40426`) and checked on that phone with Firefox 157: the popup had
+  no viewport tag. Not in 1.7.0 or 1.8.0; it needs a new version.
 - [ ] On the same phone the options page appears to start zoomed in: lines run
       past the edge of the screen, so reading them takes horizontal scrolling,
       which is what this add-on exists to avoid. After zooming out by hand the
@@ -43,7 +43,51 @@ including the ones already fixed.
 
 - [ ] When a page loads and there is a stored size for that site other than
       100%, show a toast for about 3 seconds: "Text size: x%". Requested by the
-      maintainer on 2026-10-07.
+      maintainer on 2026-10-07. It also says so when the page was fitted to the
+      screen for that site (see below), also when the size is 100%.
+
+## Fit to screen: pages without a viewport tag
+
+The plan for the first item under "Seen on Android" (maintainer, 2026-10-07).
+Nothing is built yet.
+
+A page without a viewport tag is laid out about 980 px wide on a phone, and
+Firefox enlarges its body text and zooms out to fit. Giving the page the tag
+makes Firefox lay it out at the screen's width, like a page made for phones, and
+the size the user picks then means what it says.
+
+- [ ] First, on a phone, with a build that has only the button: does Firefox for
+      Android lay the page out again when the tag is inserted after load, and
+      when it is taken out? What does it do with a block wider than the screen
+      once the tag is there: scroll sideways, or zoom out again (then the tag
+      needs `minimum-scale=1`, or wide blocks have to be kept from growing past
+      the page)? And what do `screen.width` and the layout width report, in the
+      normal and in the "desktop site" mode?
+- [ ] A button on the on-page control and in the popup that inserts the tag, and
+      takes it out again. Shown only where it does something: the page has no
+      viewport tag and is laid out wider than the screen
+      (`document.documentElement.clientWidth` against `screen.width`). Not a
+      test for a touch screen: a desktop browser ignores the tag whatever the
+      screen, and there the layout is never wider than the screen.
+- [ ] The choice is remembered per site, together with the size: follow the
+      general setting, fitted, or not fitted. A size picked in the fitted layout
+      only looks right there. Stored under a key of its own next to the size, so
+      sizes stored by earlier versions stay valid. Same rule as sizes when
+      remembering automatically is off: only for sites remembered explicitly.
+- [ ] Options page: a setting to fit such pages automatically, off by default.
+      With it on, the button is the way back to the page's own layout on a site.
+      The list of sites shows the choice next to the size, lists a site that is
+      fitted but at 100% too, and removing a site removes both.
+- [ ] Limitations guide: pages built from fixed-width tables scroll sideways
+      when fitted; the button switches back.
+- Known and accepted for a start: a page fitted automatically first appears
+  zoomed out and is then laid out again, because the extension's script runs
+  once the page has loaded. Running that one step earlier would reduce it.
+- Only the page in the address bar: embedded frames have no viewport of their
+  own.
+- The userscript can have the button, lasting until reload (it has no options
+  page and remembers nothing per site). Not the embed: a site owner who adds the
+  script can add the tag.
 
 ## Seen on Android
 
@@ -62,9 +106,11 @@ tag) and a Wikipedia article (mobile layout).
       has become wider than the page and Firefox zooms out further to fit it.
       This is likely what "the text ends up a lot smaller" was. Reset puts the
       page back exactly (1.8.0 lets go of everything at 100%); what earlier
-      builds did after reset here was not tried. Not solved: needs a decision on
-      what to do on such pages (for example keeping wide blocks from growing
-      past the page, or taking over from Firefox's own enlarging).
+      builds did after reset here was not tried. Not solved; the plan is "Fit to
+      screen" above. Considered and left: keeping wide blocks from growing past
+      the page (may still be needed, see the plan's first item), and taking over
+      from Firefox's own enlarging (fragile: it differs per block and scripts
+      can't read it).
 - [ ] The control does not always appear when zooming. Not reproduced: after a
       double-tap zoom on the norvig page it appeared, in its corner and at its
       normal size. A pinch could not be sent over adb, and a page with a mobile
