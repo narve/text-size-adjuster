@@ -18,6 +18,13 @@ including the ones already fixed.
 - [ ] addons.mozilla.org: 1.5.0 (without the gear) is waiting for review. Chrome
       Web Store: submitted by the maintainer on 2026-10-04.
 
+## Bugs
+
+- [ ] Sometimes, when increasing the text size makes the page reflow, the
+      on-page control moves along with the reflow, some pixels up. Reported by
+      the maintainer on 2026-10-07. Not yet reproduced; still to note: the page,
+      the browser and the installed version.
+
 ## Feature requests
 
 - [ ] When a page loads and there is a stored size for that site other than
