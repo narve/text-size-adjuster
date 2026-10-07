@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { CORE_BUNDLE, PHONE_SCALE, PHONE_VIEWPORT, SCREENSHOT_DIR, fixtureScreenshot, requireBuilt } from '../tools/paths.js';
 import { STANDARD_FIXTURES, FACTORS } from './fixtures.js';
-import { attachEngine, gotoAndAttach, setFactor, type TsaWindow } from './helpers.js';
+import { attachEngine, gotoAndAttach, setFactor, type MinimalEngine, type TsaWindow } from './helpers.js';
 
 test.beforeAll(() => {
   requireBuilt(CORE_BUNDLE, 'packages/core');
@@ -501,6 +501,100 @@ test.describe('the page at normal size', () => {
     expect(await size()).toBe('24px');
     await setFactor(page, 2);
     expect(await size()).toBe('48px');
+  });
+});
+
+/**
+ * FR2.7: where the browser enlarges text by itself (Firefox for Android, on a page laid out wider
+ * than the screen), the engine takes that over. No desktop browser enlarges text, so these stand
+ * in for it: the line heights the engine measures are made 1.5 times as tall for `#main` while
+ * the browser's enlarging is "on" (not switched off on the root element).
+ */
+test.describe("the browser's own enlarging of text", () => {
+  const ADJUST = ['-moz-text-size-adjust', '-webkit-text-size-adjust', 'text-size-adjust'];
+  const page980 =
+    '<div id="main"><p id="text" style="font-size: 16px; line-height: 20px">Main text</p></div>' +
+    '<p id="plain" style="font-size: 16px">Not enlarged</p>' +
+    '<pre id="code" style="font-size: 12px">a line of code</pre>' +
+    '<pre id="own" style="font-size: 12px; overflow-x: hidden">with an overflow of its own</pre>';
+
+  async function open(page: Page, mode: 'take-over' | 'auto'): Promise<void> {
+    await page.addInitScript({ path: CORE_BUNDLE });
+    await page.goto('/plain-px/');
+    await page.evaluate(
+      ({ html, props, browserEnlarging }) => {
+        document.body.insertAdjacentHTML('beforeend', html);
+        const root = document.documentElement;
+        const off = () => props.some((prop) => root.style.getPropertyValue(prop) === 'none');
+        const real = Range.prototype.getClientRects;
+        Range.prototype.getClientRects = function (this: Range) {
+          const rects = real.call(this);
+          const enlarged = !off() && this.startContainer.parentElement?.closest('#main');
+          if (!enlarged || rects.length === 0) return rects;
+          return [{ ...rects[0]!.toJSON(), height: rects[0]!.height * 1.5 }] as unknown as DOMRectList;
+        };
+        const w = window as unknown as { TSA_CORE: { createEngine: (o: object) => MinimalEngine }; __tsa: MinimalEngine };
+        w.__tsa = w.TSA_CORE.createEngine({ browserEnlarging });
+        w.__tsa.attach();
+      },
+      { html: page980, props: ADJUST, browserEnlarging: mode },
+    );
+  }
+  const read = (page: Page) =>
+    page.evaluate((props) => {
+      const style = (id: string) => getComputedStyle(document.getElementById(id)!);
+      return {
+        text: style('text').fontSize,
+        lineHeight: style('text').lineHeight,
+        plain: style('plain').fontSize,
+        code: style('code').fontSize,
+        codeScroll: document.getElementById('code')!.style.getPropertyValue('overflow-x'),
+        ownScroll: document.getElementById('own')!.style.getPropertyValue('overflow-x'),
+        off: props.some((prop) => document.documentElement.style.getPropertyValue(prop) === 'none'),
+      };
+    }, ADJUST);
+  const untouched = {
+    text: '16px', lineHeight: '20px', plain: '16px', code: '12px', codeScroll: '', ownScroll: 'hidden', off: false,
+  };
+
+  test('taken over: text starts from the size the browser gave it, and the page is given back at 100%', async ({
+    page,
+  }) => {
+    await open(page, 'take-over');
+    expect(await read(page)).toEqual(untouched);
+
+    await setFactor(page, 2);
+    expect(await read(page)).toEqual({
+      text: '48px', // 16px, enlarged 1.5 times by the browser, times 2
+      lineHeight: '60px',
+      plain: '32px',
+      code: '24px',
+      codeScroll: 'auto', // a line of code may not make the page wider
+      ownScroll: 'hidden',
+      off: true,
+    });
+
+    await setFactor(page, 1);
+    expect(await read(page)).toEqual(untouched);
+    expect(await page.evaluate(() => document.documentElement.hasAttribute('style'))).toBe(false);
+  });
+
+  test('content added while scaled is measured the same way', async ({ page }) => {
+    await open(page, 'take-over');
+    await setFactor(page, 2);
+    await page.evaluate(() =>
+      document.getElementById('main')!.insertAdjacentHTML('beforeend', '<p id="late" style="font-size: 10px">late</p>'),
+    );
+    await expect
+      .poll(() => page.evaluate(() => getComputedStyle(document.getElementById('late')!).fontSize))
+      .toBe('30px');
+    expect((await read(page)).off).toBe(true);
+  });
+
+  test('left alone where the page is no wider than the screen (every desktop browser)', async ({ page }) => {
+    await open(page, 'auto');
+    await setFactor(page, 2);
+    expect(await read(page)).toMatchObject({ text: '32px', code: '24px', codeScroll: '', off: false });
   });
 });
 

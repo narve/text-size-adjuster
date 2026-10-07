@@ -82,6 +82,12 @@ high-specificity injected rule, is explained in the header comment of
 `packages/core/src/capture.ts`. The one case still unhandled is a page script
 rewriting the element's inline style afterwards (FR6.4, accepted).
 
+On a page laid out wider than the screen, the capture also takes over the
+browser's own enlarging of text (FR2.7): `captureElements` measures each
+element's line height with that enlarging on and off, starts from the enlarged
+size, and leaves it switched off (`text-size-adjust: none` on the root element)
+until the release.
+
 Capture is lazy (FR2.6): an attached engine does nothing to the page at
 factor 1. The first change to another factor captures and starts the
 `MutationObserver`; a return to 1 releases every element and removes the factor

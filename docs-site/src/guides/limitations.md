@@ -28,6 +28,10 @@ its reach:
   along with the words, and that includes the sizes this tool sets while the
   page is resized. Go back to the normal size (**↺**) before you write there.
   Plain text boxes, like search fields and most comment forms, are not affected.
+- **On pages not made for phones, small print and code start small.** Firefox on
+  a phone enlarges such a page's main text by itself, and this tool carries on
+  from there. Text Firefox leaves small, like code and footnotes, grows by the
+  same percentage but from its small size.
 - **Boxes sized to fit their text can grow with it.** On a few pages, a very
   large size can make such a box wider than the screen.
 - **The Firefox add-on can't work on Firefox's own pages** (settings, the

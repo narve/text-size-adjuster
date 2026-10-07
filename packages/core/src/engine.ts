@@ -1,6 +1,6 @@
 import type { EngineOptions, EngineChangeEvent, EngineListener, TextSizeEngine } from './types.js';
 import { clampFactor } from './clamp.js';
-import { captureElements, releaseElements } from './capture.js';
+import { captureElements, releaseElements, setBrowserEnlarging } from './capture.js';
 import { DEFAULT_IGNORE_ATTR, DEFAULT_SCALED_ATTR } from './constants.js';
 
 const DEFAULTS = {
@@ -9,6 +9,7 @@ const DEFAULTS = {
   step: 0.1,
   scaledAttr: DEFAULT_SCALED_ATTR,
   ignoreAttr: DEFAULT_IGNORE_ATTR,
+  browserEnlarging: 'auto' as const,
 };
 
 const FACTOR_VAR = '--tsa-k';
@@ -121,6 +122,17 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     );
   }
 
+  /**
+   * FR2.7. A phone lays a page without a viewport tag out about 980px wide and shows it zoomed
+   * out; that is the page whose text Firefox for Android enlarges by itself. On a desktop browser,
+   * and on a page made for phones, the layout is never wider than the screen.
+   */
+  function takesOverEnlarging(): boolean {
+    if (opts.browserEnlarging === 'take-over') return true;
+    if (opts.browserEnlarging === 'leave' || !win) return false;
+    return win.innerWidth > win.screen.width * 1.1;
+  }
+
   function captureNew(elements: Element[]): void {
     const target = styleTarget();
     if (!target) return;
@@ -129,7 +141,11 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     // Nothing in a document is scaled before its first capture. A shadow root's content can
     // inherit a scaled size from its host from the start.
     const scaled = factor !== 1 && (followsPage || hasCaptured);
-    captureElements(unscaled, target, FACTOR_VAR, { scaledAttr: opts.scaledAttr, scaled });
+    captureElements(unscaled, target, FACTOR_VAR, {
+      scaledAttr: opts.scaledAttr,
+      scaled,
+      enlargingRoot: takesOverEnlarging() ? (doc!.documentElement as HTMLElement) : undefined,
+    });
     hasCaptured = true;
     // A root element that replaced the one the factor was written to (document.open) starts
     // without the variable.
@@ -369,6 +385,8 @@ function createEngineFor(options: EngineOptions, followsPage: boolean): TextSize
     if (!release) return;
     releaseElements(Array.from(root.querySelectorAll(`[${opts.scaledAttr}]`)), FACTOR_VAR, opts);
     hasCaptured = false;
+    // Whether or not this engine switched it off: back at factor 1 the page is the browser's.
+    if (doc!.documentElement) setBrowserEnlarging(doc!.documentElement as HTMLElement, true);
     const target = styleTarget();
     if (followsPage || !target) return;
     target.style.removeProperty(FACTOR_VAR);

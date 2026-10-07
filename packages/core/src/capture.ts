@@ -10,6 +10,56 @@ export interface CaptureContext extends CaptureOptions {
    * set: on `styleTarget` or, for a shadow root that follows its page, further up.
    */
   scaled: boolean;
+  /**
+   * The root element of a document whose text the browser enlarges by itself (FR2.7; Firefox for
+   * Android does that on a page laid out wider than the screen, a page without a viewport tag).
+   * When given, that enlarging is switched off on it and each element starts from the size the
+   * browser had given it rather than the size the page declares, so that the page looks the same
+   * at factor 1 and every step from there is the step the user asked for. Left to the browser, its
+   * enlarging shrinks as the declared size grows, and the two nearly cancel.
+   */
+  enlargingRoot?: HTMLElement;
+}
+
+const ADJUST_PROPS = ['-moz-text-size-adjust', '-webkit-text-size-adjust', 'text-size-adjust'];
+
+/** Switches the browser's own enlarging of text off (inline, on `root`) or back on. */
+export function setBrowserEnlarging(root: HTMLElement, on: boolean): void {
+  for (const prop of ADJUST_PROPS) {
+    if (on) root.style.removeProperty(prop);
+    else root.style.setProperty(prop, 'none', 'important');
+  }
+}
+
+/** The height of the first line box of the element's own text, or 0 when it has none. */
+function ownTextHeight(el: Element): number {
+  for (const node of el.childNodes) {
+    if (node.nodeType !== 3 || !node.nodeValue || node.nodeValue.trim() === '') continue;
+    const range = el.ownerDocument.createRange();
+    range.selectNodeContents(node);
+    return range.getClientRects()[0]?.height ?? 0;
+  }
+  return 0;
+}
+
+/**
+ * How much the browser enlarges each element's own text: the height of its first line with the
+ * enlarging on, against the same line with it off. Scripts can't read the enlarged size itself
+ * (computed styles report the declared one), but a line of text is as tall as its font makes it.
+ * 1 for an element without text of its own, or that the browser leaves at its size. Leaves the
+ * enlarging switched off.
+ */
+function measureEnlarging(elements: Element[], root: HTMLElement): number[] {
+  setBrowserEnlarging(root, true);
+  const enlarged = elements.map(ownTextHeight);
+  setBrowserEnlarging(root, false);
+  const plain = elements.map(ownTextHeight);
+  return enlarged.map((height, i) => (height > 0 && plain[i]! > 0 ? Math.max(1, height / plain[i]!) : 1));
+}
+
+/** `12.5px` times 2 is `25px`. */
+function timesPx(px: string, ratio: number): string {
+  return ratio === 1 ? px : `${Math.round(parseFloat(px) * ratio * 100) / 100}px`;
 }
 
 /**
@@ -50,6 +100,10 @@ export interface CaptureContext extends CaptureOptions {
  * switched off on the elements being read and on their ancestors (whose size they may inherit),
  * and switched back on only after the styles have settled at the restored factor — otherwise the
  * way back would be animated on every capture.
+ *
+ * With `enlargingRoot` (see CaptureContext), preformatted blocks also get a sideways scroll of
+ * their own: such a page is shown zoomed out to fit its widest content, so a line of code that
+ * grows past the page would make everything else smaller on the screen.
  */
 export function captureElements(
   elements: Element[],
@@ -64,14 +118,26 @@ export function captureElements(
   const prevFactor = styleTarget.style.getPropertyValue(factorVar);
   styleTarget.style.setProperty(factorVar, '1');
 
-  const reads = elements.map((el) => {
+  const ratios = opts.enlargingRoot ? measureEnlarging(elements, opts.enlargingRoot) : null;
+
+  const reads = elements.map((el, i) => {
     const computed = getComputedStyle(el);
-    return { el, fontSize: computed.fontSize, lineHeight: computed.lineHeight };
+    const ratio = ratios?.[i] ?? 1;
+    return {
+      el,
+      fontSize: timesPx(computed.fontSize, ratio),
+      lineHeight: isPxLineHeight(computed.lineHeight) ? timesPx(computed.lineHeight, ratio) : computed.lineHeight,
+      keepsWidth:
+        ratios !== null &&
+        computed.whiteSpace === 'pre' &&
+        computed.overflowX === 'visible' &&
+        !computed.display.startsWith('inline'),
+    };
   });
 
-  for (const { el, fontSize, lineHeight } of reads) {
+  for (const { el, fontSize, lineHeight, keepsWidth } of reads) {
     const htmlEl = el as HTMLElement;
-    const original = recordOriginal(htmlEl);
+    const original = recordOriginal(htmlEl, keepsWidth);
     htmlEl.style.setProperty('font-size', `calc(${fontSize} * var(${factorVar}, 1))`, 'important');
     if (isPxLineHeight(lineHeight)) {
       htmlEl.style.setProperty(
@@ -80,6 +146,7 @@ export function captureElements(
         'important',
       );
     }
+    if (keepsWidth) htmlEl.style.setProperty(SCROLL_PROP, SCROLL_VALUE, 'important');
     el.setAttribute(opts.scaledAttr, original);
   }
 
@@ -120,15 +187,25 @@ function suppressTransitions(elements: Element[], styleTarget: HTMLElement): () 
 
 const SCALED_PROPS = ['font-size', 'line-height'] as const;
 type ScaledProp = (typeof SCALED_PROPS)[number];
-/** An element's own inline value and priority for each scaled property it had one for. */
-type Original = Partial<Record<ScaledProp, [value: string, priority: string]>>;
+/** What a preformatted block gets so that it scrolls sideways inside its own box. */
+const SCROLL_PROP = 'overflow-x';
+const SCROLL_VALUE = 'auto';
+/**
+ * An element's own inline value and priority for each scaled property it had one for. The scroll
+ * property is listed whenever it was set, with an empty value when the element had none of its
+ * own: unlike a scaled size, its value alone doesn't tell that it is the engine's.
+ */
+type Original = Partial<Record<ScaledProp | typeof SCROLL_PROP, [value: string, priority: string]>>;
 
-/** The element's own inline declarations, as the `scaledAttr` value ('' when it had none). */
-function recordOriginal(el: HTMLElement): string {
+/** The element's own inline declarations, as the `scaledAttr` value ('' when there is nothing to note). */
+function recordOriginal(el: HTMLElement, withScroll: boolean): string {
   const original: Original = {};
   for (const prop of SCALED_PROPS) {
     const value = el.style.getPropertyValue(prop);
     if (value) original[prop] = [value, el.style.getPropertyPriority(prop)];
+  }
+  if (withScroll) {
+    original[SCROLL_PROP] = [el.style.getPropertyValue(SCROLL_PROP), el.style.getPropertyPriority(SCROLL_PROP)];
   }
   return Object.keys(original).length > 0 ? JSON.stringify(original) : '';
 }
@@ -157,6 +234,11 @@ export function releaseElements(elements: Element[], factorVar: string, opts: Ca
       const own = original[prop];
       if (own) htmlEl.style.setProperty(prop, own[0], own[1]);
       else htmlEl.style.removeProperty(prop);
+    }
+    const ownScroll = original[SCROLL_PROP];
+    if (ownScroll && htmlEl.style.getPropertyValue(SCROLL_PROP) === SCROLL_VALUE) {
+      if (ownScroll[0]) htmlEl.style.setProperty(SCROLL_PROP, ownScroll[0], ownScroll[1]);
+      else htmlEl.style.removeProperty(SCROLL_PROP);
     }
     el.removeAttribute(opts.scaledAttr);
     // Taking the last declaration away leaves an empty attribute behind.

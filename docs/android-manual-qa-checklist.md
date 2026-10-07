@@ -47,6 +47,10 @@ For both variants, also check:
   real-world site, or the `script-tag/on-zoom.html` fixture for the embed): it
   opens zoomed out to fit; with "show after zooming", pinching it up to a
   readable size reveals the control (FR10.2).
+- **A page not made for phones, sizes** (the `norvig` real-world site): at 140%
+  the main text is visibly 1.4 times as big, at 200% bigger again, never
+  smaller; no sideways scrolling; a code block scrolls sideways inside its own
+  box (FR2.7).
 - **Back to normal**: set a larger size, then tap **↺**; the page looks exactly
   as it did before the first change (FR2.6).
 - **Rotation**: set a larger size, rotate the phone to landscape and back; the

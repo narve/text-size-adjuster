@@ -49,6 +49,17 @@ the unscaled page, and produces no new horizontal scrollbar.
   to another size (a remembered size counts), and on the way back to the normal
   size everything is let go of again: the inline styles, the marker attribute
   and the factor. A page nobody resizes is never modified.
+- **FR2.7**: Where the browser enlarges text by itself, the chosen size counts
+  from what the user sees, not from the size the page declares. Firefox for
+  Android does this on a page laid out wider than the screen (a page without a
+  viewport tag): it enlarges the main text and shows the page zoomed out. Left
+  alone, that enlarging shrinks as the declared size grows, so 140% changed
+  almost nothing. While such a page is resized, the browser's enlarging is
+  switched off and each element starts from the size the browser had given it,
+  measured from the height of a line of its text; preformatted blocks scroll
+  sideways inside their own box, so that a long line can't make the page wider
+  and everything on it smaller. Back at the normal size the page is the
+  browser's again (FR2.6). Automatic: no setting and no button.
 
 ## FR3. Multiple delivery mechanisms, one engine
 

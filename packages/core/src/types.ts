@@ -21,6 +21,12 @@ export interface EngineOptions {
    * same-origin iframe document discovered within this root.
    */
   root?: Document | ShadowRoot;
+  /**
+   * What to do where the browser enlarges text by itself (FR2.7). `auto`, the default, takes that
+   * over on a page laid out wider than the screen, which is where Firefox for Android does it;
+   * `take-over` and `leave` are for tests and for a consumer that knows better.
+   */
+  browserEnlarging?: 'auto' | 'take-over' | 'leave';
 }
 
 export interface EngineChangeEvent {
