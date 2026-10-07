@@ -24,6 +24,27 @@ including the ones already fixed.
       only follow it to the options page in Chromium.
 - [ ] Chrome Web Store: submitted by the maintainer on 2026-10-04.
 
+## Bugs
+
+- [ ] Sometimes, when increasing the text size makes the page reflow, the
+      on-page control moves along with the reflow, some pixels up. Reported by
+      the maintainer on 2026-10-07. Not yet reproduced; still to note: the page,
+      the browser and the installed version.
+- [ ] On a Samsung Galaxy Z Flip7, opening the add-on from the browser's menu
+      shows an extremely small popup. The options page is reasonably sized.
+      Reported by the maintainer on 2026-10-07. Still to note: the browser and
+      the installed version.
+- [ ] On the same phone the options page appears to start zoomed in: lines run
+      past the edge of the screen, so reading them takes horizontal scrolling,
+      which is what this add-on exists to avoid. After zooming out by hand the
+      page looks normal. Reported by the maintainer on 2026-10-07.
+
+## Feature requests
+
+- [ ] When a page loads and there is a stored size for that site other than
+      100%, show a toast for about 3 seconds: "Text size: x%". Requested by the
+      maintainer on 2026-10-07.
+
 ## Seen on Android
 
 Reported by the maintainer on 2026-10-04, with the builds of that time (1.1.0 to
