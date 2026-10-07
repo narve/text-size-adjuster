@@ -6,10 +6,8 @@ including the ones already fixed.
 
 ## Releases
 
-- [ ] addons.mozilla.org: 1.7.0 was submitted on 2026-10-07 and is waiting for
-      review; the listing serves 1.5.0 until then. Until it is approved, the
-      install guide describes a gear and a "Show the control on this page"
-      button that the listed version doesn't have.
+- addons.mozilla.org: 1.7.0 was submitted on 2026-10-07 and approved the same
+  day; it is the version the listing serves.
 - GitHub: 1.8.0 was released on 2026-10-07, the same code as 1.7.0 (Mozilla
   takes each version number on one channel only). Copies installed from the site
   update to it. 1.6.0 was signed but never published.
