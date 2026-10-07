@@ -15,8 +15,11 @@ including the ones already fixed.
       the downloadable 1.4.0 doesn't have it.
 - [ ] Try the gear once in Firefox, on desktop and Android: the automated tests
       only follow it to the options page in Chromium.
-- [ ] addons.mozilla.org: 1.5.0 (without the gear) is waiting for review. Chrome
-      Web Store: submitted by the maintainer on 2026-10-04.
+- [ ] addons.mozilla.org: 1.5.0 (without the gear) is approved and available
+      (maintainer, 2026-10-07). The install guide doesn't link to the listing
+      yet: it still sends everyone to the `.xpi` on GitHub. The gear needs a new
+      version number there, since 1.6.0 is used up by the unlisted signing.
+- [ ] Chrome Web Store: submitted by the maintainer on 2026-10-04.
 
 ## Seen on Android
 
